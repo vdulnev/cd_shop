@@ -1,1 +1,45 @@
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.config.dart"
+  errors:
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    # Error Prevention
+    - always_declare_return_types
+    - avoid_empty_else
+    - avoid_print
+    - avoid_relative_lib_imports
+    - avoid_returning_null_for_future
+    - avoid_slow_async_io
+    - avoid_type_to_string
+    - avoid_types_as_parameter_names
+    - avoid_web_libraries_in_flutter
+    - cancel_subscriptions
+    - close_sinks
+    - unawaited_futures
+    - unnecessary_await_in_return
+
+    # Style & Consistency
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_fields
+    - prefer_final_locals
+    - require_trailing_commas
+    - sort_constructors_first
+    - use_key_in_widget_constructors
+    - prefer_single_quotes
+    - sort_child_properties_last
+
+    # Code Quality
+    - avoid_unnecessary_containers
+    - prefer_is_empty
+    - prefer_is_not_empty
+    - unnecessary_null_checks
+    - use_colored_box
+    - use_decorated_box
