@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -126,20 +127,19 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Album art placeholder
+            // Album art
             Expanded(
               flex: 3,
-              child: Container(
-                width: double.infinity,
-                color: theme.colorScheme.primaryContainer,
-                child: Center(
-                  child: Icon(
-                    Icons.album,
-                    size: 64,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
+              child: product.imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: product.imageUrl!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => _buildPlaceholder(theme),
+                      errorWidget: (context, url, error) =>
+                          _buildPlaceholder(theme),
+                    )
+                  : _buildPlaceholder(theme),
             ),
             // Product info
             Expanded(
@@ -188,6 +188,20 @@ class _ProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.primaryContainer,
+      child: Center(
+        child: Icon(
+          Icons.album,
+          size: 64,
+          color: theme.colorScheme.onPrimaryContainer,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
@@ -51,8 +52,22 @@ class _AlbumArt extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      height: 280,
+    return SizedBox(
+      height: 320,
+      width: double.infinity,
+      child: product.imageUrl != null
+          ? CachedNetworkImage(
+              imageUrl: product.imageUrl!,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => _buildPlaceholder(theme),
+              errorWidget: (context, url, error) => _buildPlaceholder(theme),
+            )
+          : _buildPlaceholder(theme),
+    );
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return ColoredBox(
       color: theme.colorScheme.primaryContainer,
       child: Center(
         child: Icon(

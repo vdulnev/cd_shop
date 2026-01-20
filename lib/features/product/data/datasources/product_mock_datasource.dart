@@ -16,6 +16,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1983,
       stockQuantity: 15,
+      imageUrl:
+          'https://coverartarchive.org/release-group/4e7b34de-0d87-356a-a3da-b21f769b7d4d/front',
     ),
     Product(
       id: 'dio-002',
@@ -27,6 +29,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1984,
       stockQuantity: 8,
+      imageUrl:
+          'https://coverartarchive.org/release-group/798601d4-f28e-3835-b10c-1a00ecf773b8/front',
     ),
 
     // Scorpions
@@ -40,6 +44,8 @@ class ProductMockDataSource {
       genre: 'Hard Rock',
       releaseYear: 1982,
       stockQuantity: 12,
+      imageUrl:
+          'https://coverartarchive.org/release-group/b00fbf7c-ebaf-3ec0-91d6-5eaad124d58f/front',
     ),
     Product(
       id: 'scorp-002',
@@ -51,6 +57,8 @@ class ProductMockDataSource {
       genre: 'Hard Rock',
       releaseYear: 1984,
       stockQuantity: 20,
+      imageUrl:
+          'https://coverartarchive.org/release-group/f74b6e75-f11c-3230-a5f1-0305d623a0a6/front',
     ),
     Product(
       id: 'scorp-003',
@@ -62,6 +70,8 @@ class ProductMockDataSource {
       genre: 'Hard Rock',
       releaseYear: 1990,
       stockQuantity: 25,
+      imageUrl:
+          'https://coverartarchive.org/release-group/d8a27312-3b03-36a0-a184-49b032528c1d/front',
     ),
 
     // Dire Straits
@@ -75,6 +85,8 @@ class ProductMockDataSource {
       genre: 'Rock',
       releaseYear: 1985,
       stockQuantity: 30,
+      imageUrl:
+          'https://coverartarchive.org/release-group/b02f651e-32a1-30ae-bc23-070b59170278/front',
     ),
     Product(
       id: 'ds-002',
@@ -86,6 +98,8 @@ class ProductMockDataSource {
       genre: 'Rock',
       releaseYear: 1982,
       stockQuantity: 10,
+      imageUrl:
+          'https://coverartarchive.org/release-group/935dde7e-8390-39fa-8e0d-1350db96bc3f/front',
     ),
     Product(
       id: 'ds-003',
@@ -97,6 +111,8 @@ class ProductMockDataSource {
       genre: 'Rock',
       releaseYear: 1980,
       stockQuantity: 7,
+      imageUrl:
+          'https://coverartarchive.org/release-group/5b0a15ce-8aa9-323b-8fb6-02b657756ba9/front',
     ),
 
     // Depeche Mode
@@ -110,6 +126,8 @@ class ProductMockDataSource {
       genre: 'Electronic/Synth-pop',
       releaseYear: 1990,
       stockQuantity: 18,
+      imageUrl:
+          'https://coverartarchive.org/release-group/71f1482e-e63f-3b2c-811b-939f62708f2a/front',
     ),
     Product(
       id: 'dm-002',
@@ -121,6 +139,8 @@ class ProductMockDataSource {
       genre: 'Electronic/Synth-pop',
       releaseYear: 1987,
       stockQuantity: 14,
+      imageUrl:
+          'https://coverartarchive.org/release-group/e59021bd-1710-3c13-9449-b78560039592/front',
     ),
     Product(
       id: 'dm-003',
@@ -132,6 +152,8 @@ class ProductMockDataSource {
       genre: 'Electronic/Alternative',
       releaseYear: 1993,
       stockQuantity: 11,
+      imageUrl:
+          'https://coverartarchive.org/release-group/e171597d-e6d5-36c8-8d0e-63daf79796b8/front',
     ),
 
     // Johnny Cash
@@ -145,6 +167,8 @@ class ProductMockDataSource {
       genre: 'Country',
       releaseYear: 1968,
       stockQuantity: 22,
+      imageUrl:
+          'https://coverartarchive.org/release-group/6b4ea595-3378-3019-be5f-058412670791/front',
     ),
     Product(
       id: 'jc-002',
@@ -156,6 +180,8 @@ class ProductMockDataSource {
       genre: 'Country/Rock',
       releaseYear: 2002,
       stockQuantity: 16,
+      imageUrl:
+          'https://coverartarchive.org/release-group/aca4ccc8-5d1b-361e-ab21-396b2c6d42d3/front',
     ),
     Product(
       id: 'jc-003',
@@ -167,6 +193,8 @@ class ProductMockDataSource {
       genre: 'Country',
       releaseYear: 1969,
       stockQuantity: 9,
+      imageUrl:
+          'https://coverartarchive.org/release-group/50df1aa9-6c37-46da-90bd-140363ddf878/front',
     ),
 
     // Iron Maiden
@@ -180,6 +208,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1982,
       stockQuantity: 19,
+      imageUrl:
+          'https://coverartarchive.org/release-group/4ebfe175-e7ed-34cd-8e91-67c7e4a53579/front',
     ),
     Product(
       id: 'im-002',
@@ -191,6 +221,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1984,
       stockQuantity: 13,
+      imageUrl:
+          'https://coverartarchive.org/release-group/60a20bc8-acac-3cbb-99f9-ce458317233a/front',
     ),
 
     // Black Sabbath
@@ -204,6 +236,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1970,
       stockQuantity: 17,
+      imageUrl:
+          'https://coverartarchive.org/release-group/cc053745-c447-3566-8f27-bed5438c9133/front',
     ),
     Product(
       id: 'bs-002',
@@ -215,6 +249,8 @@ class ProductMockDataSource {
       genre: 'Heavy Metal',
       releaseYear: 1971,
       stockQuantity: 6,
+      imageUrl:
+          'https://coverartarchive.org/release-group/e51e9779-2edc-3b39-959c-299fdb5ed940/front',
     ),
 
     // Deep Purple
@@ -228,6 +264,8 @@ class ProductMockDataSource {
       genre: 'Hard Rock',
       releaseYear: 1972,
       stockQuantity: 21,
+      imageUrl:
+          'https://coverartarchive.org/release-group/d00243c5-adcf-3018-9aa7-1957d7a5a774/front',
     ),
     Product(
       id: 'dp-002',
@@ -239,6 +277,8 @@ class ProductMockDataSource {
       genre: 'Hard Rock',
       releaseYear: 1972,
       stockQuantity: 8,
+      imageUrl:
+          'https://coverartarchive.org/release-group/afab893b-4284-37c3-bf74-0139773c8c6d/front',
     ),
   ];
 
