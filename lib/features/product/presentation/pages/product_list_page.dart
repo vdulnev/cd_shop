@@ -1,51 +1,28 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
-import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
 import 'package:cd_shop/injection_container.dart';
 
 /// Page displaying the list of products
-class ProductListPage extends StatefulWidget {
+class ProductListPage extends StatelessWidget {
   const ProductListPage({super.key});
 
   @override
-  State<ProductListPage> createState() => _ProductListPageState();
-}
-
-class _ProductListPageState extends State<ProductListPage> {
-  List<Product> _products = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
-
-  Future<void> _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    final result = await sl<GetProducts>()(const NoParams());
-
-    result.fold(
-      (failure) => setState(() {
-        _error = failure.message;
-        _isLoading = false;
-      }),
-      (products) => setState(() {
-        _products = products;
-        _isLoading = false;
-      }),
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<ProductListBloc>()..add(const ProductListFetched()),
+      child: const _ProductListView(),
     );
   }
+}
+
+class _ProductListView extends StatelessWidget {
+  const _ProductListView();
 
   @override
   Widget build(BuildContext context) {
@@ -59,33 +36,58 @@ class _ProductListPageState extends State<ProductListPage> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: BlocBuilder<ProductListBloc, ProductListState>(
+        builder: (context, state) {
+          return switch (state) {
+            ProductListInitial() ||
+            ProductListLoading() =>
+              const Center(child: CircularProgressIndicator()),
+            ProductListError(:final message) => _ErrorView(message: message),
+            ProductListLoaded(:final products) =>
+              _ProductGrid(products: products),
+          };
+        },
+      ),
     );
   }
+}
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message});
 
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProducts,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
-        ),
-      );
-    }
+  final String message;
 
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(message, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context
+                .read<ProductListBloc>()
+                .add(const ProductListFetched()),
+            child: const Text(AppStrings.retry),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductGrid extends StatelessWidget {
+  const _ProductGrid({required this.products});
+
+  final List<Product> products;
+
+  @override
+  Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadProducts,
+      onRefresh: () async {
+        context.read<ProductListBloc>().add(const ProductListRefreshed());
+      },
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -94,9 +96,9 @@ class _ProductListPageState extends State<ProductListPage> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
-        itemCount: _products.length,
+        itemCount: products.length,
         itemBuilder: (context, index) {
-          final product = _products[index];
+          final product = products[index];
           return _ProductCard(
             product: product,
             onTap: () => context.push('/products/${product.id}'),
