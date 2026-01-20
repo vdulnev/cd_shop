@@ -59,7 +59,7 @@ class _AlbumArt extends StatelessWidget {
           ? CachedNetworkImage(
               imageUrl: product.imageUrl!,
               fit: BoxFit.cover,
-              placeholder: (context, url) => _buildPlaceholder(theme),
+              placeholder: (context, url) => _buildLoadingPlaceholder(theme),
               errorWidget: (context, url, error) => _buildPlaceholder(theme),
             )
           : _buildPlaceholder(theme),
@@ -75,6 +75,15 @@ class _AlbumArt extends StatelessWidget {
           size: 160,
           color: theme.colorScheme.onPrimaryContainer,
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingPlaceholder(ThemeData theme) {
+    return ColoredBox(
+      color: theme.colorScheme.primaryContainer,
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }

@@ -135,7 +135,7 @@ class _ProductCard extends StatelessWidget {
                       imageUrl: product.imageUrl!,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => _buildPlaceholder(theme),
+                      placeholder: (context, url) => _buildLoadingPlaceholder(theme),
                       errorWidget: (context, url, error) =>
                           _buildPlaceholder(theme),
                     )
@@ -203,6 +203,16 @@ class _ProductCard extends StatelessWidget {
           size: 64,
           color: theme.colorScheme.onPrimaryContainer,
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingPlaceholder(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.primaryContainer,
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
