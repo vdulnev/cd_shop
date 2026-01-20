@@ -2,8 +2,11 @@ import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
+import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
+import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
+import 'package:cd_shop/features/auth/presentation/bloc/account_bloc.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/registration_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
@@ -26,11 +29,16 @@ Future<void> initDependencies() async {
 /// Initialize Auth feature dependencies
 Future<void> _initAuthFeature() async {
   // Bloc
+  sl.registerFactory(
+    () => AccountBloc(getCurrentUser: sl(), logoutUser: sl()),
+  );
   sl.registerFactory(() => LoginBloc(loginUser: sl()));
   sl.registerFactory(() => RegistrationBloc(registerUser: sl()));
 
   // Use Cases
+  sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerLazySingleton(() => LoginUser(sl()));
+  sl.registerLazySingleton(() => LogoutUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
 
   // Repositories

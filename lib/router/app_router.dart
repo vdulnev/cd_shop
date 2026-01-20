@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/features/auth/presentation/pages/account_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String checkout = '/checkout';
   static const String login = '/login';
   static const String register = '/register';
+  static const String account = '/account';
 }
 
 /// Application router configuration using go_router
@@ -49,6 +51,11 @@ class AppRouter {
         path: AppRoutes.register,
         name: 'register',
         builder: (context, state) => const RegistrationPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.account,
+        name: 'account',
+        builder: (context, state) => const AccountPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

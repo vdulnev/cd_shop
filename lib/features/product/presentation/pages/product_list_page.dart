@@ -32,7 +32,7 @@ class _ProductListView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/login'),
+            onPressed: () => context.push('/account'),
           ),
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
