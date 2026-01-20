@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
+import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_detail_page.dart';
 
@@ -13,6 +15,8 @@ class AppRoutes {
   static const String productDetail = '/products/:id';
   static const String cart = '/cart';
   static const String checkout = '/checkout';
+  static const String login = '/login';
+  static const String register = '/register';
 }
 
 /// Application router configuration using go_router
@@ -36,12 +40,16 @@ class AppRouter {
           return ProductDetailPage(productId: productId);
         },
       ),
-      // Add more routes as needed:
-      // GoRoute(
-      //   path: AppRoutes.cart,
-      //   name: 'cart',
-      //   builder: (context, state) => const CartPage(),
-      // ),
+      GoRoute(
+        path: AppRoutes.login,
+        name: 'login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        name: 'register',
+        builder: (context, state) => const RegistrationPage(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
