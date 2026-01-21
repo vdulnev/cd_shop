@@ -12,7 +12,9 @@ import 'package:cd_shop/features/auth/presentation/bloc/registration_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
+import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_search_bloc.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -51,9 +53,11 @@ Future<void> _initAuthFeature() async {
 Future<void> _initProductFeature() async {
   // Bloc
   sl.registerFactory(() => ProductListBloc(getProducts: sl()));
+  sl.registerFactory(() => ProductSearchBloc(searchProducts: sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetProducts(sl()));
+  sl.registerLazySingleton(() => SearchProducts(sl()));
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(

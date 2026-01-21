@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:cd_shop/features/auth/presentation/pages/account_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
-import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
+import 'package:cd_shop/features/product/presentation/pages/main_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_detail_page.dart';
+import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
+import 'package:cd_shop/features/product/presentation/pages/product_search_page.dart';
 
 /// Application route paths
 class AppRoutes {
@@ -14,6 +16,7 @@ class AppRoutes {
   static const String home = '/';
   static const String products = '/products';
   static const String productDetail = '/products/:id';
+  static const String search = '/search';
   static const String cart = '/cart';
   static const String checkout = '/checkout';
   static const String login = '/login';
@@ -29,33 +32,65 @@ class AppRouter {
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: true,
     routes: [
-      GoRoute(
-        path: AppRoutes.home,
-        name: 'home',
-        builder: (context, state) => const ProductListPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.productDetail,
-        name: 'productDetail',
-        builder: (context, state) {
-          final productId = state.pathParameters['id'] ?? '';
-          return ProductDetailPage(productId: productId);
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainPage(navigationShell: navigationShell);
         },
-      ),
-      GoRoute(
-        path: AppRoutes.login,
-        name: 'login',
-        builder: (context, state) => const LoginPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.register,
-        name: 'register',
-        builder: (context, state) => const RegistrationPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.account,
-        name: 'account',
-        builder: (context, state) => const AccountPage(),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                name: 'home',
+                builder: (context, state) => const ProductListPage(),
+                routes: [
+                  GoRoute(
+                    path: 'products/:id',
+                    name: 'productDetail',
+                    builder: (context, state) {
+                      final productId = state.pathParameters['id'] ?? '';
+                      return ProductDetailPage(productId: productId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'account',
+                    name: 'account',
+                    builder: (context, state) => const AccountPage(),
+                  ),
+                  GoRoute(
+                    path: 'login',
+                    name: 'login',
+                    builder: (context, state) => const LoginPage(),
+                  ),
+                  GoRoute(
+                    path: 'register',
+                    name: 'register',
+                    builder: (context, state) => const RegistrationPage(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.search,
+                name: 'search',
+                builder: (context, state) => const ProductSearchPage(),
+                routes: [
+                  GoRoute(
+                    path: 'products/:id',
+                    name: 'searchProductDetail',
+                    builder: (context, state) {
+                      final productId = state.pathParameters['id'] ?? '';
+                      return ProductDetailPage(productId: productId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
