@@ -9,7 +9,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, List<Product>>> getProducts({
-    String? genre,
+    ProductGenre? genre,
     String? searchQuery,
     int? limit,
     int? offset,
@@ -21,10 +21,7 @@ class ProductRepositoryImpl implements ProductRepository {
       List<Product> results = ProductMockDataSource.getAll();
 
       if (genre != null) {
-        results = results
-            .where((p) =>
-                p.genre?.toLowerCase().contains(genre.toLowerCase()) ?? false)
-            .toList();
+        results = results.where((p) => p.genre == genre).toList();
       }
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -76,7 +73,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<Either<Failure, List<Product>>> getProductsByGenre(
-    String genre,
+    ProductGenre genre,
   ) async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 400));

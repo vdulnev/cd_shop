@@ -23,13 +23,14 @@ void main() {
       'emits [Loading, Loaded] when ProductListFetched succeeds',
       build: () {
         when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => Right(<Product>[
-            const Product(
+          (_) async => const Right(<Product>[
+            Product(
               id: '1',
               title: 'Kind of Blue',
               artist: 'Miles Davis',
               description: 'Jazz classic',
               price: 14.99,
+              genre: ProductGenre.rock,
             ),
           ]),
         );
@@ -49,13 +50,14 @@ void main() {
       'emits [Loaded] when ProductListRefreshed succeeds (without loading)',
       build: () {
         when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => Right(<Product>[
-            const Product(
+          (_) async => const Right(<Product>[
+            Product(
               id: '2',
               title: 'The Dark Side of the Moon',
               artist: 'Pink Floyd',
               description: 'Progressive rock masterpiece',
               price: 21.99,
+              genre: ProductGenre.rock,
             ),
           ]),
         );
@@ -71,7 +73,7 @@ void main() {
       'emits [Loading, Error] when ProductListFetched fails',
       build: () {
         when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => Left(const ServerFailure(message: 'load failed')),
+          (_) async => const Left(ServerFailure(message: 'load failed')),
         );
         return ProductListBloc(getProducts: mockGetProducts);
       },

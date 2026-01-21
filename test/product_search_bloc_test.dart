@@ -38,13 +38,14 @@ void main() {
       'emits [Loading, Loaded] on successful search',
       build: () {
         when(() => mockSearchProducts(any(that: isA<SearchProductsParams>()))).thenAnswer(
-          (_) async => Right(<Product>[
-            const Product(
+          (_) async => const Right(<Product>[
+            Product(
               id: '1',
               title: 'Abbey Road',
               artist: 'The Beatles',
               description: 'Classic album',
               price: 19.99,
+              genre: ProductGenre.rock,
             ),
           ]),
         );
@@ -65,7 +66,7 @@ void main() {
       'emits [Loading, Error] on failed search',
       build: () {
         when(() => mockSearchProducts(any(that: isA<SearchProductsParams>()))).thenAnswer(
-          (_) async => Left(const ServerFailure(message: 'oops')),
+          (_) async => const Left(ServerFailure(message: 'oops')),
         );
         return bloc;
       },

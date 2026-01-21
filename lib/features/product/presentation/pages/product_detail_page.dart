@@ -125,11 +125,10 @@ class _ProductInfo extends StatelessWidget {
           Wrap(
             spacing: 8,
             children: [
-              if (product.genre != null)
-                Chip(
-                  label: Text(product.genre!),
-                  visualDensity: VisualDensity.compact,
-                ),
+              Chip(
+                label: Text(product.genreLabel),
+                visualDensity: VisualDensity.compact,
+              ),
               if (product.releaseYear != null)
                 Chip(
                   label: Text(product.releaseYear.toString()),

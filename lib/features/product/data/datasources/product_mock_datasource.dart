@@ -6,14 +6,14 @@ class ProductMockDataSource {
 
   static const List<Product> products = [
     // Dio
-    Product(
+        Product(
       id: 'dio-001',
       title: 'Holy Diver',
       artist: 'Dio',
       description:
           'Debut studio album by American heavy metal band Dio, released in 1983. Features iconic tracks and powerful vocals from Ronnie James Dio.',
       price: 14.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1983,
       stockQuantity: 15,
       imageUrl:
@@ -26,7 +26,7 @@ class ProductMockDataSource {
       description:
           'Second studio album by Dio, released in 1984. A classic of the heavy metal genre.',
       price: 13.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1984,
       stockQuantity: 8,
       imageUrl:
@@ -34,14 +34,14 @@ class ProductMockDataSource {
     ),
 
     // Scorpions
-    Product(
+        Product(
       id: 'scorp-001',
       title: 'Blackout',
       artist: 'Scorpions',
       description:
           'Eighth studio album by German rock band Scorpions, released in 1982. A landmark hard rock album.',
       price: 12.99,
-      genre: 'Hard Rock',
+            genre: ProductGenre.hardRock,
       releaseYear: 1982,
       stockQuantity: 12,
       imageUrl:
@@ -54,7 +54,7 @@ class ProductMockDataSource {
       description:
           'Ninth studio album by Scorpions, released in 1984. Their most commercially successful album worldwide.',
       price: 14.99,
-      genre: 'Hard Rock',
+            genre: ProductGenre.hardRock,
       releaseYear: 1984,
       stockQuantity: 20,
       imageUrl:
@@ -67,7 +67,7 @@ class ProductMockDataSource {
       description:
           'Twelfth studio album by Scorpions, released in 1990. Features their global hit ballad.',
       price: 11.99,
-      genre: 'Hard Rock',
+            genre: ProductGenre.hardRock,
       releaseYear: 1990,
       stockQuantity: 25,
       imageUrl:
@@ -75,14 +75,14 @@ class ProductMockDataSource {
     ),
 
     // Dire Straits
-    Product(
+        Product(
       id: 'ds-001',
       title: 'Brothers in Arms',
       artist: 'Dire Straits',
       description:
           'Fifth studio album by British rock band Dire Straits, released in 1985. One of the best-selling albums worldwide.',
       price: 15.99,
-      genre: 'Rock',
+            genre: ProductGenre.rock,
       releaseYear: 1985,
       stockQuantity: 30,
       imageUrl:
@@ -95,7 +95,7 @@ class ProductMockDataSource {
       description:
           'Fourth studio album by Dire Straits, released in 1982. Known for its extended compositions.',
       price: 13.99,
-      genre: 'Rock',
+            genre: ProductGenre.rock,
       releaseYear: 1982,
       stockQuantity: 10,
       imageUrl:
@@ -108,7 +108,7 @@ class ProductMockDataSource {
       description:
           'Third studio album by Dire Straits, released in 1980. A critical and commercial success.',
       price: 12.99,
-      genre: 'Rock',
+            genre: ProductGenre.rock,
       releaseYear: 1980,
       stockQuantity: 7,
       imageUrl:
@@ -116,14 +116,14 @@ class ProductMockDataSource {
     ),
 
     // Depeche Mode
-    Product(
+        Product(
       id: 'dm-001',
       title: 'Violator',
       artist: 'Depeche Mode',
       description:
           'Seventh studio album by English electronic band Depeche Mode, released in 1990. Their most successful album.',
       price: 14.99,
-      genre: 'Electronic/Synth-pop',
+            genre: ProductGenre.electronicSynthPop,
       releaseYear: 1990,
       stockQuantity: 18,
       imageUrl:
@@ -136,7 +136,7 @@ class ProductMockDataSource {
       description:
           'Sixth studio album by Depeche Mode, released in 1987. Marked their breakthrough in the United States.',
       price: 13.99,
-      genre: 'Electronic/Synth-pop',
+            genre: ProductGenre.electronicSynthPop,
       releaseYear: 1987,
       stockQuantity: 14,
       imageUrl:
@@ -149,7 +149,7 @@ class ProductMockDataSource {
       description:
           'Eighth studio album by Depeche Mode, released in 1993. Features a darker, more guitar-driven sound.',
       price: 12.99,
-      genre: 'Electronic/Alternative',
+            genre: ProductGenre.electronicAlternative,
       releaseYear: 1993,
       stockQuantity: 11,
       imageUrl:
@@ -157,14 +157,14 @@ class ProductMockDataSource {
     ),
 
     // Johnny Cash
-    Product(
+        Product(
       id: 'jc-001',
       title: 'At Folsom Prison',
       artist: 'Johnny Cash',
       description:
           'Live album by Johnny Cash, recorded in 1968 at Folsom State Prison. A landmark in country and rock music.',
       price: 16.99,
-      genre: 'Country',
+            genre: ProductGenre.country,
       releaseYear: 1968,
       stockQuantity: 22,
       imageUrl:
@@ -177,7 +177,7 @@ class ProductMockDataSource {
       description:
           'Fourth album in the American Recordings series, released in 2002. His final album released during his lifetime.',
       price: 15.99,
-      genre: 'Country/Rock',
+            genre: ProductGenre.countryRock,
       releaseYear: 2002,
       stockQuantity: 16,
       imageUrl:
@@ -190,7 +190,7 @@ class ProductMockDataSource {
       description:
           'Live album recorded in 1969 at San Quentin State Prison. Follow-up to the successful Folsom Prison album.',
       price: 14.99,
-      genre: 'Country',
+            genre: ProductGenre.country,
       releaseYear: 1969,
       stockQuantity: 9,
       imageUrl:
@@ -198,14 +198,14 @@ class ProductMockDataSource {
     ),
 
     // Iron Maiden
-    Product(
+        Product(
       id: 'im-001',
       title: 'The Number of the Beast',
       artist: 'Iron Maiden',
       description:
           'Third studio album by British heavy metal band Iron Maiden, released in 1982. Considered a classic of the genre.',
       price: 14.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1982,
       stockQuantity: 19,
       imageUrl:
@@ -218,7 +218,7 @@ class ProductMockDataSource {
       description:
           'Fifth studio album by Iron Maiden, released in 1984. Features Egyptian-themed artwork and epic compositions.',
       price: 13.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1984,
       stockQuantity: 13,
       imageUrl:
@@ -226,14 +226,14 @@ class ProductMockDataSource {
     ),
 
     // Black Sabbath
-    Product(
+        Product(
       id: 'bs-001',
       title: 'Paranoid',
       artist: 'Black Sabbath',
       description:
           'Second studio album by English rock band Black Sabbath, released in 1970. Pioneering heavy metal album.',
       price: 15.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1970,
       stockQuantity: 17,
       imageUrl:
@@ -246,7 +246,7 @@ class ProductMockDataSource {
       description:
           'Third studio album by Black Sabbath, released in 1971. Influential in the development of doom metal.',
       price: 14.99,
-      genre: 'Heavy Metal',
+            genre: ProductGenre.heavyMetal,
       releaseYear: 1971,
       stockQuantity: 6,
       imageUrl:
@@ -254,14 +254,14 @@ class ProductMockDataSource {
     ),
 
     // Deep Purple
-    Product(
+        Product(
       id: 'dp-001',
       title: 'Machine Head',
       artist: 'Deep Purple',
       description:
           'Sixth studio album by English rock band Deep Purple, released in 1972. Features iconic hard rock tracks.',
       price: 13.99,
-      genre: 'Hard Rock',
+            genre: ProductGenre.hardRock,
       releaseYear: 1972,
       stockQuantity: 21,
       imageUrl:
@@ -274,7 +274,7 @@ class ProductMockDataSource {
       description:
           'Live album by Deep Purple, recorded in 1972. Considered one of the greatest live rock albums.',
       price: 16.99,
-      genre: 'Hard Rock',
+            genre: ProductGenre.hardRock,
       releaseYear: 1972,
       stockQuantity: 8,
       imageUrl:
@@ -302,12 +302,9 @@ class ProductMockDataSource {
   }
 
   /// Get products by genre
-  static List<Product> getByGenre(String genre) {
-    return products
-        .where((p) =>
-            p.genre?.toLowerCase().contains(genre.toLowerCase()) ?? false)
-        .toList();
-  }
+    static List<Product> getByGenre(ProductGenre genre) {
+        return products.where((p) => p.genre == genre).toList();
+    }
 
   /// Search products by query
   static List<Product> search(String query) {

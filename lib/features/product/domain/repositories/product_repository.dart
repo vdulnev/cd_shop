@@ -10,7 +10,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 abstract class ProductRepository {
   /// Get all products with optional filtering
   Future<Either<Failure, List<Product>>> getProducts({
-    String? genre,
+    ProductGenre? genre,
     String? searchQuery,
     int? limit,
     int? offset,
@@ -23,7 +23,7 @@ abstract class ProductRepository {
   Future<Either<Failure, List<Product>>> searchProducts(String query);
 
   /// Get products by genre
-  Future<Either<Failure, List<Product>>> getProductsByGenre(String genre);
+  Future<Either<Failure, List<Product>>> getProductsByGenre(ProductGenre genre);
 
   /// Get featured/recommended products
   Future<Either<Failure, List<Product>>> getFeaturedProducts();
