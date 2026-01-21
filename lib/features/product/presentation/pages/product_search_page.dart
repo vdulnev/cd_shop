@@ -232,7 +232,7 @@ class _SearchResultItem extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(ThemeData theme) {
-    return Container(
+    return ColoredBox(
       color: theme.colorScheme.primaryContainer,
       child: Center(
         child: Icon(
