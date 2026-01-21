@@ -69,10 +69,6 @@ class _ProductSearchViewState extends State<_ProductSearchView> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/account'),
-          ),
-          IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {},
           ),

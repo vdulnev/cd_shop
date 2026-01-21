@@ -17,11 +17,11 @@ class AppRoutes {
   static const String products = '/products';
   static const String productDetail = '/products/:id';
   static const String search = '/search';
+  static const String account = '/account';
+  static const String login = '/account/login';
+  static const String register = '/account/register';
   static const String cart = '/cart';
   static const String checkout = '/checkout';
-  static const String login = '/login';
-  static const String register = '/register';
-  static const String account = '/account';
 }
 
 /// Application router configuration using go_router
@@ -37,6 +37,7 @@ class AppRouter {
           return MainPage(navigationShell: navigationShell);
         },
         branches: [
+          // Products tab
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -52,25 +53,11 @@ class AppRouter {
                       return ProductDetailPage(productId: productId);
                     },
                   ),
-                  GoRoute(
-                    path: 'account',
-                    name: 'account',
-                    builder: (context, state) => const AccountPage(),
-                  ),
-                  GoRoute(
-                    path: 'login',
-                    name: 'login',
-                    builder: (context, state) => const LoginPage(),
-                  ),
-                  GoRoute(
-                    path: 'register',
-                    name: 'register',
-                    builder: (context, state) => const RegistrationPage(),
-                  ),
                 ],
               ),
             ],
           ),
+          // Search tab
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -85,6 +72,28 @@ class AppRouter {
                       final productId = state.pathParameters['id'] ?? '';
                       return ProductDetailPage(productId: productId);
                     },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Account tab
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.account,
+                name: 'account',
+                builder: (context, state) => const AccountPage(),
+                routes: [
+                  GoRoute(
+                    path: 'login',
+                    name: 'login',
+                    builder: (context, state) => const LoginPage(),
+                  ),
+                  GoRoute(
+                    path: 'register',
+                    name: 'register',
+                    builder: (context, state) => const RegistrationPage(),
                   ),
                 ],
               ),

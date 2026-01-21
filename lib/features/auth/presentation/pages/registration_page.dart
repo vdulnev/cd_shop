@@ -66,7 +66,9 @@ class _RegistrationViewState extends State<_RegistrationView> {
                 backgroundColor: Colors.green,
               ),
             );
-            context.go('/');
+            // Pop back to login, then to account
+            context.pop();
+            context.pop();
           } else if (state is RegistrationFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

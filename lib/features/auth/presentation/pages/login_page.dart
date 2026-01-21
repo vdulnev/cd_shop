@@ -63,7 +63,8 @@ class _LoginViewState extends State<_LoginView> {
                 backgroundColor: Colors.green,
               ),
             );
-            context.go('/');
+            // Pop back to account page which will reload
+            context.pop();
           } else if (state is LoginFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -156,7 +157,7 @@ class _LoginViewState extends State<_LoginView> {
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: isLoading ? null : () => context.push('/register'),
+                    onPressed: isLoading ? null : () => context.push('/account/register'),
                     child: const Text("Don't have an account? Register"),
                   ),
                 ],

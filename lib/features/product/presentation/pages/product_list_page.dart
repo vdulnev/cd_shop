@@ -31,10 +31,6 @@ class _ProductListView extends StatelessWidget {
         title: const Text(AppStrings.appName),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/account'),
-          ),
-          IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () {},
           ),
