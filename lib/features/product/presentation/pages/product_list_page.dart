@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
+import 'package:cd_shop/router/app_router.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
 import 'package:cd_shop/injection_container.dart';
@@ -32,7 +33,7 @@ class _ProductListView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {},
+            onPressed: () => context.go(AppRoutes.cart),
           ),
         ],
       ),

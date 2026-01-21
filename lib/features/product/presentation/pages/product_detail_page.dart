@@ -219,9 +219,13 @@ class _AddToCartBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: product.isInStock
                     ? () {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        final messenger = ScaffoldMessenger.of(context);
+                        messenger.clearSnackBars();
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('${product.title} added to cart!'),
+                            persist: false,
+                            duration: const Duration(seconds: 2),
                             action: SnackBarAction(
                               label: 'UNDO',
                               onPressed: () {},

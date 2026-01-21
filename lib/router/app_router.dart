@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cd_shop/features/auth/presentation/pages/account_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
+import 'package:cd_shop/features/cart/presentation/pages/cart_page.dart';
+import 'package:cd_shop/features/cart/presentation/pages/checkout_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/main_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_detail_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
@@ -72,6 +74,23 @@ class AppRouter {
                       final productId = state.pathParameters['id'] ?? '';
                       return ProductDetailPage(productId: productId);
                     },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Cart tab
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.cart,
+                name: 'cart',
+                builder: (context, state) => const CartPage(),
+                routes: [
+                  GoRoute(
+                    path: 'checkout',
+                    name: 'checkout',
+                    builder: (context, state) => const CheckoutPage(),
                   ),
                 ],
               ),
