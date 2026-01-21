@@ -29,7 +29,7 @@ class _AccountView extends StatelessWidget {
       body: BlocConsumer<AccountBloc, AccountState>(
         listener: (context, state) {
           if (state is AccountUnauthenticated) {
-            context.go('/login');
+            context.pushReplacement('/login');
           } else if (state is AccountLoggedOut) {
             context.go('/');
           } else if (state is AccountError) {
