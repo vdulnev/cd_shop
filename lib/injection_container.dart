@@ -11,8 +11,10 @@ import 'package:cd_shop/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/registration_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
+import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_search_bloc.dart';
 
@@ -54,10 +56,12 @@ Future<void> _initProductFeature() async {
   // Bloc
   sl.registerFactory(() => ProductListBloc(getProducts: sl()));
   sl.registerFactory(() => ProductSearchBloc(searchProducts: sl()));
+  sl.registerFactory(() => ProductDetailBloc(getProductById: sl()));
 
   // Use Cases
   sl.registerLazySingleton(() => GetProducts(sl()));
   sl.registerLazySingleton(() => SearchProducts(sl()));
+  sl.registerLazySingleton(() => GetProductById(sl()));
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(

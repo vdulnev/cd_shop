@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
-import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
+import 'package:cd_shop/injection_container.dart';
 
 /// Page displaying product details
 class ProductDetailPage extends StatelessWidget {
@@ -16,29 +18,65 @@ class ProductDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final product = ProductMockDataSource.getById(productId);
+    return BlocProvider(
+      create: (_) =>
+          sl<ProductDetailBloc>()..add(ProductDetailFetched(productId)),
+      child: const _ProductDetailView(),
+    );
+  }
+}
 
-    if (product == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Product Details')),
-        body: const Center(child: Text('Product not found')),
-      );
-    }
+class _ProductDetailView extends StatelessWidget {
+  const _ProductDetailView();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product.artist),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _AlbumArt(product: product),
-            _ProductInfo(product: product),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _AddToCartBar(product: product),
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductDetailBloc, ProductDetailState>(
+      builder: (context, state) {
+        return switch (state) {
+          ProductDetailInitial() ||
+          ProductDetailLoading() =>
+            Scaffold(
+              appBar: AppBar(title: const Text('Product Details')),
+              body: const Center(child: CircularProgressIndicator()),
+            ),
+          ProductDetailNotFound() => Scaffold(
+              appBar: AppBar(title: const Text('Product Details')),
+              body: const Center(child: Text('Product not found')),
+            ),
+          ProductDetailError(:final message) => Scaffold(
+              appBar: AppBar(title: const Text('Product Details')),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(message, style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ProductDetailLoaded(:final product) => Scaffold(
+              appBar: AppBar(
+                title: Text(product.artist),
+              ),
+              body: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _AlbumArt(product: product),
+                    _ProductInfo(product: product),
+                  ],
+                ),
+              ),
+              bottomNavigationBar: _AddToCartBar(product: product),
+            ),
+        };
+      },
     );
   }
 }
