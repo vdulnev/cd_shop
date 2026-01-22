@@ -6,7 +6,7 @@ import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
 import 'package:cd_shop/features/cart/presentation/pages/cart_page.dart';
 import 'package:cd_shop/features/cart/presentation/pages/checkout_page.dart';
-import 'package:cd_shop/features/product/presentation/pages/main_page.dart';
+import 'package:cd_shop/main_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_detail_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
 import 'package:cd_shop/features/product/presentation/pages/product_search_page.dart';
