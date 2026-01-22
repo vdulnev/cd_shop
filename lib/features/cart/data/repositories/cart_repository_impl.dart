@@ -3,24 +3,51 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'package:cd_shop/core/database/daos/cart_dao.dart';
+import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
+import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
-/// In-memory implementation of CartRepository
+/// Floor database implementation of CartRepository
 ///
-/// Uses a simple in-memory map to store cart items.
-/// In a real app, this would persist to local storage or a backend.
+/// Persists cart items to SQLite using Floor.
+/// Product details are fetched from the product datasource.
 class CartRepositoryImpl implements CartRepository {
-  CartRepositoryImpl() : _cartSubject = BehaviorSubject<Cart>.seeded(const Cart());
+  CartRepositoryImpl({
+    required CartDao cartDao,
+  }) : _cartDao = cartDao {
+    _initCartStream();
+  }
+
+  final CartDao _cartDao;
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
-  final BehaviorSubject<Cart> _cartSubject;
+  final _cartSubject = BehaviorSubject<Cart>.seeded(const Cart());
+
+  void _initCartStream() {
+    _cartDao.watchAllCartItems().listen((entities) {
+      final cart = _entitiesToCart(entities);
+      _cartSubject.add(cart);
+    });
+  }
+
+  Cart _entitiesToCart(List<CartItemEntity> entities) {
+    final items = <CartItem>[];
+    for (final entity in entities) {
+      final product = ProductMockDataSource.getById(entity.productId);
+      if (product != null) {
+        items.add(CartItem(product: product, quantity: entity.quantity));
+      }
+    }
+    return Cart(items: items);
+  }
 
   @override
   Future<Either<Failure, Cart>> addToCart(
@@ -28,26 +55,18 @@ class CartRepositoryImpl implements CartRepository {
     int quantity = 1,
   }) async {
     try {
-      return Right(_updateCart((items) {
-        final index = items.indexWhere((item) => item.product.id == product.id);
-        if (index >= 0) {
-          final existingItem = items[index];
-          items[index] = existingItem.copyWith(
-            quantity: existingItem.quantity + quantity,
-          );
-        } else {
-          items.add(
-            CartItem(
-              product: product,
-              quantity: quantity,
-            ),
-          );
-        }
+      final existing = await _cartDao.getCartItem(product.id);
+      final newQuantity = (existing?.quantity ?? 0) + quantity;
 
-        _eventController.add(
-          CartSuccessEvent(message: '${product.title} added to cart!'),
-        );
-      }));
+      await _cartDao.insertCartItem(
+        CartItemEntity(productId: product.id, quantity: newQuantity),
+      );
+
+      _eventController.add(
+        CartSuccessEvent(message: '${product.title} added to cart!'),
+      );
+
+      return Right(await _getCurrentCart());
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to add item to cart'));
     }
@@ -56,14 +75,13 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> removeFromCart(String productId) async {
     try {
-      return Right(_updateCart((items) {
-        final removed = items.removeWhereMatching(productId);
-        if (removed) {
-          _eventController.add(
-            const CartSuccessEvent(message: 'Item removed from cart'),
-          );
-        }
-      }));
+      await _cartDao.deleteCartItem(productId);
+
+      _eventController.add(
+        const CartSuccessEvent(message: 'Item removed from cart'),
+      );
+
+      return Right(await _getCurrentCart());
     } catch (_) {
       return const Left(
         CacheFailure(message: 'Failed to remove item from cart'),
@@ -77,22 +95,21 @@ class CartRepositoryImpl implements CartRepository {
     int quantity,
   ) async {
     try {
-      final index = _cartSubject.value.items.indexWhere(
-        (item) => item.product.id == productId,
-      );
+      final existing = await _cartDao.getCartItem(productId);
 
-      if (index == -1) {
+      if (existing == null) {
         return const Left(NotFoundFailure(message: 'Item not found in cart'));
       }
 
-      return Right(_updateCart((items) {
-        if (quantity <= 0) {
-          items.removeAt(index);
-        } else {
-          final existingItem = items[index];
-          items[index] = existingItem.copyWith(quantity: quantity);
-        }
-      }));
+      if (quantity <= 0) {
+        await _cartDao.deleteCartItem(productId);
+      } else {
+        await _cartDao.updateCartItem(
+          CartItemEntity(productId: productId, quantity: quantity),
+        );
+      }
+
+      return Right(await _getCurrentCart());
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to update cart item'));
     }
@@ -101,7 +118,8 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> clearCart() async {
     try {
-      return Right(_updateCart((items) => items.clear()));
+      await _cartDao.clearCart();
+      return Right(await _getCurrentCart());
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to clear cart'));
     }
@@ -113,19 +131,8 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Stream<RepositoryEvent> eventStream() => _eventController.stream;
 
-  Cart _updateCart(void Function(List<CartItem>) mutate) {
-    final items = List<CartItem>.from(_cartSubject.value.items);
-    mutate(items);
-    final cart = Cart(items: items);
-    _cartSubject.add(cart);
-    return cart;
-  }
-}
-
-extension on List<CartItem> {
-  bool removeWhereMatching(String productId) {
-    final originalLength = length;
-    removeWhere((item) => item.product.id == productId);
-    return length != originalLength;
+  Future<Cart> _getCurrentCart() async {
+    final entities = await _cartDao.getAllCartItems();
+    return _entitiesToCart(entities);
   }
 }

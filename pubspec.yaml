@@ -34,6 +34,10 @@ dependencies:
   # Reactive utilities (BehaviorSubject)
   rxdart: ^0.27.7
 
+  # Local Database
+  floor: ^1.5.0
+  sqflite: ^2.3.0
+
   # Icons font used by CupertinoIcons
   cupertino_icons: ^1.0.8
 
@@ -45,6 +49,7 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.8
   injectable_generator: ^2.4.1
+  floor_generator: ^1.5.0
 
   # Testing
   bloc_test: ^9.1.7

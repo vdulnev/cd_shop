@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/core/blocs/app_event_bloc.dart';
+import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
@@ -34,6 +35,9 @@ final sl = GetIt.instance;
 ///
 /// Call this function in main() before runApp()
 Future<void> initDependencies() async {
+  // ===== Core (Database) =====
+  await _initDatabase();
+
   // ===== Features =====
   await _initAuthFeature();
   await _initProductFeature();
@@ -41,6 +45,12 @@ Future<void> initDependencies() async {
 
   // ===== Core (App-level) =====
   _initCoreBlocs();
+}
+
+/// Initialize database
+Future<void> _initDatabase() async {
+  final database = await AppDatabase.create();
+  sl.registerSingleton<AppDatabase>(database);
 }
 
 /// Initialize Auth feature dependencies
@@ -104,7 +114,7 @@ Future<void> _initCartFeature() async {
 
   // Repositories
   sl.registerLazySingleton<CartRepository>(
-    () => CartRepositoryImpl(),
+    () => CartRepositoryImpl(cartDao: sl<AppDatabase>().cartDao),
   );
 }
 
