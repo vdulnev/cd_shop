@@ -74,13 +74,15 @@ class _$AppDatabase extends AppDatabase {
 
   CartDao? _cartDaoInstance;
 
+  ProductDao? _productDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 2,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -97,6 +99,8 @@ class _$AppDatabase extends AppDatabase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `cart_items` (`productId` TEXT NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`productId`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `products` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `description` TEXT NOT NULL, `price` REAL NOT NULL, `imageUrl` TEXT, `genre` TEXT NOT NULL, `releaseYear` INTEGER, `stockQuantity` INTEGER NOT NULL, `isAvailable` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -107,6 +111,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   CartDao get cartDao {
     return _cartDaoInstance ??= _$CartDao(database, changeListener);
+  }
+
+  @override
+  ProductDao get productDao {
+    return _productDaoInstance ??= _$ProductDao(database, changeListener);
   }
 }
 
@@ -191,5 +200,163 @@ class _$CartDao extends CartDao {
   @override
   Future<void> updateCartItem(CartItemEntity item) async {
     await _cartItemEntityUpdateAdapter.update(item, OnConflictStrategy.replace);
+  }
+}
+
+class _$ProductDao extends ProductDao {
+  _$ProductDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _productEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'products',
+            (ProductEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'title': item.title,
+                  'artist': item.artist,
+                  'description': item.description,
+                  'price': item.price,
+                  'imageUrl': item.imageUrl,
+                  'genre': item.genre,
+                  'releaseYear': item.releaseYear,
+                  'stockQuantity': item.stockQuantity,
+                  'isAvailable': item.isAvailable ? 1 : 0
+                }),
+        _productEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'products',
+            ['id'],
+            (ProductEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'title': item.title,
+                  'artist': item.artist,
+                  'description': item.description,
+                  'price': item.price,
+                  'imageUrl': item.imageUrl,
+                  'genre': item.genre,
+                  'releaseYear': item.releaseYear,
+                  'stockQuantity': item.stockQuantity,
+                  'isAvailable': item.isAvailable ? 1 : 0
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<ProductEntity> _productEntityInsertionAdapter;
+
+  final UpdateAdapter<ProductEntity> _productEntityUpdateAdapter;
+
+  @override
+  Future<List<ProductEntity>> getAllProducts() async {
+    return _queryAdapter.queryList('SELECT * FROM products',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            artist: row['artist'] as String,
+            description: row['description'] as String,
+            price: row['price'] as double,
+            imageUrl: row['imageUrl'] as String?,
+            genre: row['genre'] as String,
+            releaseYear: row['releaseYear'] as int?,
+            stockQuantity: row['stockQuantity'] as int,
+            isAvailable: (row['isAvailable'] as int) != 0));
+  }
+
+  @override
+  Future<ProductEntity?> getProductById(String id) async {
+    return _queryAdapter.query('SELECT * FROM products WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            artist: row['artist'] as String,
+            description: row['description'] as String,
+            price: row['price'] as double,
+            imageUrl: row['imageUrl'] as String?,
+            genre: row['genre'] as String,
+            releaseYear: row['releaseYear'] as int?,
+            stockQuantity: row['stockQuantity'] as int,
+            isAvailable: (row['isAvailable'] as int) != 0),
+        arguments: [id]);
+  }
+
+  @override
+  Future<List<ProductEntity>> getProductsByGenre(String genre) async {
+    return _queryAdapter.queryList('SELECT * FROM products WHERE genre = ?1',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            artist: row['artist'] as String,
+            description: row['description'] as String,
+            price: row['price'] as double,
+            imageUrl: row['imageUrl'] as String?,
+            genre: row['genre'] as String,
+            releaseYear: row['releaseYear'] as int?,
+            stockQuantity: row['stockQuantity'] as int,
+            isAvailable: (row['isAvailable'] as int) != 0),
+        arguments: [genre]);
+  }
+
+  @override
+  Future<List<ProductEntity>> searchProducts(String query) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM products     WHERE title LIKE ?1     OR artist LIKE ?1     OR description LIKE ?1',
+        mapper: (Map<String, Object?> row) => ProductEntity(id: row['id'] as String, title: row['title'] as String, artist: row['artist'] as String, description: row['description'] as String, price: row['price'] as double, imageUrl: row['imageUrl'] as String?, genre: row['genre'] as String, releaseYear: row['releaseYear'] as int?, stockQuantity: row['stockQuantity'] as int, isAvailable: (row['isAvailable'] as int) != 0),
+        arguments: [query]);
+  }
+
+  @override
+  Future<List<ProductEntity>> getFeaturedProducts(int limit) async {
+    return _queryAdapter.queryList('SELECT * FROM products LIMIT ?1',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            artist: row['artist'] as String,
+            description: row['description'] as String,
+            price: row['price'] as double,
+            imageUrl: row['imageUrl'] as String?,
+            genre: row['genre'] as String,
+            releaseYear: row['releaseYear'] as int?,
+            stockQuantity: row['stockQuantity'] as int,
+            isAvailable: (row['isAvailable'] as int) != 0),
+        arguments: [limit]);
+  }
+
+  @override
+  Future<int?> getProductCount() async {
+    return _queryAdapter.query('SELECT COUNT(*) FROM products',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM products WHERE id = ?1', arguments: [id]);
+  }
+
+  @override
+  Future<void> clearProducts() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM products');
+  }
+
+  @override
+  Future<void> insertProduct(ProductEntity product) async {
+    await _productEntityInsertionAdapter.insert(
+        product, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> insertProducts(List<ProductEntity> products) async {
+    await _productEntityInsertionAdapter.insertList(
+        products, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> updateProduct(ProductEntity product) async {
+    await _productEntityUpdateAdapter.update(
+        product, OnConflictStrategy.replace);
   }
 }

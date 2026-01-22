@@ -2,18 +2,44 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 
+import 'package:cd_shop/core/database/daos/product_dao.dart';
+import 'package:cd_shop/core/database/entities/product_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
-/// Implementation of ProductRepository using mock data
+/// Floor database implementation of ProductRepository
+///
+/// Persists products to SQLite using Floor.
+/// Seeds database with mock data on first launch.
 class ProductRepositoryImpl implements ProductRepository {
-  ProductRepositoryImpl();
+  ProductRepositoryImpl({
+    required ProductDao productDao,
+  }) : _productDao = productDao;
+
+  final ProductDao _productDao;
+  bool _isInitialized = false;
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _eventController = StreamController<RepositoryEvent>.broadcast();
+
+  /// Ensure database is seeded with mock data on first access
+  Future<void> _ensureInitialized() async {
+    if (_isInitialized) return;
+
+    final count = await _productDao.getProductCount() ?? 0;
+    if (count == 0) {
+      // Seed database with mock data
+      final mockProducts = ProductMockDataSource.getAll();
+      final entities = mockProducts.map(ProductEntity.fromDomain).toList();
+      await _productDao.insertProducts(entities);
+    }
+
+    _isInitialized = true;
+  }
+
   @override
   Future<Either<Failure, List<Product>>> getProducts({
     ProductGenre? genre,
@@ -22,18 +48,19 @@ class ProductRepositoryImpl implements ProductRepository {
     int? offset,
   }) async {
     try {
-      // Simulate network delay
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await _ensureInitialized();
 
-      List<Product> results = ProductMockDataSource.getAll();
+      List<ProductEntity> entities;
 
       if (genre != null) {
-        results = results.where((p) => p.genre == genre).toList();
+        entities = await _productDao.getProductsByGenre(genre.name);
+      } else if (searchQuery != null && searchQuery.isNotEmpty) {
+        entities = await _productDao.searchProducts('%$searchQuery%');
+      } else {
+        entities = await _productDao.getAllProducts();
       }
 
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        results = ProductMockDataSource.search(searchQuery);
-      }
+      List<Product> results = entities.map((e) => e.toDomain()).toList();
 
       if (offset != null && offset > 0) {
         results = results.skip(offset).toList();
@@ -52,15 +79,15 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, Product>> getProductById(String id) async {
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await _ensureInitialized();
 
-      final product = ProductMockDataSource.getById(id);
+      final entity = await _productDao.getProductById(id);
 
-      if (product == null) {
+      if (entity == null) {
         return const Left(NotFoundFailure(message: 'Product not found'));
       }
 
-      return Right(product);
+      return Right(entity.toDomain());
     } catch (e) {
       return const Left(ServerFailure(message: 'Failed to load product'));
     }
@@ -69,9 +96,11 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, List<Product>>> searchProducts(String query) async {
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await _ensureInitialized();
 
-      final results = ProductMockDataSource.search(query);
+      final entities = await _productDao.searchProducts('%$query%');
+      final results = entities.map((e) => e.toDomain()).toList();
+
       return Right(results);
     } catch (e) {
       return const Left(ServerFailure(message: 'Search failed'));
@@ -83,9 +112,11 @@ class ProductRepositoryImpl implements ProductRepository {
     ProductGenre genre,
   ) async {
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await _ensureInitialized();
 
-      final results = ProductMockDataSource.getByGenre(genre);
+      final entities = await _productDao.getProductsByGenre(genre.name);
+      final results = entities.map((e) => e.toDomain()).toList();
+
       return Right(results);
     } catch (e) {
       return const Left(ServerFailure(message: 'Failed to load products'));
@@ -95,10 +126,11 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, List<Product>>> getFeaturedProducts() async {
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await _ensureInitialized();
 
-      // Return first 6 products as featured
-      final results = ProductMockDataSource.getAll().take(6).toList();
+      final entities = await _productDao.getFeaturedProducts(6);
+      final results = entities.map((e) => e.toDomain()).toList();
+
       return Right(results);
     } catch (e) {
       return const Left(ServerFailure(message: 'Failed to load products'));

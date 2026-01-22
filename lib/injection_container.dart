@@ -88,7 +88,7 @@ Future<void> _initProductFeature() async {
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(),
+    () => ProductRepositoryImpl(productDao: sl<AppDatabase>().productDao),
   );
 }
 
