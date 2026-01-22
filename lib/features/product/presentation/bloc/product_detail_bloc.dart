@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 
+import '../../../../core/error/failures.dart';
+
 // Events
 sealed class ProductDetailEvent extends Equatable {
   const ProductDetailEvent();
@@ -81,7 +83,7 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
 
     result.fold(
       (failure) {
-        if (failure.message.contains('not found')) {
+        if (failure is NotFoundFailure) {
           emit(const ProductDetailNotFound());
         } else {
           emit(ProductDetailError(failure.message));
