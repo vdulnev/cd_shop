@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
@@ -13,21 +14,13 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Uses a simple in-memory map to store cart items.
 /// In a real app, this would persist to local storage or a backend.
 class CartRepositoryImpl implements CartRepository {
-  CartRepositoryImpl();
+  CartRepositoryImpl() : _cartSubject = BehaviorSubject<Cart>.seeded(const Cart());
 
-  /// In-memory storage: productId -> CartItem
-  final Map<String, CartItem> _cartItems = {};
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _eventController = StreamController<RepositoryEvent>.broadcast();
 
-  @override
-  Future<Either<Failure, Cart>> getCart() async {
-    try {
-      return Right(Cart(items: _cartItems.values.toList()));
-    } catch (e) {
-      return const Left(CacheFailure(message: 'Failed to load cart'));
-    }
-  }
+  // ignore: close_sinks - singleton repository, lives for app lifetime
+  final BehaviorSubject<Cart> _cartSubject;
 
   @override
   Future<Either<Failure, Cart>> addToCart(
@@ -35,26 +28,27 @@ class CartRepositoryImpl implements CartRepository {
     int quantity = 1,
   }) async {
     try {
-      final existingItem = _cartItems[product.id];
+      return Right(_updateCart((items) {
+        final index = items.indexWhere((item) => item.product.id == product.id);
+        if (index >= 0) {
+          final existingItem = items[index];
+          items[index] = existingItem.copyWith(
+            quantity: existingItem.quantity + quantity,
+          );
+        } else {
+          items.add(
+            CartItem(
+              product: product,
+              quantity: quantity,
+            ),
+          );
+        }
 
-      if (existingItem != null) {
-        // Update quantity if item already exists
-        _cartItems[product.id] = existingItem.copyWith(
-          quantity: existingItem.quantity + quantity,
+        _eventController.add(
+          CartSuccessEvent(message: '${product.title} added to cart!'),
         );
-      } else {
-        // Add new item
-        _cartItems[product.id] = CartItem(
-          product: product,
-          quantity: quantity,
-        );
-      }
-
-      _eventController.add(
-        CartSuccessEvent(message: '${product.title} added to cart!'),
-      );
-      return Right(Cart(items: _cartItems.values.toList()));
-    } catch (e) {
+      }));
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to add item to cart'));
     }
   }
@@ -62,14 +56,15 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> removeFromCart(String productId) async {
     try {
-      final removedItem = _cartItems.remove(productId);
-      if (removedItem != null) {
-        _eventController.add(
-          const CartSuccessEvent(message: 'Item removed from cart'),
-        );
-      }
-      return Right(Cart(items: _cartItems.values.toList()));
-    } catch (e) {
+      return Right(_updateCart((items) {
+        final removed = items.removeWhereMatching(productId);
+        if (removed) {
+          _eventController.add(
+            const CartSuccessEvent(message: 'Item removed from cart'),
+          );
+        }
+      }));
+    } catch (_) {
       return const Left(
         CacheFailure(message: 'Failed to remove item from cart'),
       );
@@ -82,21 +77,23 @@ class CartRepositoryImpl implements CartRepository {
     int quantity,
   ) async {
     try {
-      final existingItem = _cartItems[productId];
+      final index = _cartSubject.value.items.indexWhere(
+        (item) => item.product.id == productId,
+      );
 
-      if (existingItem == null) {
+      if (index == -1) {
         return const Left(NotFoundFailure(message: 'Item not found in cart'));
       }
 
-      if (quantity <= 0) {
-        // Remove item if quantity is 0 or less
-        _cartItems.remove(productId);
-      } else {
-        _cartItems[productId] = existingItem.copyWith(quantity: quantity);
-      }
-
-      return Right(Cart(items: _cartItems.values.toList()));
-    } catch (e) {
+      return Right(_updateCart((items) {
+        if (quantity <= 0) {
+          items.removeAt(index);
+        } else {
+          final existingItem = items[index];
+          items[index] = existingItem.copyWith(quantity: quantity);
+        }
+      }));
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to update cart item'));
     }
   }
@@ -104,13 +101,31 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> clearCart() async {
     try {
-      _cartItems.clear();
-      return const Right(Cart());
-    } catch (e) {
+      return Right(_updateCart((items) => items.clear()));
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to clear cart'));
     }
   }
 
   @override
+  Stream<Cart> watchCart() => _cartSubject.stream;
+
+  @override
   Stream<RepositoryEvent> eventStream() => _eventController.stream;
+
+  Cart _updateCart(void Function(List<CartItem>) mutate) {
+    final items = List<CartItem>.from(_cartSubject.value.items);
+    mutate(items);
+    final cart = Cart(items: items);
+    _cartSubject.add(cart);
+    return cart;
+  }
+}
+
+extension on List<CartItem> {
+  bool removeWhereMatching(String productId) {
+    final originalLength = length;
+    removeWhere((item) => item.product.id == productId);
+    return length != originalLength;
+  }
 }

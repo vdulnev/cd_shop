@@ -14,9 +14,9 @@ import 'package:cd_shop/features/cart/data/repositories/cart_repository_impl.dar
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
-import 'package:cd_shop/features/cart/domain/usecases/get_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
+import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
 import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
@@ -87,20 +87,20 @@ Future<void> _initCartFeature() async {
   // Bloc - registered as singleton so cart state persists across pages
   sl.registerFactory(
     () => CartBloc(
-      getCart: sl(),
       addToCart: sl(),
       removeFromCart: sl(),
       updateCartQuantity: sl(),
       clearCart: sl(),
+      watchCart: sl(),
     ),
   );
 
   // Use Cases
-  sl.registerLazySingleton(() => GetCart(sl()));
   sl.registerLazySingleton(() => AddToCart(sl()));
   sl.registerLazySingleton(() => RemoveFromCart(sl()));
   sl.registerLazySingleton(() => UpdateCartQuantity(sl()));
   sl.registerLazySingleton(() => ClearCart(sl()));
+  sl.registerLazySingleton(() => WatchCart(sl()));
 
   // Repositories
   sl.registerLazySingleton<CartRepository>(

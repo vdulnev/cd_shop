@@ -10,9 +10,6 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// This interface defines the contract for cart data operations.
 /// Implementations can be swapped for testing or different data sources.
 abstract class CartRepository {
-  /// Get the current cart
-  Future<Either<Failure, Cart>> getCart();
-
   /// Add a product to the cart or increase quantity if already exists
   Future<Either<Failure, Cart>> addToCart(Product product, {int quantity = 1});
 
@@ -24,6 +21,9 @@ abstract class CartRepository {
 
   /// Clear all items from the cart
   Future<Either<Failure, Cart>> clearCart();
+
+  /// Watch the cart for real-time updates
+  Stream<Cart> watchCart();
 
   /// Stream of repository-level events for UI notifications
   Stream<RepositoryEvent> eventStream();

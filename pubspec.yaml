@@ -31,6 +31,9 @@ dependencies:
   # Stream utilities used in ProductSearchBloc (debounce/switchMap)
   stream_transform: ^2.1.0
 
+  # Reactive utilities (BehaviorSubject)
+  rxdart: ^0.27.7
+
   # Icons font used by CupertinoIcons
   cupertino_icons: ^1.0.8
 
