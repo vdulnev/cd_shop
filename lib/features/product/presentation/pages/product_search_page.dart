@@ -67,12 +67,6 @@ class _ProductSearchViewState extends State<_ProductSearchView> {
           ),
           onChanged: _onSearchChanged,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: BlocBuilder<ProductSearchBloc, ProductSearchState>(
         builder: (context, state) {
