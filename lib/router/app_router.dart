@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cd_shop/features/auth/presentation/pages/account_page.dart';
-import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
-import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
-import 'package:cd_shop/features/cart/presentation/pages/cart_page.dart';
-import 'package:cd_shop/features/cart/presentation/pages/checkout_page.dart';
+import 'package:cd_shop/features/auth/presentation/routes/auth_routes.dart';
+import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
+import 'package:cd_shop/features/product/presentation/routes/product_routes.dart';
 import 'package:cd_shop/main_page.dart';
-import 'package:cd_shop/features/product/presentation/pages/product_detail_page.dart';
-import 'package:cd_shop/features/product/presentation/pages/product_list_page.dart';
-import 'package:cd_shop/features/product/presentation/pages/product_search_page.dart';
 
-/// Application route paths
+/// Application route paths (re-exports feature routes for convenience)
 class AppRoutes {
   AppRoutes._();
 
-  static const String home = '/';
-  static const String products = '/products';
-  static const String productDetail = '/products/:id';
-  static const String search = '/search';
-  static const String account = '/account';
-  static const String login = '/account/login';
-  static const String register = '/account/register';
-  static const String cart = '/cart';
-  static const String checkout = '/checkout';
+  // Product routes
+  static const String home = ProductRoutes.home;
+  static const String products = ProductRoutes.products;
+  static const String productDetail = ProductRoutes.productDetail;
+  static const String search = ProductRoutes.search;
+
+  // Cart routes
+  static const String cart = CartRoutes.cart;
+  static const String checkout = CartRoutes.checkout;
+
+  // Auth routes
+  static const String account = AuthRoutes.account;
+  static const String login = AuthRoutes.login;
+  static const String register = AuthRoutes.register;
 }
 
 /// Application router configuration using go_router
@@ -39,85 +39,10 @@ class AppRouter {
           return MainPage(navigationShell: navigationShell);
         },
         branches: [
-          // Products tab
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.home,
-                name: 'home',
-                builder: (context, state) => const ProductListPage(),
-                routes: [
-                  GoRoute(
-                    path: 'products/:id',
-                    name: 'productDetail',
-                    builder: (context, state) {
-                      final productId = state.pathParameters['id'] ?? '';
-                      return ProductDetailPage(productId: productId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Search tab
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.search,
-                name: 'search',
-                builder: (context, state) => const ProductSearchPage(),
-                routes: [
-                  GoRoute(
-                    path: 'products/:id',
-                    name: 'searchProductDetail',
-                    builder: (context, state) {
-                      final productId = state.pathParameters['id'] ?? '';
-                      return ProductDetailPage(productId: productId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Cart tab
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.cart,
-                name: 'cart',
-                builder: (context, state) => const CartPage(),
-                routes: [
-                  GoRoute(
-                    path: 'checkout',
-                    name: 'checkout',
-                    builder: (context, state) => const CheckoutPage(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Account tab
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.account,
-                name: 'account',
-                builder: (context, state) => const AccountPage(),
-                routes: [
-                  GoRoute(
-                    path: 'login',
-                    name: 'login',
-                    builder: (context, state) => const LoginPage(),
-                  ),
-                  GoRoute(
-                    path: 'register',
-                    name: 'register',
-                    builder: (context, state) => const RegistrationPage(),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          productBranch(),
+          searchBranch(),
+          cartBranch(),
+          accountBranch(),
         ],
       ),
     ],
