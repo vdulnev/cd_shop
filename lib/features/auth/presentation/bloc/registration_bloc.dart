@@ -52,15 +52,6 @@ class RegistrationSuccess extends RegistrationState {
   List<Object?> get props => [user];
 }
 
-class RegistrationFailure extends RegistrationState {
-  const RegistrationFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
 // Bloc
 class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
   RegistrationBloc({required RegisterUser registerUser})
@@ -86,7 +77,7 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
     );
 
     result.fold(
-      (failure) => emit(RegistrationFailure(failure.message)),
+      (failure) => emit(const RegistrationInitial()),
       (user) => emit(RegistrationSuccess(user)),
     );
   }

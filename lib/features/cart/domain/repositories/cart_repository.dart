@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
@@ -23,4 +24,7 @@ abstract class CartRepository {
 
   /// Clear all items from the cart
   Future<Either<Failure, Cart>> clearCart();
+
+  /// Stream of repository-level events for UI notifications
+  Stream<RepositoryEvent> eventStream();
 }

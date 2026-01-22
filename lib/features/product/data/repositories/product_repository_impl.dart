@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
 /// Implementation of ProductRepository using mock data
 class ProductRepositoryImpl implements ProductRepository {
+  ProductRepositoryImpl();
+
+  // ignore: close_sinks - singleton repository, lives for app lifetime
+  final _eventController = StreamController<RepositoryEvent>.broadcast();
   @override
   Future<Either<Failure, List<Product>>> getProducts({
     ProductGenre? genre,
@@ -97,4 +104,7 @@ class ProductRepositoryImpl implements ProductRepository {
       return const Left(ServerFailure(message: 'Failed to load products'));
     }
   }
+
+  @override
+  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }

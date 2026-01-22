@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
@@ -18,4 +19,7 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> logout();
 
   Future<Either<Failure, User?>> getCurrentUser();
+
+  /// Stream of repository-level events for UI notifications
+  Stream<RepositoryEvent> eventStream();
 }

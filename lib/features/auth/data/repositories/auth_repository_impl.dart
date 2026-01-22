@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
+  AuthRepositoryImpl();
+
   final Map<String, _MockUser> _registeredUsers = {};
   User? _currentUser;
+  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   @override
   Future<Either<Failure, User>> register({
@@ -48,6 +54,7 @@ class AuthRepositoryImpl implements AuthRepository {
     );
 
     _currentUser = user;
+    _eventController.add(AuthSuccessEvent(message: 'Welcome, $name!'));
     return Right(user);
   }
 
@@ -60,10 +67,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final mockUser = _registeredUsers[email];
     if (mockUser == null || mockUser.password != password) {
+      _eventController.add(
+        const AuthErrorEvent(message: 'Invalid email or password'),
+      );
       return const Left(AuthFailure(message: 'Invalid email or password'));
     }
 
     _currentUser = mockUser.user;
+    _eventController.add(
+      AuthSuccessEvent(message: 'Welcome back, ${mockUser.user.name}!'),
+    );
     return Right(mockUser.user);
   }
 
@@ -78,6 +91,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User?>> getCurrentUser() async {
     return Right(_currentUser);
   }
+
+  @override
+  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }
 
 class _MockUser {

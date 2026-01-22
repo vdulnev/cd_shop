@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
-import 'package:cd_shop/core/widgets/snackbar_helper.dart';
 import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
@@ -260,16 +259,6 @@ class _AddToCartBar extends StatelessWidget {
                 onPressed: product.isInStock
                     ? () {
                         sl<CartBloc>().add(CartItemAdded(product));
-                        showSuccessSnackBar(
-                          context,
-                          message: '${product.title} added to cart!',
-                          action: SnackBarAction(
-                            label: 'UNDO',
-                            onPressed: () {
-                              sl<CartBloc>().add(CartItemRemoved(product.id));
-                            },
-                          ),
-                        );
                       }
                     : null,
                 icon: const Icon(Icons.add_shopping_cart),

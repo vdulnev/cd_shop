@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/core/widgets/app_event_widget.dart';
 import 'package:cd_shop/features/auth/presentation/routes/auth_routes.dart';
 import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
 import 'package:cd_shop/features/product/presentation/routes/product_routes.dart';
@@ -36,7 +37,9 @@ class AppRouter {
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return MainPage(navigationShell: navigationShell);
+          return AppEventWidget(
+            child: MainPage(navigationShell: navigationShell),
+          );
         },
         branches: [
           productBranch(),

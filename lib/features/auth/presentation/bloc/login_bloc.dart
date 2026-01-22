@@ -50,15 +50,6 @@ class LoginSuccess extends LoginState {
   List<Object?> get props => [user];
 }
 
-class LoginFailure extends LoginState {
-  const LoginFailure(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
 // Bloc
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc({required LoginUser loginUser})
@@ -83,7 +74,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     );
 
     result.fold(
-      (failure) => emit(LoginFailure(failure.message)),
+      (failure) => emit(const LoginInitial()),
       (user) => emit(LoginSuccess(user)),
     );
   }

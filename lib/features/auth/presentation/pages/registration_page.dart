@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cd_shop/core/widgets/snackbar_helper.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/registration_bloc.dart';
 import 'package:cd_shop/injection_container.dart';
 
@@ -61,18 +60,9 @@ class _RegistrationViewState extends State<_RegistrationView> {
       body: BlocConsumer<RegistrationBloc, RegistrationState>(
         listener: (context, state) {
           if (state is RegistrationSuccess) {
-            showSuccessSnackBar(
-              context,
-              message: 'Welcome, ${state.user.name}!',
-            );
             // Pop back to login, then to account
             context.pop();
             context.pop();
-          } else if (state is RegistrationFailure) {
-            showErrorSnackBar(
-              context,
-              message: state.message,
-            );
           }
         },
         builder: (context, state) {

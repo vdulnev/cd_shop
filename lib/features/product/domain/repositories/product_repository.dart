@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
 /// Abstract repository interface for Product feature
@@ -27,4 +28,7 @@ abstract class ProductRepository {
 
   /// Get featured/recommended products
   Future<Either<Failure, List<Product>>> getFeaturedProducts();
+
+  /// Stream of repository-level events for UI notifications
+  Stream<RepositoryEvent> eventStream();
 }

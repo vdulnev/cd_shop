@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 
+import 'package:cd_shop/core/blocs/app_event_bloc.dart';
 import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
@@ -37,6 +38,9 @@ Future<void> initDependencies() async {
   await _initAuthFeature();
   await _initProductFeature();
   await _initCartFeature();
+
+  // ===== Core (App-level) =====
+  _initCoreBlocs();
 }
 
 /// Initialize Auth feature dependencies
@@ -101,5 +105,16 @@ Future<void> _initCartFeature() async {
   // Repositories
   sl.registerLazySingleton<CartRepository>(
     () => CartRepositoryImpl(),
+  );
+}
+
+/// Initialize core (app-level) BLoCs
+void _initCoreBlocs() {
+  sl.registerFactory(
+    () => AppEventBloc(
+      authRepository: sl(),
+      cartRepository: sl(),
+      productRepository: sl(),
+    ),
   );
 }

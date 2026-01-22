@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
@@ -14,6 +17,8 @@ class CartRepositoryImpl implements CartRepository {
 
   /// In-memory storage: productId -> CartItem
   final Map<String, CartItem> _cartItems = {};
+  // ignore: close_sinks - singleton repository, lives for app lifetime
+  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   @override
   Future<Either<Failure, Cart>> getCart() async {
@@ -45,6 +50,9 @@ class CartRepositoryImpl implements CartRepository {
         );
       }
 
+      _eventController.add(
+        CartSuccessEvent(message: '${product.title} added to cart!'),
+      );
       return Right(Cart(items: _cartItems.values.toList()));
     } catch (e) {
       return const Left(CacheFailure(message: 'Failed to add item to cart'));
@@ -54,7 +62,12 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> removeFromCart(String productId) async {
     try {
-      _cartItems.remove(productId);
+      final removedItem = _cartItems.remove(productId);
+      if (removedItem != null) {
+        _eventController.add(
+          const CartSuccessEvent(message: 'Item removed from cart'),
+        );
+      }
       return Right(Cart(items: _cartItems.values.toList()));
     } catch (e) {
       return const Left(
@@ -97,4 +110,7 @@ class CartRepositoryImpl implements CartRepository {
       return const Left(CacheFailure(message: 'Failed to clear cart'));
     }
   }
+
+  @override
+  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }
