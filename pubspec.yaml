@@ -38,6 +38,9 @@ dependencies:
   floor: ^1.5.0
   sqflite: ^2.3.0
 
+  # Cryptography
+  crypto: ^3.0.3
+
   # Icons font used by CupertinoIcons
   cupertino_icons: ^1.0.8
 

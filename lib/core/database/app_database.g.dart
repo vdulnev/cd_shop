@@ -76,13 +76,15 @@ class _$AppDatabase extends AppDatabase {
 
   ProductDao? _productDaoInstance;
 
+  UserDao? _userDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 2,
+      version: 3,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -101,6 +103,10 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `cart_items` (`productId` TEXT NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`productId`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `products` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `description` TEXT NOT NULL, `price` REAL NOT NULL, `imageUrl` TEXT, `genre` TEXT NOT NULL, `releaseYear` INTEGER, `stockQuantity` INTEGER NOT NULL, `isAvailable` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `users` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT, `passwordHash` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `current_session` (`id` INTEGER NOT NULL, `userId` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -116,6 +122,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   ProductDao get productDao {
     return _productDaoInstance ??= _$ProductDao(database, changeListener);
+  }
+
+  @override
+  UserDao get userDao {
+    return _userDaoInstance ??= _$UserDao(database, changeListener);
   }
 }
 
@@ -358,5 +369,108 @@ class _$ProductDao extends ProductDao {
   Future<void> updateProduct(ProductEntity product) async {
     await _productEntityUpdateAdapter.update(
         product, OnConflictStrategy.replace);
+  }
+}
+
+class _$UserDao extends UserDao {
+  _$UserDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _userEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'users',
+            (UserEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'email': item.email,
+                  'name': item.name,
+                  'avatarUrl': item.avatarUrl,
+                  'passwordHash': item.passwordHash
+                }),
+        _sessionEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'current_session',
+            (SessionEntity item) =>
+                <String, Object?>{'id': item.id, 'userId': item.userId}),
+        _userEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'users',
+            ['id'],
+            (UserEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'email': item.email,
+                  'name': item.name,
+                  'avatarUrl': item.avatarUrl,
+                  'passwordHash': item.passwordHash
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<UserEntity> _userEntityInsertionAdapter;
+
+  final InsertionAdapter<SessionEntity> _sessionEntityInsertionAdapter;
+
+  final UpdateAdapter<UserEntity> _userEntityUpdateAdapter;
+
+  @override
+  Future<UserEntity?> getUserByEmail(String email) async {
+    return _queryAdapter.query('SELECT * FROM users WHERE email = ?1',
+        mapper: (Map<String, Object?> row) => UserEntity(
+            id: row['id'] as String,
+            email: row['email'] as String,
+            name: row['name'] as String,
+            avatarUrl: row['avatarUrl'] as String?,
+            passwordHash: row['passwordHash'] as String),
+        arguments: [email]);
+  }
+
+  @override
+  Future<UserEntity?> getUserById(String id) async {
+    return _queryAdapter.query('SELECT * FROM users WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => UserEntity(
+            id: row['id'] as String,
+            email: row['email'] as String,
+            name: row['name'] as String,
+            avatarUrl: row['avatarUrl'] as String?,
+            passwordHash: row['passwordHash'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteUser(String id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM users WHERE id = ?1', arguments: [id]);
+  }
+
+  @override
+  Future<SessionEntity?> getCurrentSession() async {
+    return _queryAdapter.query('SELECT * FROM current_session WHERE id = 1',
+        mapper: (Map<String, Object?> row) => SessionEntity(
+            id: row['id'] as int, userId: row['userId'] as String));
+  }
+
+  @override
+  Future<void> clearSession() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM current_session');
+  }
+
+  @override
+  Future<void> insertUser(UserEntity user) async {
+    await _userEntityInsertionAdapter.insert(user, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> setCurrentSession(SessionEntity session) async {
+    await _sessionEntityInsertionAdapter.insert(
+        session, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> updateUser(UserEntity user) async {
+    await _userEntityUpdateAdapter.update(user, OnConflictStrategy.replace);
   }
 }

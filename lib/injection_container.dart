@@ -70,7 +70,7 @@ Future<void> _initAuthFeature() async {
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(),
+    () => AuthRepositoryImpl(userDao: sl<AppDatabase>().userDao),
   );
 }
 
