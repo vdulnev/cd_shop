@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/core/widgets/snackbar_helper.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:cd_shop/injection_container.dart';
 
@@ -57,20 +58,16 @@ class _LoginViewState extends State<_LoginView> {
       body: BlocConsumer<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Welcome back, ${state.user.name}!'),
-                backgroundColor: Colors.green,
-              ),
+            showSuccessSnackBar(
+              context,
+              message: 'Welcome back, ${state.user.name}!',
             );
             // Pop back to account page which will reload
             context.pop();
           } else if (state is LoginFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
+            showErrorSnackBar(
+              context,
+              message: state.message,
             );
           }
         },
