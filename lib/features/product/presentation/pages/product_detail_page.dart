@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
+import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
 import 'package:cd_shop/injection_container.dart';
@@ -257,6 +258,7 @@ class _AddToCartBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: product.isInStock
                     ? () {
+                        sl<CartBloc>().add(CartItemAdded(product));
                         final messenger = ScaffoldMessenger.of(context);
                         messenger.clearSnackBars();
                         messenger.showSnackBar(
@@ -266,7 +268,9 @@ class _AddToCartBar extends StatelessWidget {
                             duration: const Duration(seconds: 2),
                             action: SnackBarAction(
                               label: 'UNDO',
-                              onPressed: () {},
+                              onPressed: () {
+                                sl<CartBloc>().add(CartItemRemoved(product.id));
+                              },
                             ),
                           ),
                         );
