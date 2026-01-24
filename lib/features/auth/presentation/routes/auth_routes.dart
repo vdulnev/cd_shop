@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/features/address/presentation/routes/address_routes.dart';
 import 'package:cd_shop/features/auth/presentation/pages/account_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/login_page.dart';
 import 'package:cd_shop/features/auth/presentation/pages/registration_page.dart';
@@ -31,6 +32,7 @@ StatefulShellBranch accountBranch() => StatefulShellBranch(
               name: 'register',
               builder: (context, state) => const RegistrationPage(),
             ),
+            ...addressRoutes(),
           ],
         ),
       ],

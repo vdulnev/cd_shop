@@ -135,5 +135,24 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> setDefaultAddress(String? addressId) async {
+    try {
+      final session = await _userDao.getCurrentSession();
+      if (session == null) {
+        return const Left(AuthFailure(message: 'Not logged in'));
+      }
+
+      if (addressId != null) {
+        await _userDao.setDefaultAddress(session.userId, addressId);
+      } else {
+        await _userDao.clearDefaultAddress(session.userId);
+      }
+      return const Right(null);
+    } catch (e) {
+      return const Left(ServerFailure(message: 'Failed to set default address'));
+    }
+  }
+
+  @override
   Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }

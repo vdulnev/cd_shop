@@ -32,3 +32,13 @@ class ProductErrorEvent extends RepositoryEvent {
   const ProductErrorEvent({required this.message});
   final String message;
 }
+
+class AddressSuccessEvent extends RepositoryEvent {
+  const AddressSuccessEvent({required this.message});
+  final String message;
+}
+
+class AddressErrorEvent extends RepositoryEvent {
+  const AddressErrorEvent({required this.message});
+  final String message;
+}

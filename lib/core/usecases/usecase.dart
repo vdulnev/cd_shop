@@ -12,6 +12,11 @@ abstract class UseCase<T, Params> {
   Future<Either<Failure, T>> call(Params params);
 }
 
+/// Base class for stream-based use cases.
+abstract class StreamUseCase<T, Params> {
+  Stream<T> call(Params params);
+}
+
 /// Use this class when a use case doesn't require any parameters.
 class NoParams extends Equatable {
   const NoParams();

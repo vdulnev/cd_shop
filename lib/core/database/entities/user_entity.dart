@@ -11,6 +11,7 @@ class UserEntity {
     required this.name,
     this.avatarUrl,
     required this.passwordHash,
+    this.defaultAddressId,
   });
 
   /// Convert from domain entity to database entity
@@ -21,6 +22,7 @@ class UserEntity {
       name: user.name,
       avatarUrl: user.avatarUrl,
       passwordHash: passwordHash,
+      defaultAddressId: user.defaultAddressId,
     );
   }
 
@@ -32,6 +34,9 @@ class UserEntity {
   final String? avatarUrl;
   final String passwordHash;
 
+  @ColumnInfo(name: 'default_address_id')
+  final String? defaultAddressId;
+
   /// Convert to domain entity
   User toDomain() {
     return User(
@@ -39,6 +44,7 @@ class UserEntity {
       email: email,
       name: name,
       avatarUrl: avatarUrl,
+      defaultAddressId: defaultAddressId,
     );
   }
 }

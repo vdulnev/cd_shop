@@ -2,12 +2,20 @@ import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/core/blocs/app_event_bloc.dart';
 import 'package:cd_shop/core/database/app_database.dart';
+import 'package:cd_shop/features/address/data/repositories/address_repository_impl.dart';
+import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
+import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
+import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
+import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
+import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
+import 'package:cd_shop/features/address/presentation/bloc/address_bloc.dart';
 import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
+import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/account_bloc.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/login_bloc.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/registration_bloc.dart';
@@ -42,6 +50,7 @@ Future<void> initDependencies() async {
   await _initAuthFeature();
   await _initProductFeature();
   await _initCartFeature();
+  await _initAddressFeature();
 
   // ===== Core (App-level) =====
   _initCoreBlocs();
@@ -67,6 +76,7 @@ Future<void> _initAuthFeature() async {
   sl.registerLazySingleton(() => LoginUser(sl()));
   sl.registerLazySingleton(() => LogoutUser(sl()));
   sl.registerLazySingleton(() => RegisterUser(sl()));
+  sl.registerLazySingleton(() => SetDefaultAddress(sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -118,10 +128,37 @@ Future<void> _initCartFeature() async {
   );
 }
 
+/// Initialize Address feature dependencies
+Future<void> _initAddressFeature() async {
+  // Bloc
+  sl.registerFactory(
+    () => AddressBloc(
+      getCurrentUser: sl(),
+      getAddresses: sl(),
+      addAddress: sl(),
+      updateAddress: sl(),
+      deleteAddress: sl(),
+      setDefaultAddress: sl(),
+    ),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => WatchAddresses(sl()));
+  sl.registerLazySingleton(() => AddAddress(sl()));
+  sl.registerLazySingleton(() => UpdateAddress(sl()));
+  sl.registerLazySingleton(() => DeleteAddress(sl()));
+
+  // Repositories
+  sl.registerLazySingleton<AddressRepository>(
+    () => AddressRepositoryImpl(sl<AppDatabase>().addressDao),
+  );
+}
+
 /// Initialize core (app-level) BLoCs
 void _initCoreBlocs() {
   sl.registerFactory(
     () => AppEventBloc(
+      addressRepository: sl(),
       authRepository: sl(),
       cartRepository: sl(),
       productRepository: sl(),

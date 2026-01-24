@@ -121,7 +121,7 @@ class _AuthenticatedView extends StatelessWidget {
             _AccountMenuItem(
               icon: Icons.location_on_outlined,
               title: 'Addresses',
-              onTap: () {},
+              onTap: () => context.push('/account/addresses'),
             ),
             _AccountMenuItem(
               icon: Icons.settings_outlined,

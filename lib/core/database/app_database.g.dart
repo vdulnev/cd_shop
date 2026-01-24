@@ -78,13 +78,15 @@ class _$AppDatabase extends AppDatabase {
 
   UserDao? _userDaoInstance;
 
+  AddressDao? _addressDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 3,
+      version: 5,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -104,9 +106,11 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `products` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `description` TEXT NOT NULL, `price` REAL NOT NULL, `imageUrl` TEXT, `genre` TEXT NOT NULL, `releaseYear` INTEGER, `stockQuantity` INTEGER NOT NULL, `isAvailable` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `users` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT, `passwordHash` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `users` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUrl` TEXT, `passwordHash` TEXT NOT NULL, `default_address_id` TEXT, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `current_session` (`id` INTEGER NOT NULL, `userId` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `addresses` (`id` TEXT NOT NULL, `user_id` TEXT NOT NULL, `name` TEXT NOT NULL, `street` TEXT NOT NULL, `city` TEXT NOT NULL, `state` TEXT NOT NULL, `zip_code` TEXT NOT NULL, `country` TEXT NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -127,6 +131,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   UserDao get userDao {
     return _userDaoInstance ??= _$UserDao(database, changeListener);
+  }
+
+  @override
+  AddressDao get addressDao {
+    return _addressDaoInstance ??= _$AddressDao(database, changeListener);
   }
 }
 
@@ -385,7 +394,8 @@ class _$UserDao extends UserDao {
                   'email': item.email,
                   'name': item.name,
                   'avatarUrl': item.avatarUrl,
-                  'passwordHash': item.passwordHash
+                  'passwordHash': item.passwordHash,
+                  'default_address_id': item.defaultAddressId
                 }),
         _sessionEntityInsertionAdapter = InsertionAdapter(
             database,
@@ -401,7 +411,8 @@ class _$UserDao extends UserDao {
                   'email': item.email,
                   'name': item.name,
                   'avatarUrl': item.avatarUrl,
-                  'passwordHash': item.passwordHash
+                  'passwordHash': item.passwordHash,
+                  'default_address_id': item.defaultAddressId
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -424,7 +435,8 @@ class _$UserDao extends UserDao {
             email: row['email'] as String,
             name: row['name'] as String,
             avatarUrl: row['avatarUrl'] as String?,
-            passwordHash: row['passwordHash'] as String),
+            passwordHash: row['passwordHash'] as String,
+            defaultAddressId: row['default_address_id'] as String?),
         arguments: [email]);
   }
 
@@ -436,7 +448,8 @@ class _$UserDao extends UserDao {
             email: row['email'] as String,
             name: row['name'] as String,
             avatarUrl: row['avatarUrl'] as String?,
-            passwordHash: row['passwordHash'] as String),
+            passwordHash: row['passwordHash'] as String,
+            defaultAddressId: row['default_address_id'] as String?),
         arguments: [id]);
   }
 
@@ -444,6 +457,23 @@ class _$UserDao extends UserDao {
   Future<void> deleteUser(String id) async {
     await _queryAdapter
         .queryNoReturn('DELETE FROM users WHERE id = ?1', arguments: [id]);
+  }
+
+  @override
+  Future<void> setDefaultAddress(
+    String userId,
+    String addressId,
+  ) async {
+    await _queryAdapter.queryNoReturn(
+        'UPDATE users SET default_address_id = ?2 WHERE id = ?1',
+        arguments: [userId, addressId]);
+  }
+
+  @override
+  Future<void> clearDefaultAddress(String userId) async {
+    await _queryAdapter.queryNoReturn(
+        'UPDATE users SET default_address_id = NULL WHERE id = ?1',
+        arguments: [userId]);
   }
 
   @override
@@ -472,5 +502,117 @@ class _$UserDao extends UserDao {
   @override
   Future<void> updateUser(UserEntity user) async {
     await _userEntityUpdateAdapter.update(user, OnConflictStrategy.replace);
+  }
+}
+
+class _$AddressDao extends AddressDao {
+  _$AddressDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _addressEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'addresses',
+            (AddressEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'user_id': item.userId,
+                  'name': item.name,
+                  'street': item.street,
+                  'city': item.city,
+                  'state': item.state,
+                  'zip_code': item.zipCode,
+                  'country': item.country
+                },
+            changeListener),
+        _addressEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'addresses',
+            ['id'],
+            (AddressEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'user_id': item.userId,
+                  'name': item.name,
+                  'street': item.street,
+                  'city': item.city,
+                  'state': item.state,
+                  'zip_code': item.zipCode,
+                  'country': item.country
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<AddressEntity> _addressEntityInsertionAdapter;
+
+  final UpdateAdapter<AddressEntity> _addressEntityUpdateAdapter;
+
+  @override
+  Future<List<AddressEntity>> getAddressesByUserId(String userId) async {
+    return _queryAdapter.queryList('SELECT * FROM addresses WHERE user_id = ?1',
+        mapper: (Map<String, Object?> row) => AddressEntity(
+            id: row['id'] as String,
+            userId: row['user_id'] as String,
+            name: row['name'] as String,
+            street: row['street'] as String,
+            city: row['city'] as String,
+            state: row['state'] as String,
+            zipCode: row['zip_code'] as String,
+            country: row['country'] as String),
+        arguments: [userId]);
+  }
+
+  @override
+  Stream<List<AddressEntity>> watchAddressesByUserId(String userId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM addresses WHERE user_id = ?1',
+        mapper: (Map<String, Object?> row) => AddressEntity(
+            id: row['id'] as String,
+            userId: row['user_id'] as String,
+            name: row['name'] as String,
+            street: row['street'] as String,
+            city: row['city'] as String,
+            state: row['state'] as String,
+            zipCode: row['zip_code'] as String,
+            country: row['country'] as String),
+        arguments: [userId],
+        queryableName: 'addresses',
+        isView: false);
+  }
+
+  @override
+  Future<AddressEntity?> getAddressById(String id) async {
+    return _queryAdapter.query('SELECT * FROM addresses WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => AddressEntity(
+            id: row['id'] as String,
+            userId: row['user_id'] as String,
+            name: row['name'] as String,
+            street: row['street'] as String,
+            city: row['city'] as String,
+            state: row['state'] as String,
+            zipCode: row['zip_code'] as String,
+            country: row['country'] as String),
+        arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteAddress(String id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM addresses WHERE id = ?1', arguments: [id]);
+  }
+
+  @override
+  Future<void> insertAddress(AddressEntity address) async {
+    await _addressEntityInsertionAdapter.insert(
+        address, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<void> updateAddress(AddressEntity address) async {
+    await _addressEntityUpdateAdapter.update(
+        address, OnConflictStrategy.replace);
   }
 }

@@ -41,6 +41,9 @@ dependencies:
   # Cryptography
   crypto: ^3.0.3
 
+  # UUID generation
+  uuid: ^4.4.0
+
   # Icons font used by CupertinoIcons
   cupertino_icons: ^1.0.8
 

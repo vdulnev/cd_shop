@@ -69,7 +69,10 @@ flutter build web
 ```
 
 ## Dependencies to Watch
-- `stream_transform`: used for debounce/switchMap in `ProductSearchBloc`.
+- repositories are reactive, use `BehaviorSubject` to implement streams.
+- events for snackbars are produced in repositories via `StreamController.broadcast()`.
+- `AppEventWidget` is used to subscribe to app-wide events (e.g., show snackbar).
+- snackbars are shown via methods in `lib/core/widgets/snackbar_helper.dart`.
 - `cupertino_icons`: required if using `CupertinoIcons`; resolves web font warnings.
 - DI registrations live in `lib/injection_container.dart` — keep BLoCs/use cases/repos in sync.
 - Product genres use the `ProductGenre` enum (non-null) in `lib/features/product/domain/entities/product.dart`; use `genreLabel` for display.

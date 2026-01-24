@@ -20,6 +20,12 @@ abstract class UserDao {
   @Query('DELETE FROM users WHERE id = :id')
   Future<void> deleteUser(String id);
 
+  @Query('UPDATE users SET default_address_id = :addressId WHERE id = :userId')
+  Future<void> setDefaultAddress(String userId, String addressId);
+
+  @Query('UPDATE users SET default_address_id = NULL WHERE id = :userId')
+  Future<void> clearDefaultAddress(String userId);
+
   // Session operations
   @Query('SELECT * FROM current_session WHERE id = 1')
   Future<SessionEntity?> getCurrentSession();
