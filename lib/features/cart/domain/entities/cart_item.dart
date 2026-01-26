@@ -30,9 +30,11 @@ class CartItem extends Equatable {
 /// Represents the entire shopping cart
 class Cart extends Equatable {
   const Cart({
+    this.userId = '',
     this.items = const [],
   });
 
+  final String userId;
   final List<CartItem> items;
 
   /// Total number of items in the cart (sum of all quantities)
@@ -62,5 +64,5 @@ class Cart extends Equatable {
   }
 
   @override
-  List<Object?> get props => [items];
+  List<Object?> get props => [userId, items];
 }

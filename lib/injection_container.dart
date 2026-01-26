@@ -27,6 +27,12 @@ import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
 import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:cd_shop/features/order/data/repositories/order_repository_impl.dart';
+import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
+import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
+import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
+import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
+import 'package:cd_shop/features/order/presentation/bloc/checkout_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
@@ -51,6 +57,7 @@ Future<void> initDependencies() async {
   await _initProductFeature();
   await _initCartFeature();
   await _initAddressFeature();
+  await _initOrderFeature();
 
   // ===== Core (App-level) =====
   _initCoreBlocs();
@@ -124,7 +131,10 @@ Future<void> _initCartFeature() async {
 
   // Repositories
   sl.registerLazySingleton<CartRepository>(
-    () => CartRepositoryImpl(cartDao: sl<AppDatabase>().cartDao),
+    () => CartRepositoryImpl(
+      cartDao: sl<AppDatabase>().cartDao,
+      authRepository: sl(),
+    ),
   );
 }
 
@@ -154,6 +164,31 @@ Future<void> _initAddressFeature() async {
   );
 }
 
+/// Initialize Order/Checkout feature dependencies
+Future<void> _initOrderFeature() async {
+  // Bloc
+  sl.registerFactory(
+    () => CheckoutBloc(
+      watchAddresses: sl(),
+      placeOrder: sl(),
+      clearCart: sl(),
+    ),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => PlaceOrder(sl()));
+  sl.registerLazySingleton(() => WatchUserOrders(sl()));
+  sl.registerLazySingleton(() => CancelOrder(sl()));
+
+  // Repositories
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(
+      orderDao: sl<AppDatabase>().orderDao,
+      addressDao: sl<AppDatabase>().addressDao,
+    ),
+  );
+}
+
 /// Initialize core (app-level) BLoCs
 void _initCoreBlocs() {
   sl.registerFactory(
@@ -162,6 +197,7 @@ void _initCoreBlocs() {
       authRepository: sl(),
       cartRepository: sl(),
       productRepository: sl(),
+      orderRepository: sl(),
     ),
   );
 }

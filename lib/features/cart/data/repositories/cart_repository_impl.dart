@@ -7,6 +7,7 @@ import 'package:cd_shop/core/database/daos/cart_dao.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
@@ -19,11 +20,14 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 class CartRepositoryImpl implements CartRepository {
   CartRepositoryImpl({
     required CartDao cartDao,
-  }) : _cartDao = cartDao {
+    required AuthRepository authRepository,
+  })  : _cartDao = cartDao,
+        _authRepository = authRepository {
     _initCartStream();
   }
 
   final CartDao _cartDao;
+  final AuthRepository _authRepository;
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _eventController = StreamController<RepositoryEvent>.broadcast();
@@ -32,13 +36,16 @@ class CartRepositoryImpl implements CartRepository {
   final _cartSubject = BehaviorSubject<Cart>.seeded(const Cart());
 
   void _initCartStream() {
-    _cartDao.watchAllCartItems().listen((entities) {
-      final cart = _entitiesToCart(entities);
+    _cartDao.watchAllCartItems().listen((entities) async {
+      final cart = await _entitiesToCart(entities);
       _cartSubject.add(cart);
     });
   }
 
-  Cart _entitiesToCart(List<CartItemEntity> entities) {
+  Future<Cart> _entitiesToCart(List<CartItemEntity> entities) async {
+    final userResult = await _authRepository.getCurrentUser();
+    final userId = userResult.fold((_) => '', (user) => user?.id ?? '');
+
     final items = <CartItem>[];
     for (final entity in entities) {
       final product = ProductMockDataSource.getById(entity.productId);
@@ -46,7 +53,7 @@ class CartRepositoryImpl implements CartRepository {
         items.add(CartItem(product: product, quantity: entity.quantity));
       }
     }
-    return Cart(items: items);
+    return Cart(userId: userId, items: items);
   }
 
   @override

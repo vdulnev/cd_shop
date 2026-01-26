@@ -80,13 +80,15 @@ class _$AppDatabase extends AppDatabase {
 
   AddressDao? _addressDaoInstance;
 
+  OrderDao? _orderDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 5,
+      version: 6,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -111,6 +113,10 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `current_session` (`id` INTEGER NOT NULL, `userId` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `addresses` (`id` TEXT NOT NULL, `user_id` TEXT NOT NULL, `name` TEXT NOT NULL, `street` TEXT NOT NULL, `city` TEXT NOT NULL, `state` TEXT NOT NULL, `zip_code` TEXT NOT NULL, `country` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `orders` (`id` TEXT NOT NULL, `userId` TEXT NOT NULL, `shippingAddressId` TEXT NOT NULL, `paymentMethod` TEXT NOT NULL, `subtotal` REAL NOT NULL, `shippingCost` REAL NOT NULL, `tax` REAL NOT NULL, `total` REAL NOT NULL, `status` TEXT NOT NULL, `orderDate` INTEGER NOT NULL, `estimatedDeliveryDate` INTEGER, `notes` TEXT, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `order_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `orderId` TEXT NOT NULL, `productId` TEXT NOT NULL, `productTitle` TEXT NOT NULL, `productArtist` TEXT NOT NULL, `productPrice` REAL NOT NULL, `productImageUrl` TEXT, `quantity` INTEGER NOT NULL, FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -136,6 +142,11 @@ class _$AppDatabase extends AppDatabase {
   @override
   AddressDao get addressDao {
     return _addressDaoInstance ??= _$AddressDao(database, changeListener);
+  }
+
+  @override
+  OrderDao get orderDao {
+    return _orderDaoInstance ??= _$OrderDao(database, changeListener);
   }
 }
 
@@ -614,5 +625,147 @@ class _$AddressDao extends AddressDao {
   Future<void> updateAddress(AddressEntity address) async {
     await _addressEntityUpdateAdapter.update(
         address, OnConflictStrategy.replace);
+  }
+}
+
+class _$OrderDao extends OrderDao {
+  _$OrderDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
+        _orderEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'orders',
+            (OrderEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'userId': item.userId,
+                  'shippingAddressId': item.shippingAddressId,
+                  'paymentMethod': item.paymentMethod,
+                  'subtotal': item.subtotal,
+                  'shippingCost': item.shippingCost,
+                  'tax': item.tax,
+                  'total': item.total,
+                  'status': item.status,
+                  'orderDate': item.orderDate,
+                  'estimatedDeliveryDate': item.estimatedDeliveryDate,
+                  'notes': item.notes
+                },
+            changeListener),
+        _orderItemEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'order_items',
+            (OrderItemEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'orderId': item.orderId,
+                  'productId': item.productId,
+                  'productTitle': item.productTitle,
+                  'productArtist': item.productArtist,
+                  'productPrice': item.productPrice,
+                  'productImageUrl': item.productImageUrl,
+                  'quantity': item.quantity
+                }),
+        _orderEntityUpdateAdapter = UpdateAdapter(
+            database,
+            'orders',
+            ['id'],
+            (OrderEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'userId': item.userId,
+                  'shippingAddressId': item.shippingAddressId,
+                  'paymentMethod': item.paymentMethod,
+                  'subtotal': item.subtotal,
+                  'shippingCost': item.shippingCost,
+                  'tax': item.tax,
+                  'total': item.total,
+                  'status': item.status,
+                  'orderDate': item.orderDate,
+                  'estimatedDeliveryDate': item.estimatedDeliveryDate,
+                  'notes': item.notes
+                },
+            changeListener);
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<OrderEntity> _orderEntityInsertionAdapter;
+
+  final InsertionAdapter<OrderItemEntity> _orderItemEntityInsertionAdapter;
+
+  final UpdateAdapter<OrderEntity> _orderEntityUpdateAdapter;
+
+  @override
+  Stream<List<OrderEntity>> watchOrdersByUserId(String userId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM orders WHERE userId = ?1 ORDER BY orderDate DESC',
+        mapper: (Map<String, Object?> row) => OrderEntity(
+            id: row['id'] as String,
+            userId: row['userId'] as String,
+            shippingAddressId: row['shippingAddressId'] as String,
+            paymentMethod: row['paymentMethod'] as String,
+            subtotal: row['subtotal'] as double,
+            shippingCost: row['shippingCost'] as double,
+            tax: row['tax'] as double,
+            total: row['total'] as double,
+            status: row['status'] as String,
+            orderDate: row['orderDate'] as int,
+            estimatedDeliveryDate: row['estimatedDeliveryDate'] as int?,
+            notes: row['notes'] as String?),
+        arguments: [userId],
+        queryableName: 'orders',
+        isView: false);
+  }
+
+  @override
+  Future<OrderEntity?> getOrderById(String orderId) async {
+    return _queryAdapter.query('SELECT * FROM orders WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => OrderEntity(
+            id: row['id'] as String,
+            userId: row['userId'] as String,
+            shippingAddressId: row['shippingAddressId'] as String,
+            paymentMethod: row['paymentMethod'] as String,
+            subtotal: row['subtotal'] as double,
+            shippingCost: row['shippingCost'] as double,
+            tax: row['tax'] as double,
+            total: row['total'] as double,
+            status: row['status'] as String,
+            orderDate: row['orderDate'] as int,
+            estimatedDeliveryDate: row['estimatedDeliveryDate'] as int?,
+            notes: row['notes'] as String?),
+        arguments: [orderId]);
+  }
+
+  @override
+  Future<List<OrderItemEntity>> getOrderItems(String orderId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM order_items WHERE orderId = ?1',
+        mapper: (Map<String, Object?> row) => OrderItemEntity(
+            id: row['id'] as int?,
+            orderId: row['orderId'] as String,
+            productId: row['productId'] as String,
+            productTitle: row['productTitle'] as String,
+            productArtist: row['productArtist'] as String,
+            productPrice: row['productPrice'] as double,
+            productImageUrl: row['productImageUrl'] as String?,
+            quantity: row['quantity'] as int),
+        arguments: [orderId]);
+  }
+
+  @override
+  Future<void> insertOrder(OrderEntity order) async {
+    await _orderEntityInsertionAdapter.insert(order, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> insertOrderItems(List<OrderItemEntity> items) async {
+    await _orderItemEntityInsertionAdapter.insertList(
+        items, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<void> updateOrder(OrderEntity order) async {
+    await _orderEntityUpdateAdapter.update(order, OnConflictStrategy.abort);
   }
 }

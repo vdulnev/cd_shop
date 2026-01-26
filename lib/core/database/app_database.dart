@@ -5,29 +5,32 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 
 import 'package:cd_shop/core/database/daos/address_dao.dart';
 import 'package:cd_shop/core/database/daos/cart_dao.dart';
+import 'package:cd_shop/core/database/daos/order_dao.dart';
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/daos/user_dao.dart';
 import 'package:cd_shop/core/database/entities/address_entity.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
+import 'package:cd_shop/core/database/entities/order_entity.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
 import 'package:cd_shop/core/database/entities/user_entity.dart';
 
 part 'app_database.g.dart';
 
 @Database(
-  version: 5,
-  entities: [CartItemEntity, ProductEntity, UserEntity, SessionEntity, AddressEntity],
+  version: 6,
+  entities: [CartItemEntity, ProductEntity, UserEntity, SessionEntity, AddressEntity, OrderEntity, OrderItemEntity],
 )
 abstract class AppDatabase extends FloorDatabase {
   CartDao get cartDao;
   ProductDao get productDao;
   UserDao get userDao;
   AddressDao get addressDao;
+  OrderDao get orderDao;
 
   static Future<AppDatabase> create() async {
     return $FloorAppDatabase
       .databaseBuilder('cd_shop.db')
-      .addMigrations([_migration1to2, _migration2to3, _migration3to4, _migration4to5])
+      .addMigrations([_migration1to2, _migration2to3, _migration3to4, _migration4to5, _migration5to6])
       .build();
   }
 }
@@ -111,5 +114,48 @@ final _migration4to5 = Migration(4, 5, (database) async {
       WHERE addresses.user_id = users.id AND addresses.is_default = 1
       LIMIT 1
     )
+  ''');
+});
+
+/// Migration from version 5 to 6: Add orders and order_items tables
+final _migration5to6 = Migration(5, 6, (database) async {
+  await database.execute('''
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY NOT NULL,
+      userId TEXT NOT NULL,
+      shippingAddressId TEXT NOT NULL,
+      paymentMethod TEXT NOT NULL,
+      subtotal REAL NOT NULL,
+      shippingCost REAL NOT NULL,
+      tax REAL NOT NULL,
+      total REAL NOT NULL,
+      status TEXT NOT NULL,
+      orderDate INTEGER NOT NULL,
+      estimatedDeliveryDate INTEGER,
+      notes TEXT
+    )
+  ''');
+
+  await database.execute('''
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      orderId TEXT NOT NULL,
+      productId TEXT NOT NULL,
+      productTitle TEXT NOT NULL,
+      productArtist TEXT NOT NULL,
+      productPrice REAL NOT NULL,
+      productImageUrl TEXT,
+      quantity INTEGER NOT NULL,
+      FOREIGN KEY (orderId) REFERENCES orders (id) ON DELETE CASCADE
+    )
+  ''');
+
+  // Create indexes for faster lookups
+  await database.execute('''
+    CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders (userId)
+  ''');
+
+  await database.execute('''
+    CREATE INDEX IF NOT EXISTS idx_order_items_orderId ON order_items (orderId)
   ''');
 });

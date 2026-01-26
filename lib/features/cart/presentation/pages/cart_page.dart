@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class CartPage extends StatelessWidget {
@@ -64,8 +65,12 @@ class _CartView extends StatelessWidget {
             itemCount: cart.totalItems,
             onCheckout: cart.isNotEmpty
                 ? () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Checkout coming soon')),
+                    context.push(
+                      '/cart/checkout',
+                      extra: CheckoutRouteData(
+                        userId: cart.userId,
+                        cartItems: cart.items,
+                      ),
                     );
                   }
                 : null,
