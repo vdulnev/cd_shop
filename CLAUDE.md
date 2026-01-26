@@ -1,0 +1,82 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build & Development Commands
+
+```bash
+# Bootstrap dependencies
+flutter pub get
+
+# Analyze code (required before PRs - expect zero issues)
+flutter analyze
+
+# Run tests
+flutter test
+
+# Run app on connected device/emulator
+flutter run
+
+# Build for web
+flutter build web
+
+# Regenerate Floor database code after entity/DAO changes
+dart run build_runner build --delete-conflicting-outputs
+
+# Clean and re-bootstrap
+flutter clean && flutter pub get
+```
+
+## Architecture Overview
+
+CD Shop is a Flutter e-commerce app using Clean Architecture with feature-based organization.
+
+### Layer Structure (per feature)
+```
+lib/features/<feature>/
+├── data/
+│   └── repositories/    # Repository implementations
+├── domain/
+│   ├── entities/        # Business objects
+│   ├── repositories/    # Abstract repository contracts
+│   └── usecases/        # Single-purpose business logic
+└── presentation/
+    ├── bloc/            # BLoC state management
+    ├── pages/           # Screen widgets
+    ├── routes/          # GoRouter route definitions
+    └── widgets/         # Feature-specific widgets
+```
+
+### Key Architectural Rules
+
+**Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
+
+**Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
+
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs.
+
+### Core Components
+
+- **Database**: Floor (SQLite) with DAOs in `lib/core/database/daos/` and entities in `lib/core/database/entities/`. Migrations defined in `app_database.dart`.
+
+- **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation. Each feature defines routes in `presentation/routes/`. Routes aggregate in `lib/router/app_router.dart`.
+
+- **App Events**: Repository events (success/error) flow through `StreamController.broadcast()` → `AppEventBloc` → `AppEventWidget` → snackbars via `lib/core/widgets/snackbar_helper.dart`.
+
+- **Error Handling**: `dartz` `Either<Failure, T>` for repository returns. Failure types in `lib/core/error/failures.dart`.
+
+### Features
+
+| Feature | BLoCs | Purpose |
+|---------|-------|---------|
+| auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
+| product | ProductListBloc, ProductSearchBloc, ProductDetailBloc | Product catalog |
+| cart | CartBloc | Shopping cart with real-time updates |
+| address | AddressBloc | User address management |
+| order | CheckoutBloc, OrderListBloc | Checkout flow and order history |
+
+## Testing Notes
+
+- Initialize DI before pumping widgets: `await initDependencies()`
+- Flush fake delays: `await tester.pump(const Duration(seconds: 1))`
+- BLoC tests use `bloc_test` package with `mocktail` for mocking
