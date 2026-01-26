@@ -1,9 +1,10 @@
-import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/presentation/bloc/account_bloc.dart';
+import 'package:cd_shop/features/order/presentation/routes/order_routes.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class AccountPage extends StatelessWidget {
@@ -111,7 +112,10 @@ class _AuthenticatedView extends StatelessWidget {
             _AccountMenuItem(
               icon: Icons.shopping_bag_outlined,
               title: 'My Orders',
-              onTap: () {},
+              onTap: () => context.push(
+                '/account/orders',
+                extra: OrdersRouteData(userId: user.id),
+              ),
             ),
             _AccountMenuItem(
               icon: Icons.favorite_outline,

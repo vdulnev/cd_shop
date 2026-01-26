@@ -33,6 +33,7 @@ import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
 import 'package:cd_shop/features/order/presentation/bloc/checkout_bloc.dart';
+import 'package:cd_shop/features/order/presentation/bloc/order_list_bloc.dart';
 import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
@@ -172,6 +173,12 @@ Future<void> _initOrderFeature() async {
       watchAddresses: sl(),
       placeOrder: sl(),
       clearCart: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => OrderListBloc(
+      watchUserOrders: sl(),
+      cancelOrder: sl(),
     ),
   );
 
