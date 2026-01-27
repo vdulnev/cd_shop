@@ -1,82 +1,17 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
 
-// Events
-sealed class OrderListEvent extends Equatable {
-  const OrderListEvent();
+import 'order_list_event.dart';
+import 'order_list_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'order_list_event.dart';
+export 'order_list_state.dart';
 
-class OrderListStarted extends OrderListEvent {
-  const OrderListStarted(this.userId);
-
-  final String userId;
-
-  @override
-  List<Object?> get props => [userId];
-}
-
-class OrderListUpdated extends OrderListEvent {
-  const OrderListUpdated(this.orders);
-
-  final List<Order> orders;
-
-  @override
-  List<Object?> get props => [orders];
-}
-
-class OrderCancellationRequested extends OrderListEvent {
-  const OrderCancellationRequested(this.orderId);
-
-  final String orderId;
-
-  @override
-  List<Object?> get props => [orderId];
-}
-
-// States
-sealed class OrderListState extends Equatable {
-  const OrderListState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class OrderListInitial extends OrderListState {
-  const OrderListInitial();
-}
-
-class OrderListLoading extends OrderListState {
-  const OrderListLoading();
-}
-
-class OrderListLoaded extends OrderListState {
-  const OrderListLoaded(this.orders);
-
-  final List<Order> orders;
-
-  @override
-  List<Object?> get props => [orders];
-}
-
-class OrderListError extends OrderListState {
-  const OrderListError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// BLoC
 class OrderListBloc extends Bloc<OrderListEvent, OrderListState> {
   OrderListBloc({
     required WatchUserOrders watchUserOrders,

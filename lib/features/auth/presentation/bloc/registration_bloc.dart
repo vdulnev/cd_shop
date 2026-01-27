@@ -1,58 +1,13 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 
-// Events
-sealed class RegistrationEvent extends Equatable {
-  const RegistrationEvent();
+import 'registration_event.dart';
+import 'registration_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'registration_event.dart';
+export 'registration_state.dart';
 
-class RegistrationSubmitted extends RegistrationEvent {
-  const RegistrationSubmitted({
-    required this.email,
-    required this.password,
-    required this.name,
-  });
-
-  final String email;
-  final String password;
-  final String name;
-
-  @override
-  List<Object?> get props => [email, password, name];
-}
-
-// States
-sealed class RegistrationState extends Equatable {
-  const RegistrationState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class RegistrationInitial extends RegistrationState {
-  const RegistrationInitial();
-}
-
-class RegistrationLoading extends RegistrationState {
-  const RegistrationLoading();
-}
-
-class RegistrationSuccess extends RegistrationState {
-  const RegistrationSuccess(this.user);
-
-  final User user;
-
-  @override
-  List<Object?> get props => [user];
-}
-
-// Bloc
 class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
   RegistrationBloc({required RegisterUser registerUser})
       : _registerUser = registerUser,

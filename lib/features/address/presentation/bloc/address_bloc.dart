@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
@@ -13,115 +12,12 @@ import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 
-// Events
-sealed class AddressEvent extends Equatable {
-  const AddressEvent();
+import 'address_event.dart';
+import 'address_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'address_event.dart';
+export 'address_state.dart';
 
-class AddressesLoaded extends AddressEvent {
-  const AddressesLoaded();
-}
-
-class AddressesStreamUpdated extends AddressEvent {
-  const AddressesStreamUpdated(this.addresses);
-
-  final List<Address> addresses;
-
-  @override
-  List<Object?> get props => [addresses];
-}
-
-class AddressesStreamFailed extends AddressEvent {
-  const AddressesStreamFailed(this.failure);
-
-  final Failure failure;
-
-  @override
-  List<Object?> get props => [failure];
-}
-
-class AddressAdded extends AddressEvent {
-  const AddressAdded(this.address);
-
-  final Address address;
-
-  @override
-  List<Object?> get props => [address];
-}
-
-class AddressUpdated extends AddressEvent {
-  const AddressUpdated(this.address);
-
-  final Address address;
-
-  @override
-  List<Object?> get props => [address];
-}
-
-class AddressDeleted extends AddressEvent {
-  const AddressDeleted(this.addressId);
-
-  final String addressId;
-
-  @override
-  List<Object?> get props => [addressId];
-}
-
-class DefaultAddressSet extends AddressEvent {
-  const DefaultAddressSet(this.addressId);
-
-  final String addressId;
-
-  @override
-  List<Object?> get props => [addressId];
-}
-
-// States
-sealed class AddressState extends Equatable {
-  const AddressState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AddressInitial extends AddressState {
-  const AddressInitial();
-}
-
-class AddressLoading extends AddressState {
-  const AddressLoading();
-}
-
-class AddressesLoadedState extends AddressState {
-  const AddressesLoadedState({
-    required this.addresses,
-    this.defaultAddressId,
-  });
-
-  final List<Address> addresses;
-  final String? defaultAddressId;
-
-  @override
-  List<Object?> get props => [addresses, defaultAddressId];
-}
-
-class AddressError extends AddressState {
-  const AddressError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class AddressNotAuthenticated extends AddressState {
-  const AddressNotAuthenticated();
-}
-
-// Bloc
 class AddressBloc extends Bloc<AddressEvent, AddressState> {
   AddressBloc({
     required GetCurrentUser getCurrentUser,

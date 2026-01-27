@@ -47,6 +47,17 @@ lib/features/<feature>/
     └── widgets/         # Feature-specific widgets
 ```
 
+### BLoC File Structure
+
+Each BLoC is split into three files:
+```
+lib/features/<feature>/presentation/bloc/
+├── <name>_bloc.dart    # BLoC class (imports + re-exports event/state)
+├── <name>_event.dart   # Sealed event classes
+└── <name>_state.dart   # Sealed state classes
+```
+The `_bloc.dart` file imports and re-exports the event/state files, so consumers only need to import `_bloc.dart`.
+
 ### Key Architectural Rules
 
 **Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.

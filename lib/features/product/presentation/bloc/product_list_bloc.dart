@@ -1,61 +1,14 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
-import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 
-// Events
-sealed class ProductListEvent extends Equatable {
-  const ProductListEvent();
+import 'product_list_event.dart';
+import 'product_list_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'product_list_event.dart';
+export 'product_list_state.dart';
 
-class ProductListFetched extends ProductListEvent {
-  const ProductListFetched();
-}
-
-class ProductListRefreshed extends ProductListEvent {
-  const ProductListRefreshed();
-}
-
-// States
-sealed class ProductListState extends Equatable {
-  const ProductListState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class ProductListInitial extends ProductListState {
-  const ProductListInitial();
-}
-
-class ProductListLoading extends ProductListState {
-  const ProductListLoading();
-}
-
-class ProductListLoaded extends ProductListState {
-  const ProductListLoaded(this.products);
-
-  final List<Product> products;
-
-  @override
-  List<Object?> get props => [products];
-}
-
-class ProductListError extends ProductListState {
-  const ProductListError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
 class ProductListBloc extends Bloc<ProductListEvent, ProductListState> {
   ProductListBloc({required GetProducts getProducts})
       : _getProducts = getProducts,

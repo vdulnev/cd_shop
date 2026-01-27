@@ -1,70 +1,14 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 
-// Events
-sealed class ProductSearchEvent extends Equatable {
-  const ProductSearchEvent();
+import 'product_search_event.dart';
+import 'product_search_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'product_search_event.dart';
+export 'product_search_state.dart';
 
-class ProductSearchQueryChanged extends ProductSearchEvent {
-  const ProductSearchQueryChanged(this.query);
-
-  final String query;
-
-  @override
-  List<Object?> get props => [query];
-}
-
-class ProductSearchCleared extends ProductSearchEvent {
-  const ProductSearchCleared();
-}
-
-// States
-sealed class ProductSearchState extends Equatable {
-  const ProductSearchState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class ProductSearchInitial extends ProductSearchState {
-  const ProductSearchInitial();
-}
-
-class ProductSearchLoading extends ProductSearchState {
-  const ProductSearchLoading();
-}
-
-class ProductSearchLoaded extends ProductSearchState {
-  const ProductSearchLoaded({
-    required this.products,
-    required this.query,
-  });
-
-  final List<Product> products;
-  final String query;
-
-  @override
-  List<Object?> get props => [products, query];
-}
-
-class ProductSearchError extends ProductSearchState {
-  const ProductSearchError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
 class ProductSearchBloc extends Bloc<ProductSearchEvent, ProductSearchState> {
   ProductSearchBloc({required SearchProducts searchProducts})
       : _searchProducts = searchProducts,

@@ -1,67 +1,14 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:cd_shop/features/product/domain/entities/product.dart';
+import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 
-import '../../../../core/error/failures.dart';
+import 'product_detail_event.dart';
+import 'product_detail_state.dart';
 
-// Events
-sealed class ProductDetailEvent extends Equatable {
-  const ProductDetailEvent();
+export 'product_detail_event.dart';
+export 'product_detail_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-
-class ProductDetailFetched extends ProductDetailEvent {
-  const ProductDetailFetched(this.productId);
-
-  final String productId;
-
-  @override
-  List<Object?> get props => [productId];
-}
-
-// States
-sealed class ProductDetailState extends Equatable {
-  const ProductDetailState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class ProductDetailInitial extends ProductDetailState {
-  const ProductDetailInitial();
-}
-
-class ProductDetailLoading extends ProductDetailState {
-  const ProductDetailLoading();
-}
-
-class ProductDetailLoaded extends ProductDetailState {
-  const ProductDetailLoaded(this.product);
-
-  final Product product;
-
-  @override
-  List<Object?> get props => [product];
-}
-
-class ProductDetailError extends ProductDetailState {
-  const ProductDetailError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ProductDetailNotFound extends ProductDetailState {
-  const ProductDetailNotFound();
-}
-
-// Bloc
 class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   ProductDetailBloc({required GetProductById getProductById})
       : _getProductById = getProductById,

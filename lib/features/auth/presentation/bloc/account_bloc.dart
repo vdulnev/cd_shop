@@ -1,70 +1,15 @@
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
-import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 
-// Events
-sealed class AccountEvent extends Equatable {
-  const AccountEvent();
+import 'account_event.dart';
+import 'account_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'account_event.dart';
+export 'account_state.dart';
 
-class AccountLoaded extends AccountEvent {
-  const AccountLoaded();
-}
-
-class AccountLogoutRequested extends AccountEvent {
-  const AccountLogoutRequested();
-}
-
-// States
-sealed class AccountState extends Equatable {
-  const AccountState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AccountInitial extends AccountState {
-  const AccountInitial();
-}
-
-class AccountLoading extends AccountState {
-  const AccountLoading();
-}
-
-class AccountAuthenticated extends AccountState {
-  const AccountAuthenticated(this.user);
-
-  final User user;
-
-  @override
-  List<Object?> get props => [user];
-}
-
-class AccountUnauthenticated extends AccountState {
-  const AccountUnauthenticated();
-}
-
-class AccountLoggedOut extends AccountState {
-  const AccountLoggedOut();
-}
-
-class AccountError extends AccountState {
-  const AccountError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
   AccountBloc({
     required GetCurrentUser getCurrentUser,

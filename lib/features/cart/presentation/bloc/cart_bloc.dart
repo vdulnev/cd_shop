@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
@@ -10,97 +9,13 @@ import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
-import 'package:cd_shop/features/product/domain/entities/product.dart';
 
-// Events
-sealed class CartEvent extends Equatable {
-  const CartEvent();
+import 'cart_event.dart';
+import 'cart_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'cart_event.dart';
+export 'cart_state.dart';
 
-class CartStarted extends CartEvent {
-  const CartStarted();
-}
-
-class CartItemAdded extends CartEvent {
-  const CartItemAdded(this.product, {this.quantity = 1});
-
-  final Product product;
-  final int quantity;
-
-  @override
-  List<Object?> get props => [product, quantity];
-}
-
-class CartItemRemoved extends CartEvent {
-  const CartItemRemoved(this.productId);
-
-  final String productId;
-
-  @override
-  List<Object?> get props => [productId];
-}
-
-class CartItemQuantityUpdated extends CartEvent {
-  const CartItemQuantityUpdated(this.productId, this.quantity);
-
-  final String productId;
-  final int quantity;
-
-  @override
-  List<Object?> get props => [productId, quantity];
-}
-
-class CartCleared extends CartEvent {
-  const CartCleared();
-}
-
-class CartUpdated extends CartEvent {
-  const CartUpdated(this.cart);
-
-  final Cart cart;
-
-  @override
-  List<Object?> get props => [cart];
-}
-
-// States
-sealed class CartState extends Equatable {
-  const CartState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class CartInitial extends CartState {
-  const CartInitial();
-}
-
-class CartLoading extends CartState {
-  const CartLoading();
-}
-
-class CartLoaded extends CartState {
-  const CartLoaded(this.cart);
-
-  final Cart cart;
-
-  @override
-  List<Object?> get props => [cart];
-}
-
-class CartError extends CartState {
-  const CartError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// Bloc
 class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc({
     required AddToCart addToCart,

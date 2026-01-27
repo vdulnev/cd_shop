@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
@@ -11,150 +10,12 @@ import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
 
-// Events
-sealed class CheckoutEvent extends Equatable {
-  const CheckoutEvent();
+import 'checkout_event.dart';
+import 'checkout_state.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+export 'checkout_event.dart';
+export 'checkout_state.dart';
 
-class CheckoutStarted extends CheckoutEvent {
-  const CheckoutStarted(this.userId, this.cartItems);
-
-  final String userId;
-  final List<CartItem> cartItems;
-
-  @override
-  List<Object?> get props => [userId, cartItems];
-}
-
-class CheckoutAddressSelected extends CheckoutEvent {
-  const CheckoutAddressSelected(this.address);
-
-  final Address? address;
-
-  @override
-  List<Object?> get props => [address];
-}
-
-class CheckoutPaymentMethodSelected extends CheckoutEvent {
-  const CheckoutPaymentMethodSelected(this.paymentMethod);
-
-  final PaymentMethod paymentMethod;
-
-  @override
-  List<Object?> get props => [paymentMethod];
-}
-
-class CheckoutNotesChanged extends CheckoutEvent {
-  const CheckoutNotesChanged(this.notes);
-
-  final String notes;
-
-  @override
-  List<Object?> get props => [notes];
-}
-
-class CheckoutOrderPlaced extends CheckoutEvent {
-  const CheckoutOrderPlaced();
-}
-
-// States
-sealed class CheckoutState extends Equatable {
-  const CheckoutState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class CheckoutInitial extends CheckoutState {
-  const CheckoutInitial();
-}
-
-class CheckoutLoading extends CheckoutState {
-  const CheckoutLoading();
-}
-
-class CheckoutReady extends CheckoutState {
-  const CheckoutReady({
-    required this.userId,
-    required this.cartItems,
-    required this.addresses,
-    this.selectedAddress,
-    this.selectedPaymentMethod,
-    this.notes,
-  });
-
-  final String userId;
-  final List<CartItem> cartItems;
-  final List<Address> addresses;
-  final Address? selectedAddress;
-  final PaymentMethod? selectedPaymentMethod;
-  final String? notes;
-
-  double get subtotal =>
-      cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
-  double get shippingCost => 5.99;
-  double get tax => subtotal * 0.08;
-  double get total => subtotal + shippingCost + tax;
-
-  bool get canPlaceOrder =>
-      selectedAddress != null && selectedPaymentMethod != null;
-
-  CheckoutReady copyWith({
-    String? userId,
-    List<CartItem>? cartItems,
-    List<Address>? addresses,
-    Address? selectedAddress,
-    PaymentMethod? selectedPaymentMethod,
-    String? notes,
-  }) {
-    return CheckoutReady(
-      userId: userId ?? this.userId,
-      cartItems: cartItems ?? this.cartItems,
-      addresses: addresses ?? this.addresses,
-      selectedAddress: selectedAddress ?? this.selectedAddress,
-      selectedPaymentMethod:
-          selectedPaymentMethod ?? this.selectedPaymentMethod,
-      notes: notes ?? this.notes,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        userId,
-        cartItems,
-        addresses,
-        selectedAddress,
-        selectedPaymentMethod,
-        notes,
-      ];
-}
-
-class CheckoutPlacingOrder extends CheckoutState {
-  const CheckoutPlacingOrder();
-}
-
-class CheckoutSuccess extends CheckoutState {
-  const CheckoutSuccess(this.order);
-
-  final Order order;
-
-  @override
-  List<Object?> get props => [order];
-}
-
-class CheckoutError extends CheckoutState {
-  const CheckoutError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// BLoC
 class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
   CheckoutBloc({
     required this.watchAddresses,
