@@ -5,10 +5,12 @@ import 'package:cd_shop/features/product/presentation/bloc/product_detail_state.
 import 'package:cd_shop/injection_container.dart';
 
 class ProductDetailNotifier extends StateNotifier<ProductDetailState> {
-  ProductDetailNotifier({required GetProductById getProductById, required String productId})
-      : _getProductById = getProductById,
-        _productId = productId,
-        super(const ProductDetailInitial()) {
+  ProductDetailNotifier({
+    required GetProductById getProductById,
+    required String productId,
+  }) : _getProductById = getProductById,
+       _productId = productId,
+       super(const ProductDetailInitial()) {
     _fetchProduct();
   }
 
@@ -17,21 +19,22 @@ class ProductDetailNotifier extends StateNotifier<ProductDetailState> {
 
   Future<void> _fetchProduct() async {
     state = const ProductDetailLoading();
-
-    try {
-      final product = await _getProductById(GetProductByIdParams(id: _productId));
+    final product = await _getProductById(GetProductByIdParams(id: _productId));
+    if (product != null) {
       state = ProductDetailLoaded(product);
-    } catch (e) {
-      if (e.toString().contains('not found')) {
-        state = const ProductDetailNotFound();
-      } else {
-        state = ProductDetailError(e.toString());
-      }
+    } else {
+      state = const ProductDetailNotFound();
     }
   }
 }
 
 final productDetailProvider = StateNotifierProvider.autoDispose
-    .family<ProductDetailNotifier, ProductDetailState, String>((ref, productId) {
-  return ProductDetailNotifier(getProductById: sl<GetProductById>(), productId: productId);
-});
+    .family<ProductDetailNotifier, ProductDetailState, String>((
+      ref,
+      productId,
+    ) {
+      return ProductDetailNotifier(
+        getProductById: sl<GetProductById>(),
+        productId: productId,
+      );
+    });

@@ -75,14 +75,9 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Product> getProductById(String id) async {
+  Future<Product?> getProductById(String id) async {
     final entity = await _productDao.getProductById(id);
-
-    if (entity == null) {
-      throw Exception('Product not found');
-    }
-
-    return entity.toDomain();
+    return entity?.toDomain();
   }
 
   @override

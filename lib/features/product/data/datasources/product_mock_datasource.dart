@@ -287,11 +287,7 @@ class ProductMockDataSource {
 
   /// Get product by ID
   static Product? getById(String id) {
-    try {
-      return products.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
+    return products.where((p) => p.id == id).firstOrNull;
   }
 
   /// Get products by artist

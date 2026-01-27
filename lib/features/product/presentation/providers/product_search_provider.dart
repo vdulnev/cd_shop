@@ -8,8 +8,8 @@ import 'package:cd_shop/injection_container.dart';
 
 class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
   ProductSearchNotifier({required SearchProducts searchProducts})
-      : _searchProducts = searchProducts,
-        super(const ProductSearchInitial());
+    : _searchProducts = searchProducts,
+      super(const ProductSearchInitial());
 
   final SearchProducts _searchProducts;
   Timer? _debounce;
@@ -25,12 +25,10 @@ class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
 
     _debounce = Timer(const Duration(milliseconds: 300), () async {
       state = const ProductSearchLoading();
-      try {
-        final products = await _searchProducts(SearchProductsParams(query: trimmed));
-        state = ProductSearchLoaded(products: products, query: trimmed);
-      } catch (_) {
-        // Errors surfaced via app events/snackbars; keep loading state
-      }
+      final products = await _searchProducts(
+        SearchProductsParams(query: trimmed),
+      );
+      state = ProductSearchLoaded(products: products, query: trimmed);
     });
   }
 
@@ -47,6 +45,9 @@ class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
 }
 
 final productSearchProvider =
-    StateNotifierProvider.autoDispose<ProductSearchNotifier, ProductSearchState>((ref) {
-  return ProductSearchNotifier(searchProducts: sl<SearchProducts>());
-});
+    StateNotifierProvider.autoDispose<
+      ProductSearchNotifier,
+      ProductSearchState
+    >((ref) {
+      return ProductSearchNotifier(searchProducts: sl<SearchProducts>());
+    });

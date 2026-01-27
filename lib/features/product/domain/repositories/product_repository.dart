@@ -15,7 +15,7 @@ abstract class ProductRepository {
   });
 
   /// Get a single product by ID
-  Future<Product> getProductById(String id);
+  Future<Product?> getProductById(String id);
 
   /// Search products by query string
   Future<List<Product>> searchProducts(String query);

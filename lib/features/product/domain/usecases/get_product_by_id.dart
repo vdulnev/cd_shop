@@ -9,7 +9,7 @@ class GetProductById {
 
   final ProductRepository repository;
 
-  Future<Product> call(GetProductByIdParams params) {
+  Future<Product?> call(GetProductByIdParams params) {
     return repository.getProductById(params.id);
   }
 }

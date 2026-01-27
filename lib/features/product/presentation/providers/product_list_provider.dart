@@ -1,3 +1,4 @@
+import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
@@ -6,38 +7,32 @@ import 'package:cd_shop/features/product/presentation/bloc/product_list_state.da
 import 'package:cd_shop/injection_container.dart';
 
 class ProductListNotifier extends StateNotifier<ProductListState> {
-  ProductListNotifier({required WatchProducts watchProducts})
-      : _watchProducts = watchProducts,
-        super(const ProductListInitial()) {
+  ProductListNotifier({
+    required WatchProducts watchProducts,
+    required GetProducts getProducts,
+  }) : _watchProducts = watchProducts,
+       _getProducts = getProducts,
+       super(const ProductListInitial()) {
     _subscribe();
   }
 
   final WatchProducts _watchProducts;
+  final GetProducts _getProducts;
 
   void _subscribe() {
-    _watchProducts(const NoParams()).listen(
-      (products) {
-        state = ProductListLoaded(products);
-      },
-      // No explicit error state; keep last good state and surface via app events
-      onError: (error) {},
-    );
+    _watchProducts(const NoParams()).listen((products) {
+      state = ProductListLoaded(products);
+    });
   }
 
   Future<void> refresh() async {
-    final previous = state;
     state = const ProductListLoading();
-    try {
-      final products = await _watchProducts(const NoParams()).first;
-      state = ProductListLoaded(products);
-    } catch (error) {
-      // Restore previous state on error
-      state = previous;
-    }
+    final products = await _getProducts();
+    state = ProductListLoaded(products);
   }
 }
 
 final productListProvider =
     StateNotifierProvider<ProductListNotifier, ProductListState>((ref) {
-  return ProductListNotifier(watchProducts: sl<WatchProducts>());
-});
+      return ProductListNotifier(watchProducts: sl(), getProducts: sl());
+    });

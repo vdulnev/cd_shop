@@ -73,28 +73,6 @@ void main() {
       verify(() => mockSearchProducts(const SearchProductsParams(query: 'beatles'))).called(1);
     });
 
-    test('stays on Loading when search fails (errors via app events)', () async {
-      when(() => mockSearchProducts(any(that: isA<SearchProductsParams>())))
-          .thenThrow(Exception('oops'));
-
-      final states = <ProductSearchState>[];
-      final sub = container.listen(
-        productSearchProvider,
-        (previous, next) => states.add(next),
-        fireImmediately: true,
-      );
-
-      container.read(productSearchProvider.notifier).updateQuery('error');
-      await Future.delayed(const Duration(milliseconds: 350));
-
-      expect(states, [
-        isA<ProductSearchInitial>(),
-        isA<ProductSearchLoading>(),
-      ]);
-
-      sub.close();
-    });
-
     test('emits only initial state when query is empty', () {
       final states = <ProductSearchState>[];
       final sub = container.listen(
