@@ -39,9 +39,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_search_bloc.dart';
+import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -94,19 +92,18 @@ Future<void> _initAuthFeature() async {
 
 /// Initialize Product feature dependencies
 Future<void> _initProductFeature() async {
-  // Bloc
-  sl.registerFactory(() => ProductListBloc(getProducts: sl()));
-  sl.registerFactory(() => ProductSearchBloc(searchProducts: sl()));
-  sl.registerFactory(() => ProductDetailBloc(getProductById: sl()));
-
   // Use Cases
   sl.registerLazySingleton(() => GetProducts(sl()));
   sl.registerLazySingleton(() => SearchProducts(sl()));
   sl.registerLazySingleton(() => GetProductById(sl()));
+  sl.registerLazySingleton(() => WatchProducts(sl()));
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(productDao: sl<AppDatabase>().productDao),
+    () => ProductRepositoryImpl(
+      productDao: sl<AppDatabase>().productDao,
+      appSettingsDao: sl<AppDatabase>().appSettingsDao,
+    ),
   );
 }
 

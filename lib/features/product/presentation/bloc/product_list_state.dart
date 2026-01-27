@@ -25,12 +25,4 @@ class ProductListLoaded extends ProductListState {
   @override
   List<Object?> get props => [products];
 }
-
-class ProductListError extends ProductListState {
-  const ProductListError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
+// No explicit error state; errors are surfaced via app events/snackbars

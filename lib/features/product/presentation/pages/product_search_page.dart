@@ -1,32 +1,20 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_search_bloc.dart';
-import 'package:cd_shop/injection_container.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_search_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
 
-class ProductSearchPage extends StatelessWidget {
+class ProductSearchPage extends ConsumerStatefulWidget {
   const ProductSearchPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ProductSearchBloc>(),
-      child: const _ProductSearchView(),
-    );
-  }
+  ConsumerState<ProductSearchPage> createState() => _ProductSearchViewState();
 }
 
-class _ProductSearchView extends StatefulWidget {
-  const _ProductSearchView();
-
-  @override
-  State<_ProductSearchView> createState() => _ProductSearchViewState();
-}
-
-class _ProductSearchViewState extends State<_ProductSearchView> {
+class _ProductSearchViewState extends ConsumerState<ProductSearchPage> {
   final _searchController = TextEditingController();
 
   @override
@@ -36,16 +24,18 @@ class _ProductSearchViewState extends State<_ProductSearchView> {
   }
 
   void _onSearchChanged(String query) {
-    context.read<ProductSearchBloc>().add(ProductSearchQueryChanged(query));
+    ref.read(productSearchProvider.notifier).updateQuery(query);
   }
 
   void _clearSearch() {
     _searchController.clear();
-    context.read<ProductSearchBloc>().add(const ProductSearchCleared());
+    ref.read(productSearchProvider.notifier).clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(productSearchProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -53,35 +43,25 @@ class _ProductSearchViewState extends State<_ProductSearchView> {
           decoration: InputDecoration(
             hintText: 'Search albums...',
             border: InputBorder.none,
-            suffixIcon: BlocBuilder<ProductSearchBloc, ProductSearchState>(
-              builder: (context, state) {
-                if (state is ProductSearchLoaded && state.query.isNotEmpty) {
-                  return IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: _clearSearch,
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+            suffixIcon: switch (state) {
+              ProductSearchLoaded(:final query) when query.isNotEmpty => IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: _clearSearch,
+                ),
+              _ => const SizedBox.shrink(),
+            },
           ),
           onChanged: _onSearchChanged,
         ),
       ),
-      body: BlocBuilder<ProductSearchBloc, ProductSearchState>(
-        builder: (context, state) {
-          return switch (state) {
-            ProductSearchInitial() => const _EmptySearchView(),
-            ProductSearchLoading() =>
-              const Center(child: CircularProgressIndicator()),
-            ProductSearchError(:final message) => _ErrorView(message: message),
-            ProductSearchLoaded(:final products, :final query) =>
-              products.isEmpty
-                  ? _NoResultsView(query: query)
-                  : _SearchResultsList(products: products),
-          };
-        },
-      ),
+      body: switch (state) {
+        ProductSearchInitial() => const _EmptySearchView(),
+        ProductSearchLoading() => const Center(child: CircularProgressIndicator()),
+        ProductSearchLoaded(:final products, :final query) =>
+          products.isEmpty
+              ? _NoResultsView(query: query)
+              : _SearchResultsList(products: products),
+      },
     );
   }
 }
@@ -138,19 +118,6 @@ class _NoResultsView extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(message, style: const TextStyle(color: Colors.red)),
     );
   }
 }

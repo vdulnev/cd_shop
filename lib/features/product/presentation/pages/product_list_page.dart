@@ -1,29 +1,38 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
-import 'package:cd_shop/router/app_router.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
-import 'package:cd_shop/injection_container.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_list_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
+import 'package:cd_shop/router/app_router.dart';
 
 /// Page displaying the list of products
-class ProductListPage extends StatelessWidget {
+class ProductListPage extends ConsumerWidget {
   const ProductListPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ProductListBloc>()..add(const ProductListFetched()),
-      child: const _ProductListView(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(productListProvider);
+    final notifier = ref.read(productListProvider.notifier);
+
+    return _ProductListView(
+      state: state,
+      onRefresh: notifier.refresh,
     );
   }
 }
 
 class _ProductListView extends StatelessWidget {
-  const _ProductListView();
+  const _ProductListView({
+    required this.state,
+    required this.onRefresh,
+  });
+
+  final ProductListState state;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -37,58 +46,30 @@ class _ProductListView extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<ProductListBloc, ProductListState>(
-        builder: (context, state) {
-          return switch (state) {
-            ProductListInitial() ||
-            ProductListLoading() =>
-              const Center(child: CircularProgressIndicator()),
-            ProductListError(:final message) => _ErrorView(message: message),
-            ProductListLoaded(:final products) =>
-              _ProductGrid(products: products),
-          };
-        },
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(message, style: const TextStyle(color: Colors.red)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context
-                .read<ProductListBloc>()
-                .add(const ProductListFetched()),
-            child: const Text(AppStrings.retry),
+      body: switch (state) {
+        ProductListInitial() || ProductListLoading() =>
+          const Center(child: CircularProgressIndicator()),
+        ProductListLoaded(:final products) => _ProductGrid(
+            products: products,
+            onRefresh: onRefresh,
           ),
-        ],
-      ),
+      },
     );
   }
 }
+
+// No explicit error view; errors surface via app events/snackbars
 
 class _ProductGrid extends StatelessWidget {
-  const _ProductGrid({required this.products});
+  const _ProductGrid({required this.products, required this.onRefresh});
 
   final List<Product> products;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {
-        context.read<ProductListBloc>().add(const ProductListRefreshed());
-      },
+      onRefresh: onRefresh,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -139,8 +120,7 @@ class _ProductCard extends StatelessWidget {
                       width: double.infinity,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => _buildLoadingPlaceholder(theme),
-                      errorWidget: (context, url, error) =>
-                          _buildPlaceholder(theme),
+                      errorWidget: (context, url, error) => _buildPlaceholder(theme),
                     )
                   : _buildPlaceholder(theme),
             ),
@@ -168,7 +148,7 @@ class _ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${product.price.toStringAsFixed(2)}',
+                      '\$${product.price.toStringAsFixed(2)}',
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,

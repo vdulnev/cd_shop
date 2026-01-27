@@ -1,15 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
-import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_detail_bloc.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_detail_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_detail_provider.dart';
 import 'package:cd_shop/injection_container.dart';
 
 /// Page displaying product details
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends ConsumerWidget {
   const ProductDetailPage({
     super.key,
     required this.productId,
@@ -18,67 +19,73 @@ class ProductDetailPage extends StatelessWidget {
   final String productId;
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          sl<ProductDetailBloc>()..add(ProductDetailFetched(productId)),
-      child: const _ProductDetailView(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(productDetailProvider(productId));
+    final addToCart = sl<AddToCart>();
+    return _ProductDetailView(
+      state: state,
+      onAddToCart: (product) async {
+        await addToCart(AddToCartParams(product: product));
+      },
     );
   }
 }
 
 class _ProductDetailView extends StatelessWidget {
-  const _ProductDetailView();
+  const _ProductDetailView({
+    required this.state,
+    required this.onAddToCart,
+  });
+
+  final ProductDetailState state;
+  final Function(Product) onAddToCart;  // Async callback from usecase
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductDetailBloc, ProductDetailState>(
-      builder: (context, state) {
-        return switch (state) {
-          ProductDetailInitial() ||
-          ProductDetailLoading() =>
-            Scaffold(
-              appBar: AppBar(title: const Text('Product Details')),
-              body: const Center(child: CircularProgressIndicator()),
-            ),
-          ProductDetailNotFound() => Scaffold(
-              appBar: AppBar(title: const Text('Product Details')),
-              body: const Center(child: Text('Product not found')),
-            ),
-          ProductDetailError(:final message) => Scaffold(
-              appBar: AppBar(title: const Text('Product Details')),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(message, style: const TextStyle(color: Colors.red)),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Go Back'),
-                    ),
-                  ],
+    return switch (state) {
+      ProductDetailInitial() || ProductDetailLoading() => Scaffold(
+          appBar: AppBar(title: const Text('Product Details')),
+          body: const Center(child: CircularProgressIndicator()),
+        ),
+      ProductDetailNotFound() => Scaffold(
+          appBar: AppBar(title: const Text('Product Details')),
+          body: const Center(child: Text('Product not found')),
+        ),
+      ProductDetailError(:final message) => Scaffold(
+          appBar: AppBar(title: const Text('Product Details')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(message, style: const TextStyle(color: Colors.red)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Go Back'),
                 ),
-              ),
+              ],
             ),
-          ProductDetailLoaded(:final product) => Scaffold(
-              appBar: AppBar(
-                title: Text(product.artist),
-              ),
-              body: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _AlbumArt(product: product),
-                    _ProductInfo(product: product),
-                  ],
-                ),
-              ),
-              bottomNavigationBar: _AddToCartBar(product: product),
+          ),
+        ),
+      ProductDetailLoaded(:final product) => Scaffold(
+          appBar: AppBar(
+            title: Text(product.artist),
+          ),
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _AlbumArt(product: product),
+                _ProductInfo(product: product),
+              ],
             ),
-        };
-      },
-    );
+          ),
+          bottomNavigationBar: _AddToCartBar(
+            product: product,
+            onAddToCart: onAddToCart,
+          ),
+        ),
+    };
   }
 }
 
@@ -210,9 +217,13 @@ class _ProductInfo extends StatelessWidget {
 }
 
 class _AddToCartBar extends StatelessWidget {
-  const _AddToCartBar({required this.product});
+  const _AddToCartBar({
+    required this.product,
+    required this.onAddToCart,
+  });
 
   final Product product;
+  final Function(Product) onAddToCart;  // Injected from parent page
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +269,7 @@ class _AddToCartBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: product.isInStock
                     ? () {
-                        sl<CartBloc>().add(CartItemAdded(product));
+                        onAddToCart(product);
                       }
                     : null,
                 icon: const Icon(Icons.add_shopping_cart),

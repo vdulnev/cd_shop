@@ -4,11 +4,13 @@ import 'package:floor/floor.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 import 'package:cd_shop/core/database/daos/address_dao.dart';
+import 'package:cd_shop/core/database/daos/app_settings_dao.dart';
 import 'package:cd_shop/core/database/daos/cart_dao.dart';
 import 'package:cd_shop/core/database/daos/order_dao.dart';
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/daos/user_dao.dart';
 import 'package:cd_shop/core/database/entities/address_entity.dart';
+import 'package:cd_shop/core/database/entities/app_settings_entity.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/database/entities/order_entity.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
@@ -17,8 +19,8 @@ import 'package:cd_shop/core/database/entities/user_entity.dart';
 part 'app_database.g.dart';
 
 @Database(
-  version: 6,
-  entities: [CartItemEntity, ProductEntity, UserEntity, SessionEntity, AddressEntity, OrderEntity, OrderItemEntity],
+  version: 7,
+  entities: [CartItemEntity, ProductEntity, UserEntity, SessionEntity, AddressEntity, OrderEntity, OrderItemEntity, AppSettingsEntity],
 )
 abstract class AppDatabase extends FloorDatabase {
   CartDao get cartDao;
@@ -26,11 +28,12 @@ abstract class AppDatabase extends FloorDatabase {
   UserDao get userDao;
   AddressDao get addressDao;
   OrderDao get orderDao;
+  AppSettingsDao get appSettingsDao;
 
   static Future<AppDatabase> create() async {
     return $FloorAppDatabase
       .databaseBuilder('cd_shop.db')
-      .addMigrations([_migration1to2, _migration2to3, _migration3to4, _migration4to5, _migration5to6])
+      .addMigrations([_migration1to2, _migration2to3, _migration3to4, _migration4to5, _migration5to6, _migration6to7])
       .build();
   }
 }
@@ -157,5 +160,15 @@ final _migration5to6 = Migration(5, 6, (database) async {
 
   await database.execute('''
     CREATE INDEX IF NOT EXISTS idx_order_items_orderId ON order_items (orderId)
+  ''');
+});
+
+/// Migration from version 6 to 7: Add app_settings table
+final _migration6to7 = Migration(6, 7, (database) async {
+  await database.execute('''
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    )
   ''');
 });

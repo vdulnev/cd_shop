@@ -62,11 +62,16 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 **Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
 
+**No Foreign Bloc/State Access in Widgets**: Widgets must never access BLoCs or state managers from other features directly. Instead:
+- Pages (top-level) call foreign usecases and inject callbacks to child widgets.
+- Child widgets receive pure callbacks with no knowledge of other features' implementation.
+- Example: ProductDetailPage calls `AddToCart` usecase, passes result callback to _AddToCartBar.
+
 **No Direct Repository Access in BLoCs**: BLoCs must never depend on repositories directly. All data access goes through use case classes (`domain/usecases/`).
 
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs.
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature must use Riverpod (StateNotifier/Provider); do not introduce new Flutter BLoCs there. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
 
 ### Core Components
 
@@ -83,7 +88,7 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 | Feature | BLoCs | Purpose |
 |---------|-------|---------|
 | auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
-| product | ProductListBloc, ProductSearchBloc, ProductDetailBloc | Product catalog |
+| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier (Riverpod-only, no BLoCs) | Product catalog |
 | cart | CartBloc | Shopping cart with real-time updates |
 | address | AddressBloc | User address management |
 | order | CheckoutBloc, OrderListBloc | Checkout flow and order history |

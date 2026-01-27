@@ -1,87 +1,104 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_bloc.dart';
+import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_list_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
 
-class MockGetProducts extends Mock implements GetProducts {}
+class MockWatchProducts extends Mock implements WatchProducts {}
 
 void main() {
-  group('ProductListBloc', () {
-    late MockGetProducts mockGetProducts;
+  late MockWatchProducts mockWatchProducts;
+  late StreamController<List<Product>> controller;
+  late ProviderContainer container;
 
-    setUp(() {
-      mockGetProducts = MockGetProducts();
-    });
+  setUp(() {
+    mockWatchProducts = MockWatchProducts();
+    controller = StreamController<List<Product>>.broadcast();
 
-    blocTest<ProductListBloc, ProductListState>(
-      'emits [Loading, Loaded] when ProductListFetched succeeds',
-      build: () {
-        when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => const Right(<Product>[
-            Product(
-              id: '1',
-              title: 'Kind of Blue',
-              artist: 'Miles Davis',
-              description: 'Jazz classic',
-              price: 14.99,
-              genre: ProductGenre.rock,
-            ),
-          ]),
-        );
-        return ProductListBloc(getProducts: mockGetProducts);
-      },
-      act: (b) => b.add(const ProductListFetched()),
-      expect: () => [
-        isA<ProductListLoading>(),
-        isA<ProductListLoaded>().having((s) => s.products.length, 'count', 1),
-      ],
-      verify: (_) {
-        verify(() => mockGetProducts(const NoParams())).called(1);
-      },
-    );
+    when(() => mockWatchProducts(const NoParams()))
+        .thenAnswer((_) => controller.stream);
 
-    blocTest<ProductListBloc, ProductListState>(
-      'emits [Loaded] when ProductListRefreshed succeeds (without loading)',
-      build: () {
-        when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => const Right(<Product>[
-            Product(
-              id: '2',
-              title: 'The Dark Side of the Moon',
-              artist: 'Pink Floyd',
-              description: 'Progressive rock masterpiece',
-              price: 21.99,
-              genre: ProductGenre.rock,
-            ),
-          ]),
-        );
-        return ProductListBloc(getProducts: mockGetProducts);
-      },
-      act: (b) => b.add(const ProductListRefreshed()),
-      expect: () => [
-        isA<ProductListLoaded>().having((s) => s.products.first.id, 'first.id', '2'),
+    container = ProviderContainer(
+      overrides: [
+        productListProvider.overrideWith((_) {
+          return ProductListNotifier(watchProducts: mockWatchProducts);
+        }),
       ],
     );
+  });
 
-    blocTest<ProductListBloc, ProductListState>(
-      'emits [Loading, Error] when ProductListFetched fails',
-      build: () {
-        when(() => mockGetProducts(const NoParams())).thenAnswer(
-          (_) async => const Left(ServerFailure(message: 'load failed')),
-        );
-        return ProductListBloc(getProducts: mockGetProducts);
-      },
-      act: (b) => b.add(const ProductListFetched()),
-      expect: () => [
-        isA<ProductListLoading>(),
-        isA<ProductListError>().having((e) => e.message, 'message', 'load failed'),
-      ],
+  tearDown(() {
+    container.dispose();
+    controller.close();
+  });
+
+  test('initial state transitions to Loaded when stream emits', () async {
+    final states = <ProductListState>[];
+    final sub = container.listen(
+      productListProvider,
+      (previous, next) => states.add(next),
+      fireImmediately: true,
     );
+
+    controller.add(const [
+      Product(
+        id: '1',
+        title: 'Kind of Blue',
+        artist: 'Miles Davis',
+        description: 'Jazz classic',
+        price: 14.99,
+        genre: ProductGenre.rock,
+      ),
+    ]);
+
+    // Allow stream event to propagate
+    await Future.delayed(Duration.zero);
+
+    expect(states, [
+      isA<ProductListInitial>(),
+      isA<ProductListLoaded>().having((s) => s.products.length, 'count', 1),
+    ]);
+
+    sub.close();
+  });
+
+  test('refresh emits Loading then Loaded', () async {
+    final states = <ProductListState>[];
+    final sub = container.listen(
+      productListProvider,
+      (previous, next) => states.add(next),
+      fireImmediately: true,
+    );
+
+    final refreshFuture = container.read(productListProvider.notifier).refresh();
+
+    controller.add(const [
+      Product(
+        id: '2',
+        title: 'The Dark Side of the Moon',
+        artist: 'Pink Floyd',
+        description: 'Progressive rock masterpiece',
+        price: 21.99,
+        genre: ProductGenre.rock,
+      ),
+    ]);
+
+    await refreshFuture;
+
+    // Expect at least Initial -> Loading -> Loaded; the stream subscription
+    // may also deliver a duplicate Loaded from _subscribe().
+    expect(states.length, greaterThanOrEqualTo(3));
+    expect(states[0], isA<ProductListInitial>());
+    expect(states[1], isA<ProductListLoading>());
+    expect(states[2], isA<ProductListLoaded>()
+        .having((s) => s.products.first.id, 'first.id', '2'));
+
+    sub.close();
   });
 }

@@ -57,9 +57,19 @@ lib/features/<feature>/
 
 **Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
 
+**No Foreign Bloc Access in Widgets**: Widgets must never access BLoCs from other features (e.g., CartBloc in product widgets). Instead, use usecases or inject callbacks from parent pages. Example: ProductDetailPage injects an `AddToCart` usecase callback to _AddToCartBar, keeping cart logic isolated.
+
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs.
+### Reactive Repository Rules
+- **Primary API is streams**: Prefer `Stream<List<T>>` (e.g., `watchProducts()`) for live data. Avoid wrapping streams in `Either`; propagate failures via the stream error channel.
+- **Floor streaming queries**: Implement DAO methods using Floor `@Query` returning `Stream<List<Entity>>` (e.g., `ProductDao.watchAllProducts()`). Map entities to domain in the repository.
+- **Non-blocking initialization**: Trigger seeding in the repository constructor without awaiting in method calls. Do not call init per-method.
+- **Persist initialization state**: Track one-time seeds using a dedicated settings table (e.g., `app_settings` with key `products_seeded`) rather than checking table emptiness.
+- **Domain-only emissions**: Streams should emit domain models; convert entities in the repository layer.
+- **UI subscription**: Notifiers/BLoCs subscribe to streams and update state on data; handle errors via `onError` to surface user-friendly messages.
+
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature is Riverpod-only (StateNotifier/Provider) — do not add new Flutter BLoCs there. Do not create intermediate providers that merely wrap `sl()` calls; inject usecases directly via `sl()` in notifier factories.
 
 ### Core Components
 
@@ -76,7 +86,7 @@ lib/features/<feature>/
 | Feature | BLoCs | Purpose |
 |---------|-------|---------|
 | auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
-| product | ProductListBloc, ProductSearchBloc, ProductDetailBloc | Product catalog |
+| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier (Riverpod-only, no BLoCs) | Product catalog |
 | cart | CartBloc | Shopping cart with real-time updates |
 | address | AddressBloc | User address management |
 | order | CheckoutBloc, OrderListBloc | Checkout flow and order history |

@@ -7,6 +7,9 @@ abstract class ProductDao {
   @Query('SELECT * FROM products')
   Future<List<ProductEntity>> getAllProducts();
 
+  @Query('SELECT * FROM products')
+  Stream<List<ProductEntity>> watchAllProducts();
+
   @Query('SELECT * FROM products WHERE id = :id')
   Future<ProductEntity?> getProductById(String id);
 

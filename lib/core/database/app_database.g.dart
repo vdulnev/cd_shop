@@ -82,13 +82,15 @@ class _$AppDatabase extends AppDatabase {
 
   OrderDao? _orderDaoInstance;
 
+  AppSettingsDao? _appSettingsDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 6,
+      version: 7,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -117,6 +119,8 @@ class _$AppDatabase extends AppDatabase {
             'CREATE TABLE IF NOT EXISTS `orders` (`id` TEXT NOT NULL, `userId` TEXT NOT NULL, `shippingAddressId` TEXT NOT NULL, `paymentMethod` TEXT NOT NULL, `subtotal` REAL NOT NULL, `shippingCost` REAL NOT NULL, `tax` REAL NOT NULL, `total` REAL NOT NULL, `status` TEXT NOT NULL, `orderDate` INTEGER NOT NULL, `estimatedDeliveryDate` INTEGER, `notes` TEXT, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `order_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `orderId` TEXT NOT NULL, `productId` TEXT NOT NULL, `productTitle` TEXT NOT NULL, `productArtist` TEXT NOT NULL, `productPrice` REAL NOT NULL, `productImageUrl` TEXT, `quantity` INTEGER NOT NULL, FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE)');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `app_settings` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY (`key`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -147,6 +151,12 @@ class _$AppDatabase extends AppDatabase {
   @override
   OrderDao get orderDao {
     return _orderDaoInstance ??= _$OrderDao(database, changeListener);
+  }
+
+  @override
+  AppSettingsDao get appSettingsDao {
+    return _appSettingsDaoInstance ??=
+        _$AppSettingsDao(database, changeListener);
   }
 }
 
@@ -238,7 +248,7 @@ class _$ProductDao extends ProductDao {
   _$ProductDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database),
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
         _productEntityInsertionAdapter = InsertionAdapter(
             database,
             'products',
@@ -253,7 +263,8 @@ class _$ProductDao extends ProductDao {
                   'releaseYear': item.releaseYear,
                   'stockQuantity': item.stockQuantity,
                   'isAvailable': item.isAvailable ? 1 : 0
-                }),
+                },
+            changeListener),
         _productEntityUpdateAdapter = UpdateAdapter(
             database,
             'products',
@@ -269,7 +280,8 @@ class _$ProductDao extends ProductDao {
                   'releaseYear': item.releaseYear,
                   'stockQuantity': item.stockQuantity,
                   'isAvailable': item.isAvailable ? 1 : 0
-                });
+                },
+            changeListener);
 
   final sqflite.DatabaseExecutor database;
 
@@ -295,6 +307,24 @@ class _$ProductDao extends ProductDao {
             releaseYear: row['releaseYear'] as int?,
             stockQuantity: row['stockQuantity'] as int,
             isAvailable: (row['isAvailable'] as int) != 0));
+  }
+
+  @override
+  Stream<List<ProductEntity>> watchAllProducts() {
+    return _queryAdapter.queryListStream('SELECT * FROM products',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            title: row['title'] as String,
+            artist: row['artist'] as String,
+            description: row['description'] as String,
+            price: row['price'] as double,
+            imageUrl: row['imageUrl'] as String?,
+            genre: row['genre'] as String,
+            releaseYear: row['releaseYear'] as int?,
+            stockQuantity: row['stockQuantity'] as int,
+            isAvailable: (row['isAvailable'] as int) != 0),
+        queryableName: 'products',
+        isView: false);
   }
 
   @override
@@ -767,5 +797,45 @@ class _$OrderDao extends OrderDao {
   @override
   Future<void> updateOrder(OrderEntity order) async {
     await _orderEntityUpdateAdapter.update(order, OnConflictStrategy.abort);
+  }
+}
+
+class _$AppSettingsDao extends AppSettingsDao {
+  _$AppSettingsDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _appSettingsEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'app_settings',
+            (AppSettingsEntity item) =>
+                <String, Object?>{'key': item.key, 'value': item.value});
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<AppSettingsEntity> _appSettingsEntityInsertionAdapter;
+
+  @override
+  Future<AppSettingsEntity?> getSetting(String key) async {
+    return _queryAdapter.query('SELECT * FROM app_settings WHERE key = ?1',
+        mapper: (Map<String, Object?> row) => AppSettingsEntity(
+            key: row['key'] as String, value: row['value'] as String),
+        arguments: [key]);
+  }
+
+  @override
+  Future<void> deleteSetting(String key) async {
+    await _queryAdapter.queryNoReturn('DELETE FROM app_settings WHERE key = ?1',
+        arguments: [key]);
+  }
+
+  @override
+  Future<void> insertSetting(AppSettingsEntity setting) async {
+    await _appSettingsEntityInsertionAdapter.insert(
+        setting, OnConflictStrategy.replace);
   }
 }

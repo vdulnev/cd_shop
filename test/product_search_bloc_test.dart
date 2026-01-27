@@ -1,12 +1,11 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_search_bloc.dart';
+import 'package:cd_shop/features/product/presentation/bloc/product_search_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
 
 class MockSearchProducts extends Mock implements SearchProducts {}
 
@@ -17,72 +16,99 @@ void main() {
     registerFallbackValue(_FakeParams());
   });
 
-  group('ProductSearchBloc', () {
+  group('ProductSearchNotifier', () {
     late MockSearchProducts mockSearchProducts;
-    late ProductSearchBloc bloc;
+    late ProviderContainer container;
 
     setUp(() {
       mockSearchProducts = MockSearchProducts();
-      bloc = ProductSearchBloc(searchProducts: mockSearchProducts);
+      container = ProviderContainer(
+        overrides: [
+          productSearchProvider.overrideWith((_) {
+            return ProductSearchNotifier(searchProducts: mockSearchProducts);
+          }),
+        ],
+      );
     });
 
-    tearDown(() async {
-      await bloc.close();
+    tearDown(() {
+      container.dispose();
     });
 
     test('initial state is ProductSearchInitial', () {
-      expect(bloc.state, isA<ProductSearchInitial>());
+      expect(container.read(productSearchProvider), isA<ProductSearchInitial>());
     });
 
-    blocTest<ProductSearchBloc, ProductSearchState>(
-      'emits [Loading, Loaded] on successful search',
-      build: () {
-        when(() => mockSearchProducts(any(that: isA<SearchProductsParams>()))).thenAnswer(
-          (_) async => const Right(<Product>[
-            Product(
-              id: '1',
-              title: 'Abbey Road',
-              artist: 'The Beatles',
-              description: 'Classic album',
-              price: 19.99,
-              genre: ProductGenre.rock,
-            ),
-          ]),
-        );
-        return bloc;
-      },
-      act: (b) => b.add(const ProductSearchQueryChanged('beatles')),
-      wait: const Duration(milliseconds: 350),
-      expect: () => [
+    test('emits [Initial, Loading, Loaded] on successful search', () async {
+      when(() => mockSearchProducts(any(that: isA<SearchProductsParams>()))).thenAnswer(
+        (_) async => const <Product>[
+          Product(
+            id: '1',
+            title: 'Abbey Road',
+            artist: 'The Beatles',
+            description: 'Classic album',
+            price: 19.99,
+            genre: ProductGenre.rock,
+          ),
+        ],
+      );
+
+      final states = <ProductSearchState>[];
+      final sub = container.listen(
+        productSearchProvider,
+        (previous, next) => states.add(next),
+        fireImmediately: true,
+      );
+
+      container.read(productSearchProvider.notifier).updateQuery('beatles');
+      await Future.delayed(const Duration(milliseconds: 350));
+
+      expect(states, [
+        isA<ProductSearchInitial>(),
         isA<ProductSearchLoading>(),
         isA<ProductSearchLoaded>().having((s) => s.query, 'query', 'beatles'),
-      ],
-      verify: (_) {
-        verify(() => mockSearchProducts(const SearchProductsParams(query: 'beatles'))).called(1);
-      },
-    );
+      ]);
 
-    blocTest<ProductSearchBloc, ProductSearchState>(
-      'emits [Loading, Error] on failed search',
-      build: () {
-        when(() => mockSearchProducts(any(that: isA<SearchProductsParams>()))).thenAnswer(
-          (_) async => const Left(ServerFailure(message: 'oops')),
-        );
-        return bloc;
-      },
-      act: (b) => b.add(const ProductSearchQueryChanged('error')),
-      wait: const Duration(milliseconds: 350),
-      expect: () => [
+      sub.close();
+      verify(() => mockSearchProducts(const SearchProductsParams(query: 'beatles'))).called(1);
+    });
+
+    test('stays on Loading when search fails (errors via app events)', () async {
+      when(() => mockSearchProducts(any(that: isA<SearchProductsParams>())))
+          .thenThrow(Exception('oops'));
+
+      final states = <ProductSearchState>[];
+      final sub = container.listen(
+        productSearchProvider,
+        (previous, next) => states.add(next),
+        fireImmediately: true,
+      );
+
+      container.read(productSearchProvider.notifier).updateQuery('error');
+      await Future.delayed(const Duration(milliseconds: 350));
+
+      expect(states, [
+        isA<ProductSearchInitial>(),
         isA<ProductSearchLoading>(),
-        isA<ProductSearchError>().having((e) => e.message, 'message', 'oops'),
-      ],
-    );
+      ]);
 
-    blocTest<ProductSearchBloc, ProductSearchState>(
-      'emits nothing when query is empty',
-      build: () => bloc,
-      act: (b) => b.add(const ProductSearchQueryChanged('   ')),
-      expect: () => [],
-    );
+      sub.close();
+    });
+
+    test('emits only initial state when query is empty', () {
+      final states = <ProductSearchState>[];
+      final sub = container.listen(
+        productSearchProvider,
+        (previous, next) => states.add(next),
+        fireImmediately: true,
+      );
+
+      container.read(productSearchProvider.notifier).updateQuery('   ');
+
+      expect(states, everyElement(isA<ProductSearchInitial>()));
+      expect(states.length, anyOf(1, 2));
+
+      sub.close();
+    });
   });
 }

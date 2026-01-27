@@ -1,6 +1,3 @@
-import 'package:dartz/dartz.dart';
-
-import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
@@ -10,7 +7,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Implementations can be swapped for testing or different data sources.
 abstract class ProductRepository {
   /// Get all products with optional filtering
-  Future<Either<Failure, List<Product>>> getProducts({
+  Future<List<Product>> getProducts({
     ProductGenre? genre,
     String? searchQuery,
     int? limit,
@@ -18,16 +15,19 @@ abstract class ProductRepository {
   });
 
   /// Get a single product by ID
-  Future<Either<Failure, Product>> getProductById(String id);
+  Future<Product> getProductById(String id);
 
   /// Search products by query string
-  Future<Either<Failure, List<Product>>> searchProducts(String query);
+  Future<List<Product>> searchProducts(String query);
 
   /// Get products by genre
-  Future<Either<Failure, List<Product>>> getProductsByGenre(ProductGenre genre);
+  Future<List<Product>> getProductsByGenre(ProductGenre genre);
 
   /// Get featured/recommended products
-  Future<Either<Failure, List<Product>>> getFeaturedProducts();
+  Future<List<Product>> getFeaturedProducts();
+
+  /// Watch products for real-time updates
+  Stream<List<Product>> watchProducts();
 
   /// Stream of repository-level events for UI notifications
   Stream<RepositoryEvent> eventStream();
