@@ -62,6 +62,8 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 **Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
 
+**No Direct Repository Access in BLoCs**: BLoCs must never depend on repositories directly. All data access goes through use case classes (`domain/usecases/`).
+
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
 
 **Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs.
