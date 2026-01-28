@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
-import 'package:cd_shop/features/order/presentation/bloc/checkout_bloc.dart';
+import 'package:cd_shop/features/order/presentation/providers/checkout_state.dart';
+import 'package:cd_shop/features/order/presentation/providers/checkout_provider.dart';
 import 'package:cd_shop/features/order/presentation/widgets/address_selection_section.dart';
 import 'package:cd_shop/features/order/presentation/widgets/order_summary_section.dart';
 import 'package:cd_shop/features/order/presentation/widgets/payment_method_section.dart';
-import 'package:cd_shop/injection_container.dart';
 
-class CheckoutPage extends StatelessWidget {
+class CheckoutPage extends ConsumerWidget {
   const CheckoutPage({
     super.key,
     required this.userId,
@@ -21,20 +21,24 @@ class CheckoutPage extends StatelessWidget {
   final List<CartItem> cartItems;
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          sl<CheckoutBloc>()..add(CheckoutStarted(userId, cartItems)),
-      child: const CheckoutView(),
-    );
-  }
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final params = CheckoutParams(userId: userId, cartItems: cartItems);
 
-class CheckoutView extends StatelessWidget {
-  const CheckoutView({super.key});
+    ref.listen<CheckoutState>(checkoutProvider(params), (previous, state) {
+      if (state is CheckoutSuccess) {
+        _showSuccessDialog(context, state.order);
+      } else if (state is CheckoutError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
 
-  @override
-  Widget build(BuildContext context) {
+    final state = ref.watch(checkoutProvider(params));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Checkout'),
@@ -43,58 +47,47 @@ class CheckoutView extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: BlocConsumer<CheckoutBloc, CheckoutState>(
-        listener: (context, state) {
-          if (state is CheckoutSuccess) {
-            _showSuccessDialog(context, state.order);
-          } else if (state is CheckoutError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          return switch (state) {
-            CheckoutInitial() || CheckoutLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            CheckoutReady() => _buildCheckoutForm(context, state),
-            CheckoutPlacingOrder() => const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Placing your order...'),
-                  ],
+      body: switch (state) {
+        CheckoutInitial() || CheckoutLoading() => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        CheckoutReady() => _buildCheckoutForm(context, ref, params, state),
+        CheckoutPlacingOrder() => const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Placing your order...'),
+              ],
+            ),
+          ),
+        CheckoutSuccess() => const SizedBox.shrink(),
+        CheckoutError() => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(state.message),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Go Back'),
                 ),
-              ),
-            CheckoutSuccess() => const SizedBox.shrink(),
-            CheckoutError() => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(state.message),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => context.pop(),
-                      child: const Text('Go Back'),
-                    ),
-                  ],
-                ),
-              ),
-          };
-        },
-      ),
+              ],
+            ),
+          ),
+      },
     );
   }
 
-  Widget _buildCheckoutForm(BuildContext context, CheckoutReady state) {
+  Widget _buildCheckoutForm(
+    BuildContext context,
+    WidgetRef ref,
+    CheckoutParams params,
+    CheckoutReady state,
+  ) {
     if (state.cartItems.isEmpty) {
       return Center(
         child: Column(
@@ -122,7 +115,9 @@ class CheckoutView extends StatelessWidget {
             addresses: state.addresses,
             selectedAddress: state.selectedAddress,
             onAddressSelected: (address) {
-              context.read<CheckoutBloc>().add(CheckoutAddressSelected(address));
+              ref
+                  .read(checkoutProvider(params).notifier)
+                  .selectAddress(address);
             },
           ),
 
@@ -132,9 +127,9 @@ class CheckoutView extends StatelessWidget {
           PaymentMethodSection(
             selectedPaymentMethod: state.selectedPaymentMethod,
             onPaymentMethodSelected: (method) {
-              context
-                  .read<CheckoutBloc>()
-                  .add(CheckoutPaymentMethodSelected(method));
+              ref
+                  .read(checkoutProvider(params).notifier)
+                  .selectPaymentMethod(method);
             },
           ),
 
@@ -151,7 +146,7 @@ class CheckoutView extends StatelessWidget {
               ),
               maxLines: 3,
               onChanged: (notes) {
-                context.read<CheckoutBloc>().add(CheckoutNotesChanged(notes));
+                ref.read(checkoutProvider(params).notifier).updateNotes(notes);
               },
             ),
           ),
@@ -173,7 +168,7 @@ class CheckoutView extends StatelessWidget {
             child: ElevatedButton(
               onPressed: state.canPlaceOrder
                   ? () {
-                      context.read<CheckoutBloc>().add(const CheckoutOrderPlaced());
+                      ref.read(checkoutProvider(params).notifier).placeOrder();
                     }
                   : null,
               style: ElevatedButton.styleFrom(

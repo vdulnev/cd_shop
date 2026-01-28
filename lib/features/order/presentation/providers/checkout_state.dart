@@ -58,8 +58,7 @@ class CheckoutReady extends CheckoutState {
       cartItems: cartItems ?? this.cartItems,
       addresses: addresses ?? this.addresses,
       selectedAddress: selectedAddress ?? this.selectedAddress,
-      selectedPaymentMethod:
-          selectedPaymentMethod ?? this.selectedPaymentMethod,
+      selectedPaymentMethod: selectedPaymentMethod ?? this.selectedPaymentMethod,
       notes: notes ?? this.notes,
     );
   }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cd_shop/features/order/presentation/bloc/order_list_bloc.dart';
+import 'package:cd_shop/features/order/domain/entities/order.dart';
+import 'package:cd_shop/features/order/presentation/providers/order_list_state.dart';
+import 'package:cd_shop/features/order/presentation/providers/order_list_provider.dart';
 import 'package:cd_shop/features/order/presentation/widgets/order_card.dart';
-import 'package:cd_shop/injection_container.dart';
 
-class OrdersPage extends StatelessWidget {
+class OrdersPage extends ConsumerWidget {
   const OrdersPage({
     super.key,
     required this.userId,
@@ -14,37 +15,28 @@ class OrdersPage extends StatelessWidget {
   final String userId;
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          sl<OrderListBloc>()..add(OrderListStarted(userId)),
-      child: const _OrdersView(),
-    );
-  }
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(orderListProvider(userId));
 
-class _OrdersView extends StatelessWidget {
-  const _OrdersView();
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Orders'),
       ),
-      body: BlocBuilder<OrderListBloc, OrderListState>(
-        builder: (context, state) {
-          return switch (state) {
-            OrderListInitial() || OrderListLoading() => const Center(
-                child: CircularProgressIndicator(),
+      body: switch (state) {
+        OrderListInitial() || OrderListLoading() => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        OrderListError(:final message) => _OrdersErrorView(message: message),
+        OrderListLoaded(:final orders) => orders.isEmpty
+            ? const _OrdersEmptyView()
+            : _OrdersListView(
+                orders: orders,
+                onCancel: (orderId) =>
+                    ref.read(orderListProvider(userId).notifier).cancelOrder(
+                          orderId,
+                        ),
               ),
-            OrderListError(:final message) => _OrdersErrorView(message: message),
-            OrderListLoaded(:final orders) => orders.isEmpty
-                ? const _OrdersEmptyView()
-                : _OrdersListView(orders: orders),
-          };
-        },
-      ),
+      },
     );
   }
 }
@@ -121,9 +113,13 @@ class _OrdersErrorView extends StatelessWidget {
 }
 
 class _OrdersListView extends StatelessWidget {
-  const _OrdersListView({required this.orders});
+  const _OrdersListView({
+    required this.orders,
+    required this.onCancel,
+  });
 
-  final List<dynamic> orders;
+  final List<Order> orders;
+  final ValueChanged<String> onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +154,7 @@ class _OrdersListView extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              context.read<OrderListBloc>().add(
-                    OrderCancellationRequested(orderId),
-                  );
+              onCancel(orderId);
               Navigator.of(dialogContext).pop();
             },
             child: const Text('Yes, Cancel'),
