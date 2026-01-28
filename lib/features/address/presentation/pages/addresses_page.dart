@@ -1,26 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cd_shop/core/widgets/snackbar_helper.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
-import 'package:cd_shop/features/address/presentation/bloc/address_bloc.dart';
-import 'package:cd_shop/injection_container.dart';
+import 'package:cd_shop/features/address/presentation/bloc/address_state.dart';
+import 'package:cd_shop/features/address/presentation/providers/address_provider.dart';
 
-class AddressesPage extends StatelessWidget {
+class AddressesPage extends ConsumerWidget {
   const AddressesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AddressBloc>()..add(const AddressesLoaded()),
-      child: const _AddressesView(),
-    );
-  }
-}
-
-class _AddressesView extends StatelessWidget {
-  const _AddressesView();
 
   void _openAddAddress(BuildContext context) {
     context.push('/account/addresses/add');
@@ -30,12 +17,10 @@ class _AddressesView extends StatelessWidget {
     context.push('/account/addresses/${address.id}/edit', extra: address);
   }
 
-  void _setDefaultAddress(BuildContext context, String addressId) {
-    context.read<AddressBloc>().add(DefaultAddressSet(addressId));
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(addressProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Addresses'),
@@ -46,37 +31,26 @@ class _AddressesView extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocConsumer<AddressBloc, AddressState>(
-        listener: (context, state) {
-          if (state is AddressError) {
-            showErrorSnackBar(context, message: state.message);
-          } else if (state is AddressNotAuthenticated) {
-            showErrorSnackBar(context, message: 'Please log in to view addresses');
-          }
-        },
-        builder: (context, state) {
-          return switch (state) {
-            AddressInitial() || AddressLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            AddressesLoadedState(:final addresses, :final defaultAddressId) =>
-              addresses.isEmpty
-                  ? _EmptyState(onAddPressed: () => _openAddAddress(context))
-                  : _AddressesList(
-                      addresses: addresses,
-                      defaultAddressId: defaultAddressId,
-                      onSetDefault: (id) => _setDefaultAddress(context, id),
-                      onEdit: (address) => _openEditAddress(context, address),
-                    ),
-            AddressError(:final message) => Center(
-                child: Text('Error: $message'),
-              ),
-            AddressNotAuthenticated() => const Center(
-                child: Text('Please log in to view addresses'),
-              ),
-          };
-        },
-      ),
+      body: switch (state) {
+        AddressInitial() || AddressLoading() => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        AddressesLoadedState(:final addresses, :final defaultAddressId) =>
+          addresses.isEmpty
+              ? _EmptyState(onAddPressed: () => _openAddAddress(context))
+              : _AddressesList(
+                  addresses: addresses,
+                  defaultAddressId: defaultAddressId,
+                  onSetDefault: (id) =>
+                      ref.read(addressProvider.notifier).setDefaultAddress(id),
+                  onEdit: (address) => _openEditAddress(context, address),
+                  onDelete: (id) =>
+                      ref.read(addressProvider.notifier).deleteAddress(id),
+                ),
+        AddressNotAuthenticated() => const Center(
+            child: Text('Please log in to view addresses'),
+          ),
+      },
     );
   }
 }
@@ -121,12 +95,14 @@ class _AddressesList extends StatelessWidget {
     required this.defaultAddressId,
     required this.onSetDefault,
     required this.onEdit,
+    required this.onDelete,
   });
 
   final List<Address> addresses;
   final String? defaultAddressId;
   final void Function(String) onSetDefault;
   final void Function(Address) onEdit;
+  final void Function(String) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +117,7 @@ class _AddressesList extends StatelessWidget {
           isDefault: isDefault,
           onSetDefault: onSetDefault,
           onEdit: onEdit,
+          onDelete: onDelete,
         );
       },
     );
@@ -153,12 +130,14 @@ class _AddressCard extends StatelessWidget {
     required this.isDefault,
     required this.onSetDefault,
     required this.onEdit,
+    required this.onDelete,
   });
 
   final Address address;
   final bool isDefault;
   final void Function(String) onSetDefault;
   final void Function(Address) onEdit;
+  final void Function(String) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +217,7 @@ class _AddressCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.read<AddressBloc>().add(AddressDeleted(address.id));
+              onDelete(address.id);
               Navigator.of(dialogContext).pop();
             },
             style: TextButton.styleFrom(

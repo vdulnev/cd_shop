@@ -30,15 +30,6 @@ class AddressesLoadedState extends AddressState {
   List<Object?> get props => [addresses, defaultAddressId];
 }
 
-class AddressError extends AddressState {
-  const AddressError(this.message);
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
 class AddressNotAuthenticated extends AddressState {
   const AddressNotAuthenticated();
 }

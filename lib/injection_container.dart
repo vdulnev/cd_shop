@@ -8,7 +8,6 @@ import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
 import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
-import 'package:cd_shop/features/address/presentation/bloc/address_bloc.dart';
 import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
@@ -138,18 +137,6 @@ Future<void> _initCartFeature() async {
 
 /// Initialize Address feature dependencies
 Future<void> _initAddressFeature() async {
-  // Bloc
-  sl.registerFactory(
-    () => AddressBloc(
-      getCurrentUser: sl(),
-      getAddresses: sl(),
-      addAddress: sl(),
-      updateAddress: sl(),
-      deleteAddress: sl(),
-      setDefaultAddress: sl(),
-    ),
-  );
-
   // Use Cases
   sl.registerLazySingleton(() => WatchAddresses(sl()));
   sl.registerLazySingleton(() => AddAddress(sl()));
