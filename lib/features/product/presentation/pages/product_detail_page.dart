@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cd_shop/core/constants/app_strings.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_detail_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_detail_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_detail_provider.dart';
 import 'package:cd_shop/injection_container.dart';
 

@@ -1,6 +1,5 @@
 import 'package:get_it/get_it.dart';
 
-import 'package:cd_shop/core/blocs/app_event_bloc.dart';
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/features/address/data/repositories/address_repository_impl.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
@@ -52,8 +51,6 @@ Future<void> initDependencies() async {
   await _initAddressFeature();
   await _initOrderFeature();
 
-  // ===== Core (App-level) =====
-  _initCoreBlocs();
 }
 
 /// Initialize database
@@ -148,15 +145,3 @@ Future<void> _initOrderFeature() async {
   );
 }
 
-/// Initialize core (app-level) BLoCs
-void _initCoreBlocs() {
-  sl.registerFactory(
-    () => AppEventBloc(
-      addressRepository: sl(),
-      authRepository: sl(),
-      cartRepository: sl(),
-      productRepository: sl(),
-      orderRepository: sl(),
-    ),
-  );
-}

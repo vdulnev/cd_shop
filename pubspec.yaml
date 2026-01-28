@@ -11,8 +11,6 @@ dependencies:
     sdk: flutter
 
   # State Management
-  flutter_bloc: ^8.1.5
-  bloc: ^8.1.4
   equatable: ^2.0.5
   flutter_riverpod: ^2.5.1
 
@@ -56,7 +54,6 @@ dev_dependencies:
   floor_generator: ^1.5.0
 
   # Testing
-  bloc_test: ^9.1.7
   mocktail: ^1.0.3
 
 flutter:

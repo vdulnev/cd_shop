@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_search_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_search_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
 
 class ProductSearchPage extends ConsumerStatefulWidget {

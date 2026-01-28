@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
 import 'package:cd_shop/router/app_router.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_detail_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_detail_state.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class ProductDetailNotifier extends StateNotifier<ProductDetailState> {

@@ -8,7 +8,7 @@ import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
-import 'package:cd_shop/features/address/presentation/bloc/address_state.dart';
+import 'package:cd_shop/features/address/presentation/providers/address_state.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 import 'package:cd_shop/injection_container.dart';

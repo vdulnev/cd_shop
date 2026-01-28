@@ -29,4 +29,3 @@ class ProductSearchLoaded extends ProductSearchState {
   @override
   List<Object?> get props => [products, query];
 }
-// No explicit error state; errors are surfaced via app events/snackbars

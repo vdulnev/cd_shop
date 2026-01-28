@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class ProductListNotifier extends StateNotifier<ProductListState> {

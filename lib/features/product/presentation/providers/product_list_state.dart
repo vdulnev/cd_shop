@@ -25,4 +25,3 @@ class ProductListLoaded extends ProductListState {
   @override
   List<Object?> get props => [products];
 }
-// No explicit error state; errors are surfaced via app events/snackbars

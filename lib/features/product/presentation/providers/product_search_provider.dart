@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_search_state.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_search_state.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
