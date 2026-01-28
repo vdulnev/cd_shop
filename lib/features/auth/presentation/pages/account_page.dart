@@ -1,70 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
-import 'package:cd_shop/features/auth/presentation/bloc/account_bloc.dart';
+import 'package:cd_shop/features/auth/presentation/providers/account_state.dart';
+import 'package:cd_shop/features/auth/presentation/providers/account_provider.dart';
 import 'package:cd_shop/features/order/presentation/routes/order_routes.dart';
-import 'package:cd_shop/injection_container.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AccountBloc>()..add(const AccountLoaded()),
-      child: const _AccountView(),
-    );
-  }
+  ConsumerState<AccountPage> createState() => _AccountPageState();
 }
 
-class _AccountView extends StatefulWidget {
-  const _AccountView();
-
+class _AccountPageState extends ConsumerState<AccountPage> {
   @override
-  State<_AccountView> createState() => _AccountViewState();
-}
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(accountProvider.notifier).load());
+  }
 
-class _AccountViewState extends State<_AccountView> {
   void _goToLogin() async {
     await context.push('/account/login');
-    // Reload when returning from login
     if (mounted) {
-      context.read<AccountBloc>().add(const AccountLoaded());
+      await ref.read(accountProvider.notifier).load();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AccountState>(accountProvider, (previous, state) {
+      if (state is AccountLoggedOut) {
+        ref.read(accountProvider.notifier).load();
+      }
+    });
+
+    final state = ref.watch(accountProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
       ),
-      body: BlocConsumer<AccountBloc, AccountState>(
-        listener: (context, state) {
-          if (state is AccountLoggedOut) {
-            // Reload to check auth status
-            context.read<AccountBloc>().add(const AccountLoaded());
-          } else if (state is AccountError) {
-            // Error handled by repository event stream
-          }
-        },
-        builder: (context, state) {
-          return switch (state) {
-            AccountInitial() ||
-            AccountLoading() =>
-              const Center(child: CircularProgressIndicator()),
-            AccountUnauthenticated() ||
-            AccountLoggedOut() =>
-              _UnauthenticatedView(
-                onLoginPressed: _goToLogin,
-              ),
-            AccountError(:final message) => _ErrorView(message: message),
-            AccountAuthenticated(:final user) => _AuthenticatedView(user: user),
-          };
-        },
-      ),
+      body: switch (state) {
+        AccountInitial() ||
+        AccountLoading() =>
+          const Center(child: CircularProgressIndicator()),
+        AccountUnauthenticated() ||
+        AccountLoggedOut() =>
+          _UnauthenticatedView(
+            onLoginPressed: _goToLogin,
+          ),
+        AccountError(:final message) => _ErrorView(
+            message: message,
+            onRetry: () => ref.read(accountProvider.notifier).load(),
+          ),
+        AccountAuthenticated(:final user) => _AuthenticatedView(
+            user: user,
+            onLogout: () => ref.read(accountProvider.notifier).logout(),
+          ),
+      },
     );
   }
 }
@@ -72,9 +67,11 @@ class _AccountViewState extends State<_AccountView> {
 class _AuthenticatedView extends StatelessWidget {
   const _AuthenticatedView({
     required this.user,
+    required this.onLogout,
   });
 
   final User user;
+  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
@@ -136,11 +133,7 @@ class _AuthenticatedView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  context
-                      .read<AccountBloc>()
-                      .add(const AccountLogoutRequested());
-                },
+                onPressed: onLogout,
                 icon: const Icon(Icons.logout),
                 label: const Text('Sign Out'),
                 style: OutlinedButton.styleFrom(
@@ -190,9 +183,13 @@ class _UnauthenticatedView extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+  });
 
   final String message;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -203,8 +200,7 @@ class _ErrorView extends StatelessWidget {
           Text(message, style: const TextStyle(color: Colors.red)),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () =>
-                context.read<AccountBloc>().add(const AccountLoaded()),
+            onPressed: onRetry,
             child: const Text('Retry'),
           ),
         ],
