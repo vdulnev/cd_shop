@@ -25,7 +25,6 @@ import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
-import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:cd_shop/features/order/data/repositories/order_repository_impl.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
@@ -108,16 +107,6 @@ Future<void> _initProductFeature() async {
 
 /// Initialize Cart feature dependencies
 Future<void> _initCartFeature() async {
-  // Bloc - registered as singleton so cart state persists across pages
-  sl.registerFactory(
-    () => CartBloc(
-      addToCart: sl(),
-      removeFromCart: sl(),
-      updateCartQuantity: sl(),
-      clearCart: sl(),
-      watchCart: sl(),
-    ),
-  );
 
   // Use Cases
   sl.registerLazySingleton(() => AddToCart(sl()));

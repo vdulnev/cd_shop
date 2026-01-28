@@ -89,7 +89,7 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 |---------|-------|---------|
 | auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
 | product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier (Riverpod-only, no BLoCs) | Product catalog |
-| cart | CartBloc | Shopping cart with real-time updates |
+| cart | CartNotifier (Riverpod-only) | Shopping cart with real-time updates |
 | address | AddressBloc | User address management |
 | order | CheckoutBloc, OrderListBloc | Checkout flow and order history |
 

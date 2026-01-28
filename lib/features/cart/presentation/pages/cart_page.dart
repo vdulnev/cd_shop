@@ -1,49 +1,45 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
-import 'package:cd_shop/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
+import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
+import 'package:cd_shop/features/cart/presentation/providers/cart_state.dart';
+import 'package:cd_shop/features/cart/presentation/providers/cart_provider.dart';
 import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
-import 'package:cd_shop/injection_container.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends ConsumerWidget {
   const CartPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: sl<CartBloc>()..add(const CartStarted()),
-      child: const _CartView(),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const _CartView();
   }
 }
 
-class _CartView extends StatelessWidget {
+class _CartView extends ConsumerWidget {
   const _CartView();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(cartProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Basket'),
         actions: [
-          BlocBuilder<CartBloc, CartState>(
-            builder: (context, state) {
-              if (state is CartLoaded && state.cart.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _showClearCartDialog(context),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+          if (state is CartLoaded && state.cart.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _showClearCartDialog(context, ref),
+            ),
         ],
       ),
-      body: BlocBuilder<CartBloc, CartState>(
-        builder: (context, state) {
+      body: Builder(
+        builder: (context) {
           return switch (state) {
             CartInitial() || CartLoading() => const Center(
                 child: CircularProgressIndicator(),
@@ -57,8 +53,8 @@ class _CartView extends StatelessWidget {
           };
         },
       ),
-      bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
-        builder: (context, state) {
+      bottomNavigationBar: Builder(
+        builder: (context) {
           final cart = state is CartLoaded ? state.cart : const Cart();
           return _CheckoutBar(
             totalPrice: cart.totalPrice,
@@ -80,7 +76,7 @@ class _CartView extends StatelessWidget {
     );
   }
 
-  void _showClearCartDialog(BuildContext context) {
+  void _showClearCartDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -93,7 +89,7 @@ class _CartView extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              context.read<CartBloc>().add(const CartCleared());
+              ref.read(cartProvider.notifier).clearCart(const NoParams());
               Navigator.of(dialogContext).pop();
             },
             child: const Text('Clear'),
@@ -155,13 +151,13 @@ class _CartItemsList extends StatelessWidget {
   }
 }
 
-class _CartItemTile extends StatelessWidget {
+class _CartItemTile extends ConsumerWidget {
   const _CartItemTile({required this.item});
 
   final CartItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final product = item.product;
 
@@ -178,7 +174,7 @@ class _CartItemTile extends StatelessWidget {
         ),
       ),
       onDismissed: (_) {
-        context.read<CartBloc>().add(CartItemRemoved(product.id));
+        ref.read(cartProvider.notifier).removeFromCart(RemoveFromCartParams(productId: product.id));
       },
       child: InkWell(
         onTap: () => context.push('/products/${product.id}'),
@@ -262,13 +258,13 @@ class _CartItemTile extends StatelessWidget {
   }
 }
 
-class _QuantityControls extends StatelessWidget {
+class _QuantityControls extends ConsumerWidget {
   const _QuantityControls({required this.item});
 
   final CartItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return DecoratedBox(
@@ -283,14 +279,14 @@ class _QuantityControls extends StatelessWidget {
             icon: item.quantity > 1 ? Icons.remove : Icons.delete_outline,
             onPressed: () {
               if (item.quantity > 1) {
-                context.read<CartBloc>().add(
-                      CartItemQuantityUpdated(
-                        item.product.id,
-                        item.quantity - 1,
+                ref.read(cartProvider.notifier).updateQuantity(
+                      UpdateCartQuantityParams(
+                        productId: item.product.id,
+                        quantity: item.quantity - 1,
                       ),
                     );
               } else {
-                context.read<CartBloc>().add(CartItemRemoved(item.product.id));
+                ref.read(cartProvider.notifier).removeFromCart(RemoveFromCartParams(productId: item.product.id));
               }
             },
           ),
@@ -308,10 +304,10 @@ class _QuantityControls extends StatelessWidget {
             icon: Icons.add,
             onPressed: item.quantity < item.product.stockQuantity
                 ? () {
-                    context.read<CartBloc>().add(
-                          CartItemQuantityUpdated(
-                            item.product.id,
-                            item.quantity + 1,
+                    ref.read(cartProvider.notifier).updateQuantity(
+                          UpdateCartQuantityParams(
+                            productId: item.product.id,
+                            quantity: item.quantity + 1,
                           ),
                         );
                   }
