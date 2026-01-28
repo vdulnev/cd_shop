@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
@@ -33,9 +34,13 @@ class CartNotifier extends StateNotifier<CartState> {
 
   void _subscribe() {
     state = const CartLoading();
-    _watchCart().listen((cart) {
-      state = CartLoaded(cart);
-    });
+    _watchCart().listen(
+      (cart) => state = CartLoaded(cart),
+      onError: (error) {
+        final message = error is Failure ? error.message : error.toString();
+        state = CartError(message);
+      },
+    );
   }
 
   Future<void> addToCart(AddToCartParams params) async {

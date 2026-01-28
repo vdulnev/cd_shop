@@ -30,6 +30,9 @@ abstract class UserDao {
   @Query('SELECT * FROM current_session WHERE id = 1')
   Future<SessionEntity?> getCurrentSession();
 
+  @Query('SELECT * FROM current_session WHERE id = 1')
+  Stream<SessionEntity?> watchCurrentSession();
+
   @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> setCurrentSession(SessionEntity session);
 

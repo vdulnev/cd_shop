@@ -30,9 +30,14 @@ class CartItem extends Equatable {
 /// Represents the entire shopping cart
 class Cart extends Equatable {
   const Cart({
-    this.userId = '',
-    this.items = const [],
-  });
+    required this.userId,
+    required this.items,
+  }) : assert(userId != '', 'userId must be a real user id');
+
+  const Cart.empty({
+    required this.userId,
+  })  : items = const [],
+        assert(userId != '', 'userId must be a real user id');
 
   final String userId;
   final List<CartItem> items;

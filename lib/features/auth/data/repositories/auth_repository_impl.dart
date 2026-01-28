@@ -135,6 +135,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Stream<User?> watchCurrentUser() async* {
+    final initialSession = await _userDao.getCurrentSession();
+    if (initialSession == null) {
+      yield null;
+    } else {
+      final userEntity = await _userDao.getUserById(initialSession.userId);
+      yield userEntity?.toDomain();
+    }
+
+    yield* _userDao.watchCurrentSession().asyncMap((session) async {
+      if (session == null) {
+        return null;
+      }
+      final userEntity = await _userDao.getUserById(session.userId);
+      return userEntity?.toDomain();
+    });
+  }
+
+  @override
   Future<Either<Failure, void>> setDefaultAddress(String? addressId) async {
     try {
       final session = await _userDao.getCurrentSession();

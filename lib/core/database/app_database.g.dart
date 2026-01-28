@@ -90,7 +90,7 @@ class _$AppDatabase extends AppDatabase {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 7,
+      version: 8,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -106,7 +106,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `cart_items` (`productId` TEXT NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`productId`))');
+            'CREATE TABLE IF NOT EXISTS `cart_items` (`user_id` TEXT NOT NULL, `productId` TEXT NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY (`productId`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `products` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `description` TEXT NOT NULL, `price` REAL NOT NULL, `imageUrl` TEXT, `genre` TEXT NOT NULL, `releaseYear` INTEGER, `stockQuantity` INTEGER NOT NULL, `isAvailable` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
@@ -169,6 +169,7 @@ class _$CartDao extends CartDao {
             database,
             'cart_items',
             (CartItemEntity item) => <String, Object?>{
+                  'user_id': item.userId,
                   'productId': item.productId,
                   'quantity': item.quantity
                 },
@@ -178,6 +179,7 @@ class _$CartDao extends CartDao {
             'cart_items',
             ['productId'],
             (CartItemEntity item) => <String, Object?>{
+                  'user_id': item.userId,
                   'productId': item.productId,
                   'quantity': item.quantity
                 },
@@ -194,42 +196,58 @@ class _$CartDao extends CartDao {
   final UpdateAdapter<CartItemEntity> _cartItemEntityUpdateAdapter;
 
   @override
-  Future<List<CartItemEntity>> getAllCartItems() async {
-    return _queryAdapter.queryList('SELECT * FROM cart_items',
+  Future<List<CartItemEntity>> getAllCartItems(String userId) async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM cart_items WHERE user_id = ?1',
         mapper: (Map<String, Object?> row) => CartItemEntity(
+            userId: row['user_id'] as String,
             productId: row['productId'] as String,
-            quantity: row['quantity'] as int));
+            quantity: row['quantity'] as int),
+        arguments: [userId]);
   }
 
   @override
-  Stream<List<CartItemEntity>> watchAllCartItems() {
-    return _queryAdapter.queryListStream('SELECT * FROM cart_items',
+  Stream<List<CartItemEntity>> watchCartItems(String userId) {
+    return _queryAdapter.queryListStream(
+        'SELECT * FROM cart_items WHERE user_id = ?1',
         mapper: (Map<String, Object?> row) => CartItemEntity(
+            userId: row['user_id'] as String,
             productId: row['productId'] as String,
             quantity: row['quantity'] as int),
+        arguments: [userId],
         queryableName: 'cart_items',
         isView: false);
   }
 
   @override
-  Future<CartItemEntity?> getCartItem(String productId) async {
-    return _queryAdapter.query('SELECT * FROM cart_items WHERE productId = ?1',
+  Future<CartItemEntity?> getCartItem(
+    String userId,
+    String productId,
+  ) async {
+    return _queryAdapter.query(
+        'SELECT * FROM cart_items WHERE user_id = ?1 AND productId = ?2',
         mapper: (Map<String, Object?> row) => CartItemEntity(
+            userId: row['user_id'] as String,
             productId: row['productId'] as String,
             quantity: row['quantity'] as int),
-        arguments: [productId]);
+        arguments: [userId, productId]);
   }
 
   @override
-  Future<void> deleteCartItem(String productId) async {
+  Future<void> deleteCartItem(
+    String userId,
+    String productId,
+  ) async {
     await _queryAdapter.queryNoReturn(
-        'DELETE FROM cart_items WHERE productId = ?1',
-        arguments: [productId]);
+        'DELETE FROM cart_items WHERE user_id = ?1 AND productId = ?2',
+        arguments: [userId, productId]);
   }
 
   @override
-  Future<void> clearCart() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM cart_items');
+  Future<void> clearCart(String userId) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM cart_items WHERE user_id = ?1',
+        arguments: [userId]);
   }
 
   @override
@@ -426,7 +444,7 @@ class _$UserDao extends UserDao {
   _$UserDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database),
+  )   : _queryAdapter = QueryAdapter(database, changeListener),
         _userEntityInsertionAdapter = InsertionAdapter(
             database,
             'users',
@@ -442,7 +460,8 @@ class _$UserDao extends UserDao {
             database,
             'current_session',
             (SessionEntity item) =>
-                <String, Object?>{'id': item.id, 'userId': item.userId}),
+                <String, Object?>{'id': item.id, 'userId': item.userId},
+            changeListener),
         _userEntityUpdateAdapter = UpdateAdapter(
             database,
             'users',
@@ -522,6 +541,16 @@ class _$UserDao extends UserDao {
     return _queryAdapter.query('SELECT * FROM current_session WHERE id = 1',
         mapper: (Map<String, Object?> row) => SessionEntity(
             id: row['id'] as int, userId: row['userId'] as String));
+  }
+
+  @override
+  Stream<SessionEntity?> watchCurrentSession() {
+    return _queryAdapter.queryStream(
+        'SELECT * FROM current_session WHERE id = 1',
+        mapper: (Map<String, Object?> row) => SessionEntity(
+            id: row['id'] as int, userId: row['userId'] as String),
+        queryableName: 'current_session',
+        isView: false);
   }
 
   @override

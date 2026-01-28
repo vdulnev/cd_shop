@@ -69,9 +69,7 @@ Future<void> _initDatabase() async {
 /// Initialize Auth feature dependencies
 Future<void> _initAuthFeature() async {
   // Bloc
-  sl.registerFactory(
-    () => AccountBloc(getCurrentUser: sl(), logoutUser: sl()),
-  );
+  sl.registerFactory(() => AccountBloc(getCurrentUser: sl(), logoutUser: sl()));
   sl.registerFactory(() => LoginBloc(loginUser: sl()));
   sl.registerFactory(() => RegistrationBloc(registerUser: sl()));
 
@@ -107,7 +105,6 @@ Future<void> _initProductFeature() async {
 
 /// Initialize Cart feature dependencies
 Future<void> _initCartFeature() async {
-
   // Use Cases
   sl.registerLazySingleton(() => AddToCart(sl()));
   sl.registerLazySingleton(() => RemoveFromCart(sl()));
@@ -121,6 +118,11 @@ Future<void> _initCartFeature() async {
       cartDao: sl<AppDatabase>().cartDao,
       authRepository: sl(),
     ),
+    dispose: (instance) {
+      if (instance is CartRepositoryImpl) {
+        instance.dispose();
+      }
+    },
   );
 }
 
@@ -142,17 +144,10 @@ Future<void> _initAddressFeature() async {
 Future<void> _initOrderFeature() async {
   // Bloc
   sl.registerFactory(
-    () => CheckoutBloc(
-      watchAddresses: sl(),
-      placeOrder: sl(),
-      clearCart: sl(),
-    ),
+    () => CheckoutBloc(watchAddresses: sl(), placeOrder: sl(), clearCart: sl()),
   );
   sl.registerFactory(
-    () => OrderListBloc(
-      watchUserOrders: sl(),
-      cancelOrder: sl(),
-    ),
+    () => OrderListBloc(watchUserOrders: sl(), cancelOrder: sl()),
   );
 
   // Use Cases

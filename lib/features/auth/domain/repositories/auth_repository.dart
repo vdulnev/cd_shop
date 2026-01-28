@@ -20,6 +20,9 @@ abstract class AuthRepository {
 
   Future<Either<Failure, User?>> getCurrentUser();
 
+  /// Watch the current signed-in user (or null if signed out)
+  Stream<User?> watchCurrentUser();
+
   Future<Either<Failure, void>> setDefaultAddress(String? addressId);
 
   /// Stream of repository-level events for UI notifications

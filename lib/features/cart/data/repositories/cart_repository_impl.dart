@@ -7,6 +7,7 @@ import 'package:cd_shop/core/database/daos/cart_dao.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
@@ -29,23 +30,64 @@ class CartRepositoryImpl implements CartRepository {
   final CartDao _cartDao;
   final AuthRepository _authRepository;
 
+  StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<List<CartItemEntity>>? _cartItemsSubscription;
+  String? _activeUserId;
+
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
-  final _cartSubject = BehaviorSubject<Cart>.seeded(const Cart());
+  final _cartSubject = BehaviorSubject<Cart>();
 
   void _initCartStream() {
-    _cartDao.watchAllCartItems().listen((entities) async {
-      final cart = await _entitiesToCart(entities);
-      _cartSubject.add(cart);
-    });
+    _authSubscription ??= _authRepository.watchCurrentUser().listen(
+      (user) => unawaited(_syncCartStreamForUser(user?.id)),
+      onError: (_) => unawaited(_syncCartStreamForUser(null)),
+    );
+    unawaited(_syncCartStreamForUser(_activeUserId));
   }
 
-  Future<Cart> _entitiesToCart(List<CartItemEntity> entities) async {
-    final userResult = await _authRepository.getCurrentUser();
-    final userId = userResult.fold((_) => '', (user) => user?.id ?? '');
+  Future<void> _syncCartStreamForUser(String? userId) async {
+    if (userId == null || userId.isEmpty) {
+      _activeUserId = null;
+      await _cartItemsSubscription?.cancel();
+      _cartItemsSubscription = null;
+      _cartSubject.addError(
+        const AuthFailure(message: 'Please sign in to use the cart'),
+      );
+      return;
+    }
 
+    if (_activeUserId == userId && _cartItemsSubscription != null) {
+      return;
+    }
+
+    _activeUserId = userId;
+    await _cartItemsSubscription?.cancel();
+    _cartItemsSubscription = _cartDao.watchCartItems(userId).listen(
+      (entities) async {
+        final cart = await _entitiesToCart(entities, userId: userId);
+        _cartSubject.add(cart);
+      },
+    );
+
+    final initialCart = await _getCurrentCart(userId);
+    _cartSubject.add(initialCart);
+  }
+
+  Future<String?> _getCurrentUserId() async {
+    if (_activeUserId != null && _activeUserId!.isNotEmpty) {
+      return _activeUserId;
+    }
+    final userResult = await _authRepository.getCurrentUser();
+    return userResult.fold((_) => null, (user) => user?.id);
+  }
+
+  Future<Cart> _entitiesToCart(
+    List<CartItemEntity> entities, {
+    required String userId,
+  }) async {
     final items = <CartItem>[];
     for (final entity in entities) {
       final product = ProductMockDataSource.getById(entity.productId);
@@ -62,18 +104,30 @@ class CartRepositoryImpl implements CartRepository {
     int quantity = 1,
   }) async {
     try {
-      final existing = await _cartDao.getCartItem(product.id);
+      final userId = await _getCurrentUserId();
+      if (userId == null || userId.isEmpty) {
+        _eventController.add(
+          const CartErrorEvent(message: 'Please sign in to use the cart'),
+        );
+        return const Left(AuthFailure(message: 'Please sign in to use the cart'));
+      }
+
+      final existing = await _cartDao.getCartItem(userId, product.id);
       final newQuantity = (existing?.quantity ?? 0) + quantity;
 
       await _cartDao.insertCartItem(
-        CartItemEntity(productId: product.id, quantity: newQuantity),
+        CartItemEntity(
+          userId: userId,
+          productId: product.id,
+          quantity: newQuantity,
+        ),
       );
 
       _eventController.add(
         CartSuccessEvent(message: '${product.title} added to cart!'),
       );
 
-      return Right(await _getCurrentCart());
+      return Right(await _getCurrentCart(userId));
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to add item to cart'));
     }
@@ -82,13 +136,21 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> removeFromCart(String productId) async {
     try {
-      await _cartDao.deleteCartItem(productId);
+      final userId = await _getCurrentUserId();
+      if (userId == null || userId.isEmpty) {
+        _eventController.add(
+          const CartErrorEvent(message: 'Please sign in to use the cart'),
+        );
+        return const Left(AuthFailure(message: 'Please sign in to use the cart'));
+      }
+
+      await _cartDao.deleteCartItem(userId, productId);
 
       _eventController.add(
         const CartSuccessEvent(message: 'Item removed from cart'),
       );
 
-      return Right(await _getCurrentCart());
+      return Right(await _getCurrentCart(userId));
     } catch (_) {
       return const Left(
         CacheFailure(message: 'Failed to remove item from cart'),
@@ -102,21 +164,33 @@ class CartRepositoryImpl implements CartRepository {
     int quantity,
   ) async {
     try {
-      final existing = await _cartDao.getCartItem(productId);
+      final userId = await _getCurrentUserId();
+      if (userId == null || userId.isEmpty) {
+        _eventController.add(
+          const CartErrorEvent(message: 'Please sign in to use the cart'),
+        );
+        return const Left(AuthFailure(message: 'Please sign in to use the cart'));
+      }
+
+      final existing = await _cartDao.getCartItem(userId, productId);
 
       if (existing == null) {
         return const Left(NotFoundFailure(message: 'Item not found in cart'));
       }
 
       if (quantity <= 0) {
-        await _cartDao.deleteCartItem(productId);
+        await _cartDao.deleteCartItem(userId, productId);
       } else {
         await _cartDao.updateCartItem(
-          CartItemEntity(productId: productId, quantity: quantity),
+          CartItemEntity(
+            userId: userId,
+            productId: productId,
+            quantity: quantity,
+          ),
         );
       }
 
-      return Right(await _getCurrentCart());
+      return Right(await _getCurrentCart(userId));
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to update cart item'));
     }
@@ -125,21 +199,39 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, Cart>> clearCart() async {
     try {
-      await _cartDao.clearCart();
-      return Right(await _getCurrentCart());
+      final userId = await _getCurrentUserId();
+      if (userId == null || userId.isEmpty) {
+        _eventController.add(
+          const CartErrorEvent(message: 'Please sign in to use the cart'),
+        );
+        return const Left(AuthFailure(message: 'Please sign in to use the cart'));
+      }
+
+      await _cartDao.clearCart(userId);
+      return Right(await _getCurrentCart(userId));
     } catch (_) {
       return const Left(CacheFailure(message: 'Failed to clear cart'));
     }
   }
 
   @override
-  Stream<Cart> watchCart() => _cartSubject.stream;
+  Stream<Cart> watchCart() {
+    _initCartStream();
+    return _cartSubject.stream;
+  }
 
   @override
   Stream<RepositoryEvent> eventStream() => _eventController.stream;
 
-  Future<Cart> _getCurrentCart() async {
-    final entities = await _cartDao.getAllCartItems();
-    return _entitiesToCart(entities);
+  Future<Cart> _getCurrentCart(String userId) async {
+    final entities = await _cartDao.getAllCartItems(userId);
+    return _entitiesToCart(entities, userId: userId);
+  }
+
+  void dispose() {
+    _authSubscription?.cancel();
+    _cartItemsSubscription?.cancel();
+    _eventController.close();
+    _cartSubject.close();
   }
 }

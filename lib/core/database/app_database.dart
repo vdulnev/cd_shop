@@ -19,8 +19,17 @@ import 'package:cd_shop/core/database/entities/user_entity.dart';
 part 'app_database.g.dart';
 
 @Database(
-  version: 7,
-  entities: [CartItemEntity, ProductEntity, UserEntity, SessionEntity, AddressEntity, OrderEntity, OrderItemEntity, AppSettingsEntity],
+  version: 8,
+  entities: [
+    CartItemEntity,
+    ProductEntity,
+    UserEntity,
+    SessionEntity,
+    AddressEntity,
+    OrderEntity,
+    OrderItemEntity,
+    AppSettingsEntity,
+  ],
 )
 abstract class AppDatabase extends FloorDatabase {
   CartDao get cartDao;
@@ -33,7 +42,15 @@ abstract class AppDatabase extends FloorDatabase {
   static Future<AppDatabase> create() async {
     return $FloorAppDatabase
       .databaseBuilder('cd_shop.db')
-      .addMigrations([_migration1to2, _migration2to3, _migration3to4, _migration4to5, _migration5to6, _migration6to7])
+      .addMigrations([
+        _migration1to2,
+        _migration2to3,
+        _migration3to4,
+        _migration4to5,
+        _migration5to6,
+        _migration6to7,
+        _migration7to8,
+      ])
       .build();
   }
 }
@@ -171,4 +188,30 @@ final _migration6to7 = Migration(6, 7, (database) async {
       value TEXT NOT NULL
     )
   ''');
+});
+
+/// Migration from version 7 to 8: Connect cart items to users
+final _migration7to8 = Migration(7, 8, (database) async {
+  await database.execute('''
+    CREATE TABLE IF NOT EXISTS cart_items_new (
+      user_id TEXT NOT NULL,
+      productId TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      PRIMARY KEY (user_id, productId)
+    )
+  ''');
+
+  await database.execute('''
+    INSERT INTO cart_items_new (user_id, productId, quantity)
+    SELECT COALESCE((SELECT userId FROM current_session LIMIT 1), ''),
+           productId,
+           quantity
+    FROM cart_items
+  ''');
+
+  await database.execute('DROP TABLE cart_items');
+  await database.execute('ALTER TABLE cart_items_new RENAME TO cart_items');
+  await database.execute(
+    'CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items (user_id)'
+  );
 });

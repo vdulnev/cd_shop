@@ -55,11 +55,13 @@ class _CartView extends ConsumerWidget {
       ),
       bottomNavigationBar: Builder(
         builder: (context) {
-          final cart = state is CartLoaded ? state.cart : const Cart();
+          final cart = state is CartLoaded ? state.cart : null;
+          final totalPrice = cart?.totalPrice ?? 0.0;
+          final itemCount = cart?.totalItems ?? 0;
           return _CheckoutBar(
-            totalPrice: cart.totalPrice,
-            itemCount: cart.totalItems,
-            onCheckout: cart.isNotEmpty
+            totalPrice: totalPrice,
+            itemCount: itemCount,
+            onCheckout: cart != null && cart.isNotEmpty
                 ? () {
                     context.push(
                       '/cart/checkout',
