@@ -107,7 +107,7 @@ class CartRepositoryImpl implements CartRepository {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
         _eventController.add(
-          const CartErrorEvent(message: 'Please sign in to use the cart'),
+          const ErrorEvent(message: 'Please sign in to use the cart'),
         );
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -124,7 +124,7 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       _eventController.add(
-        CartSuccessEvent(message: '${product.title} added to cart!'),
+        SuccessEvent(message: '${product.title} added to cart!'),
       );
 
       return Right(await _getCurrentCart(userId));
@@ -139,7 +139,7 @@ class CartRepositoryImpl implements CartRepository {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
         _eventController.add(
-          const CartErrorEvent(message: 'Please sign in to use the cart'),
+          const ErrorEvent(message: 'Please sign in to use the cart'),
         );
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -147,7 +147,7 @@ class CartRepositoryImpl implements CartRepository {
       await _cartDao.deleteCartItem(userId, productId);
 
       _eventController.add(
-        const CartSuccessEvent(message: 'Item removed from cart'),
+        const SuccessEvent(message: 'Item removed from cart'),
       );
 
       return Right(await _getCurrentCart(userId));
@@ -167,7 +167,7 @@ class CartRepositoryImpl implements CartRepository {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
         _eventController.add(
-          const CartErrorEvent(message: 'Please sign in to use the cart'),
+          const ErrorEvent(message: 'Please sign in to use the cart'),
         );
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -202,7 +202,7 @@ class CartRepositoryImpl implements CartRepository {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
         _eventController.add(
-          const CartErrorEvent(message: 'Please sign in to use the cart'),
+          const ErrorEvent(message: 'Please sign in to use the cart'),
         );
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }

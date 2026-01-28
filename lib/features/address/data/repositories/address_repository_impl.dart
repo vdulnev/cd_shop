@@ -28,7 +28,7 @@ class AddressRepositoryImpl implements AddressRepository {
     final entity = AddressEntity.fromDomain(address);
     await addressDao.insertAddress(entity);
     _eventController.add(
-      AddressSuccessEvent(message: '${address.name} address added'),
+      SuccessEvent(message: '${address.name} address added'),
     );
     return address;
   }
@@ -38,7 +38,7 @@ class AddressRepositoryImpl implements AddressRepository {
     final entity = AddressEntity.fromDomain(address);
     await addressDao.updateAddress(entity);
     _eventController.add(
-      const AddressSuccessEvent(message: 'Address updated'),
+      const SuccessEvent(message: 'Address updated'),
     );
     return address;
   }
@@ -47,7 +47,7 @@ class AddressRepositoryImpl implements AddressRepository {
   Future<void> deleteAddress(String addressId) async {
     await addressDao.deleteAddress(addressId);
     _eventController.add(
-      const AddressSuccessEvent(message: 'Address deleted'),
+      const SuccessEvent(message: 'Address deleted'),
     );
   }
 }

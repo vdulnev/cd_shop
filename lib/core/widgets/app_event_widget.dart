@@ -20,21 +20,9 @@ class AppEventWidget extends ConsumerWidget {
       next.whenOrNull(
         data: (event) {
           switch (event) {
-            case AuthSuccessEvent(:final message):
+            case SuccessEvent(:final message):
               showSuccessSnackBar(context, message: message);
-            case AuthErrorEvent(:final message):
-              showErrorSnackBar(context, message: message);
-            case CartSuccessEvent(:final message):
-              showSuccessSnackBar(context, message: message);
-            case CartErrorEvent(:final message):
-              showErrorSnackBar(context, message: message);
-            case ProductSuccessEvent(:final message):
-              showSuccessSnackBar(context, message: message);
-            case ProductErrorEvent(:final message):
-              showErrorSnackBar(context, message: message);
-            case AddressSuccessEvent(:final message):
-              showSuccessSnackBar(context, message: message);
-            case AddressErrorEvent(:final message):
+            case ErrorEvent(:final message):
               showErrorSnackBar(context, message: message);
           }
         },

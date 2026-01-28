@@ -71,7 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // Set current session
       await _userDao.setCurrentSession(SessionEntity(id: 1, userId: user.id));
 
-      _eventController.add(AuthSuccessEvent(message: 'Welcome, $name!'));
+      _eventController.add(SuccessEvent(message: 'Welcome, $name!'));
       return Right(user);
     } catch (e) {
       return const Left(ServerFailure(message: 'Registration failed'));
@@ -89,7 +89,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userEntity == null ||
           userEntity.passwordHash != _hashPassword(password)) {
         _eventController.add(
-          const AuthErrorEvent(message: 'Invalid email or password'),
+          const ErrorEvent(message: 'Invalid email or password'),
         );
         return const Left(AuthFailure(message: 'Invalid email or password'));
       }
@@ -101,7 +101,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = userEntity.toDomain();
       _eventController.add(
-        AuthSuccessEvent(message: 'Welcome back, ${user.name}!'),
+        SuccessEvent(message: 'Welcome back, ${user.name}!'),
       );
       return Right(user);
     } catch (e) {
