@@ -15,18 +15,16 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 ///
 /// Uses Firebase Auth for authentication and Firestore for user profiles.
 class FirebaseAuthRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements AuthRepository, Disposable {
   FirebaseAuthRepositoryImpl({
     fb.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
-    this.analyticsEventBus,
   })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
   final fb.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
-  final AnalyticsEventBus? analyticsEventBus;
 
   CollectionReference<Map<String, dynamic>> get _usersRef =>
       _firestore.collection('users');
@@ -104,8 +102,8 @@ class FirebaseAuthRepositoryImpl
       });
 
       // Track analytics
-      analyticsEventBus?.emit(const SignUpAnalyticsEvent());
-      analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
+      emitAnalyticsEvent(const SignUpAnalyticsEvent());
+      emitAnalyticsEvent(SetUserAnalyticsEvent(user: user));
 
       emitEvent(SuccessEvent(message: 'Welcome, $name!'));
       return Right(user);
@@ -151,8 +149,8 @@ class FirebaseAuthRepositoryImpl
       );
 
       // Track analytics
-      analyticsEventBus?.emit(const LoginAnalyticsEvent());
-      analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
+      emitAnalyticsEvent(const LoginAnalyticsEvent());
+      emitAnalyticsEvent(SetUserAnalyticsEvent(user: user));
 
       emitEvent(SuccessEvent(message: 'Welcome back, ${user.name}!'));
       return Right(user);
@@ -170,7 +168,7 @@ class FirebaseAuthRepositoryImpl
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      analyticsEventBus?.emit(const SetUserAnalyticsEvent(user: null));
+      emitAnalyticsEvent(const SetUserAnalyticsEvent(user: null));
       await _firebaseAuth.signOut();
       return const Right(null);
     } catch (e) {

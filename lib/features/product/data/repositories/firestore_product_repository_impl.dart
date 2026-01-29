@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
@@ -13,7 +15,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 /// Uses Firestore as the primary data source and falls back to
 /// local SQLite cache when offline.
 class FirestoreProductRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements ProductRepository, Disposable {
   FirestoreProductRepositoryImpl({
     FirebaseFirestore? firestore,
@@ -163,16 +165,22 @@ class FirestoreProductRepositoryImpl
       }
       final product = _documentToProduct(doc);
       await _cacheProducts([product]);
+      emitAnalyticsEvent(ViewProductAnalyticsEvent(product: product));
       return product;
     } catch (e) {
       // Fallback to local cache
       final entity = await _productDao.getProductById(id);
-      return entity?.toDomain();
+      final product = entity?.toDomain();
+      if (product != null) {
+        emitAnalyticsEvent(ViewProductAnalyticsEvent(product: product));
+      }
+      return product;
     }
   }
 
   @override
   Future<List<Product>> searchProducts(String query) async {
+    emitAnalyticsEvent(SearchAnalyticsEvent(query: query));
     // Firestore doesn't support full-text search
     // Fetch all products and filter locally
     final products = await getProducts();
@@ -225,5 +233,6 @@ class FirestoreProductRepositoryImpl
   @override
   void dispose() {
     disposeEventEmitter();
+    disposeAnalyticsEmitter();
   }
 }

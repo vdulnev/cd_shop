@@ -7,7 +7,6 @@ import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/core/di/firebase_dependency_factory.dart';
-import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/core/services/analytics_observer.dart';
 import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
@@ -49,20 +48,14 @@ Future<void> initDependencies({DependencyFactory? factory}) async {
   final f = factory ?? FirebaseDependencyFactory();
 
   // ===== Core Services =====
-  sl.registerLazySingleton(() => AnalyticsEventBus());
-
-  if (factory == null) {
-    // Only register Firebase-dependent analytics in production
-    sl.registerLazySingleton(() => AnalyticsService());
-    sl.registerLazySingleton(
-      () => AnalyticsObserver(
-        analyticsService: sl<AnalyticsService>(),
-        eventBus: sl<AnalyticsEventBus>(),
-      ),
-    );
-    // Eagerly initialize so the observer starts listening immediately
-    sl<AnalyticsObserver>();
-  }
+  sl.registerLazySingleton<AnalyticsService>(
+    () => f.createAnalyticsService(),
+  );
+  sl.registerLazySingleton<AnalyticsObserver>(
+    () => f.createAnalyticsObserver(
+      analyticsService: sl<AnalyticsService>(),
+    ),
+  );
 
   // ===== Core (Database - kept for offline caching) =====
   await _initDatabase();
@@ -73,6 +66,9 @@ Future<void> initDependencies({DependencyFactory? factory}) async {
   _initCartFeature(f);
   _initAddressFeature(f);
   _initOrderFeature(f);
+
+  // Eagerly initialize so the observer starts listening immediately
+  sl<AnalyticsObserver>();
 }
 
 /// Initialize database (kept for offline caching)

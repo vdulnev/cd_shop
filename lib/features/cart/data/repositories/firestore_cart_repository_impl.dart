@@ -21,12 +21,11 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Stores cart items in Firestore subcollections under each user.
 /// Structure: carts/{userId}/items/{productId}
 class FirestoreCartRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements CartRepository, Disposable {
   FirestoreCartRepositoryImpl({
     FirebaseFirestore? firestore,
     required AuthRepository authRepository,
-    this.analyticsEventBus,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _authRepository = authRepository {
     _initCartStream();
@@ -34,7 +33,6 @@ class FirestoreCartRepositoryImpl
 
   final FirebaseFirestore _firestore;
   final AuthRepository _authRepository;
-  final AnalyticsEventBus? analyticsEventBus;
 
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _cartSubscription;
@@ -177,7 +175,7 @@ class FirestoreCartRepositoryImpl
       });
 
       // Track analytics
-      analyticsEventBus?.emit(AddToCartAnalyticsEvent(product: product, quantity: quantity));
+      emitAnalyticsEvent(AddToCartAnalyticsEvent(product: product, quantity: quantity));
 
       emitEvent(SuccessEvent(message: '${product.title} added to cart!'));
 
@@ -207,7 +205,7 @@ class FirestoreCartRepositoryImpl
 
       // Track analytics
       if (product != null) {
-        analyticsEventBus?.emit(RemoveFromCartAnalyticsEvent(product: product, quantity: quantity));
+        emitAnalyticsEvent(RemoveFromCartAnalyticsEvent(product: product, quantity: quantity));
       }
 
       emitEvent(const SuccessEvent(message: 'Item removed from cart'));

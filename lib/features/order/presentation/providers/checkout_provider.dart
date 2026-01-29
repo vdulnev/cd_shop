@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cd_shop/core/models/analytics_event.dart';
-import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
 import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
@@ -33,12 +31,10 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     required WatchAddresses watchAddresses,
     required PlaceOrder placeOrder,
     required ClearCart clearCart,
-    required AnalyticsEventBus analyticsEventBus,
     required CheckoutParams params,
   })  : _watchAddresses = watchAddresses,
         _placeOrder = placeOrder,
         _clearCart = clearCart,
-        _analyticsEventBus = analyticsEventBus,
         _params = params,
         super(const CheckoutInitial()) {
     _subscribe();
@@ -47,7 +43,6 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   final WatchAddresses _watchAddresses;
   final PlaceOrder _placeOrder;
   final ClearCart _clearCart;
-  final AnalyticsEventBus _analyticsEventBus;
   final CheckoutParams _params;
 
   StreamSubscription<List<Address>>? _addressSubscription;
@@ -123,12 +118,6 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
     state = const CheckoutPlacingOrder();
 
-    final total = current.cartItems.fold<double>(
-      0,
-      (sum, item) => sum + item.product.price * item.quantity,
-    );
-    _analyticsEventBus.emit(BeginCheckoutAnalyticsEvent(items: current.cartItems, total: total));
-
     final request = OrderRequest(
       userId: current.userId,
       items: current.cartItems,
@@ -171,7 +160,6 @@ final checkoutProvider = StateNotifierProvider.autoDispose.family<
     watchAddresses: sl<WatchAddresses>(),
     placeOrder: sl<PlaceOrder>(),
     clearCart: sl<ClearCart>(),
-    analyticsEventBus: sl<AnalyticsEventBus>(),
     params: params,
   );
 });

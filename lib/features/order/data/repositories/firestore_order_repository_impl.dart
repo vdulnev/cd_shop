@@ -18,15 +18,13 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 ///
 /// Stores orders as documents in the 'orders' collection.
 class FirestoreOrderRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements OrderRepository, Disposable {
   FirestoreOrderRepositoryImpl({
     FirebaseFirestore? firestore,
-    this.analyticsEventBus,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
-  final AnalyticsEventBus? analyticsEventBus;
   final _uuid = const Uuid();
 
   CollectionReference<Map<String, dynamic>> get _ordersRef =>
@@ -37,6 +35,14 @@ class FirestoreOrderRepositoryImpl
 
   @override
   Future<Either<Failure, Order>> placeOrder(OrderRequest request) async {
+    final subtotalForCheckout = request.items.fold<double>(
+      0, (acc, item) => acc + item.product.price * item.quantity,
+    );
+    emitAnalyticsEvent(BeginCheckoutAnalyticsEvent(
+      items: request.items,
+      total: subtotalForCheckout,
+    ));
+
     try {
       // Fetch the shipping address
       final addressDoc =
@@ -123,7 +129,7 @@ class FirestoreOrderRepositoryImpl
       );
 
       // Track analytics
-      analyticsEventBus?.emit(PurchaseAnalyticsEvent(
+      emitAnalyticsEvent(PurchaseAnalyticsEvent(
         orderId: orderId,
         total: total,
         shipping: shippingCost,
@@ -198,6 +204,7 @@ class FirestoreOrderRepositoryImpl
   @override
   void dispose() {
     disposeEventEmitter();
+    disposeAnalyticsEmitter();
   }
 
   Order? _documentToOrder(DocumentSnapshot<Map<String, dynamic>> doc) {

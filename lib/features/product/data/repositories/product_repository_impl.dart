@@ -2,8 +2,10 @@ import 'package:cd_shop/core/database/daos/app_settings_dao.dart';
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/app_settings_entity.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
@@ -13,7 +15,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 /// Persists products to SQLite using Floor.
 /// Seeds database with mock data on first launch.
 class ProductRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements ProductRepository, EventEmitter, Disposable {
   ProductRepositoryImpl({
     required ProductDao productDao,
@@ -45,6 +47,7 @@ class ProductRepositoryImpl
   @override
   void dispose() {
     disposeEventEmitter();
+    disposeAnalyticsEmitter();
   }
 
   @override
@@ -80,11 +83,16 @@ class ProductRepositoryImpl
   @override
   Future<Product?> getProductById(String id) async {
     final entity = await _productDao.getProductById(id);
-    return entity?.toDomain();
+    final product = entity?.toDomain();
+    if (product != null) {
+      emitAnalyticsEvent(ViewProductAnalyticsEvent(product: product));
+    }
+    return product;
   }
 
   @override
   Future<List<Product>> searchProducts(String query) async {
+    emitAnalyticsEvent(SearchAnalyticsEvent(query: query));
     final entities = await _productDao.searchProducts('%$query%');
     return entities.map((e) => e.toDomain()).toList();
   }

@@ -1,15 +1,30 @@
 import 'dart:async';
 
+import 'package:rxdart/rxdart.dart';
+
 import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
+import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
+import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
+import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
+import 'package:cd_shop/injection_container.dart';
 
 class AnalyticsObserver {
   AnalyticsObserver({
     required AnalyticsService analyticsService,
-    required AnalyticsEventBus eventBus,
   }) : _analyticsService = analyticsService {
-    _subscription = eventBus.stream.listen(_handleEvent);
+    final emitters = [
+      sl<AuthRepository>(),
+      sl<CartRepository>(),
+      sl<OrderRepository>(),
+      sl<ProductRepository>(),
+    ].whereType<AnalyticsEmitter>().toList();
+
+    _subscription = MergeStream<AnalyticsEvent>(
+      emitters.map((e) => e.analyticsEventStream()).toList(),
+    ).listen(_handleEvent);
   }
 
   final AnalyticsService _analyticsService;

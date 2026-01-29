@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
 
@@ -20,18 +19,15 @@ void main() {
 
   group('ProductSearchNotifier', () {
     late MockSearchProducts mockSearchProducts;
-    late AnalyticsEventBus analyticsEventBus;
     late ProviderContainer container;
 
     setUp(() {
       mockSearchProducts = MockSearchProducts();
-      analyticsEventBus = AnalyticsEventBus();
       container = ProviderContainer(
         overrides: [
           productSearchProvider.overrideWith((_) {
             return ProductSearchNotifier(
               searchProducts: mockSearchProducts,
-              analyticsEventBus: analyticsEventBus,
             );
           }),
         ],

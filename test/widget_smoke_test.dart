@@ -8,6 +8,7 @@ import 'package:cd_shop/app.dart';
 import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/core/services/analytics_observer.dart';
 import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -22,9 +23,8 @@ import 'package:cd_shop/injection_container.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
-
 class MockFirebaseAnalyticsObserver extends Mock
-    implements FirebaseAnalyticsObserver {}
+  implements FirebaseAnalyticsObserver {}
 
 class MockAuthRepository extends Mock
   implements AuthRepository, EventEmitter, Disposable {}
@@ -42,7 +42,21 @@ class MockOrderRepository extends Mock
   implements OrderRepository, EventEmitter, Disposable {}
 
 class MockDependencyFactory implements DependencyFactory {
+
+  MockDependencyFactory() {
+    when(() => _analyticsService.observer)
+        .thenReturn(MockFirebaseAnalyticsObserver());
+  }
   static const _emptyEvents = Stream<RepositoryEvent>.empty();
+  final AnalyticsService _analyticsService = MockAnalyticsService();
+
+  @override
+  AnalyticsService createAnalyticsService() => _analyticsService;
+
+  @override
+  AnalyticsObserver createAnalyticsObserver({
+    required AnalyticsService analyticsService,
+  }) => AnalyticsObserver(analyticsService: analyticsService);
 
   @override
   AuthRepository createAuthRepository() {
@@ -89,13 +103,6 @@ class MockDependencyFactory implements DependencyFactory {
 void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-
-    // Pre-register analytics mocks (Firebase not available in tests)
-    final mockAnalytics = MockAnalyticsService();
-    when(() => mockAnalytics.observer)
-        .thenReturn(MockFirebaseAnalyticsObserver());
-    sl.registerLazySingleton<AnalyticsService>(() => mockAnalytics);
-
     await initDependencies(factory: MockDependencyFactory());
   });
 

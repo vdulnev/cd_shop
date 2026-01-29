@@ -1,6 +1,7 @@
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
-import 'package:cd_shop/core/services/analytics_event_bus.dart';
+import 'package:cd_shop/core/services/analytics_observer.dart';
+import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/data/repositories/firestore_address_repository_impl.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
 import 'package:cd_shop/features/auth/data/repositories/firebase_auth_repository_impl.dart';
@@ -16,9 +17,15 @@ import 'package:cd_shop/injection_container.dart';
 /// Default factory that creates real Firebase-backed dependencies.
 class FirebaseDependencyFactory implements DependencyFactory {
   @override
-  AuthRepository createAuthRepository() => FirebaseAuthRepositoryImpl(
-        analyticsEventBus: sl<AnalyticsEventBus>(),
-      );
+  AnalyticsService createAnalyticsService() => AnalyticsService();
+
+  @override
+  AnalyticsObserver createAnalyticsObserver({
+    required AnalyticsService analyticsService,
+  }) => AnalyticsObserver(analyticsService: analyticsService);
+
+  @override
+  AuthRepository createAuthRepository() => FirebaseAuthRepositoryImpl();
 
   @override
   ProductRepository createProductRepository() =>
@@ -29,7 +36,6 @@ class FirebaseDependencyFactory implements DependencyFactory {
   @override
   CartRepository createCartRepository() => FirestoreCartRepositoryImpl(
         authRepository: sl<AuthRepository>(),
-        analyticsEventBus: sl<AnalyticsEventBus>(),
       );
 
   @override
@@ -37,7 +43,5 @@ class FirebaseDependencyFactory implements DependencyFactory {
       FirestoreAddressRepositoryImpl();
 
   @override
-  OrderRepository createOrderRepository() => FirestoreOrderRepositoryImpl(
-        analyticsEventBus: sl<AnalyticsEventBus>(),
-      );
+  OrderRepository createOrderRepository() => FirestoreOrderRepositoryImpl();
 }

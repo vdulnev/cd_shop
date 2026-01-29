@@ -2,12 +2,25 @@ import 'dart:async';
 
 import 'package:cd_shop/core/models/analytics_event.dart';
 
-class AnalyticsEventBus {
-  final _controller = StreamController<AnalyticsEvent>.broadcast();
+/// Interface for objects that emit [AnalyticsEvent]s.
+abstract class AnalyticsEmitter {
+  Stream<AnalyticsEvent> analyticsEventStream();
+  void disposeAnalyticsEmitter();
+}
 
-  Stream<AnalyticsEvent> get stream => _controller.stream;
+/// Mixin providing a shared implementation for [AnalyticsEmitter].
+mixin AnalyticsEventBusMixin implements AnalyticsEmitter {
+  final StreamController<AnalyticsEvent> _analyticsController =
+      StreamController<AnalyticsEvent>.broadcast();
 
-  void emit(AnalyticsEvent event) => _controller.add(event);
+  @override
+  Stream<AnalyticsEvent> analyticsEventStream() => _analyticsController.stream;
 
-  void dispose() => _controller.close();
+  void emitAnalyticsEvent(AnalyticsEvent event) =>
+      _analyticsController.add(event);
+
+  @override
+  void disposeAnalyticsEmitter() {
+    _analyticsController.close();
+  }
 }

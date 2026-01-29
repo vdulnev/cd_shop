@@ -6,16 +6,18 @@ import 'package:cd_shop/core/database/daos/address_dao.dart';
 import 'package:cd_shop/core/database/daos/order_dao.dart';
 import 'package:cd_shop/core/database/entities/order_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
 class OrderRepositoryImpl
-  with EventEmitterMixin
+  with EventEmitterMixin, AnalyticsEventBusMixin
   implements OrderRepository, Disposable {
   OrderRepositoryImpl({
     required this.orderDao,
@@ -28,6 +30,15 @@ class OrderRepositoryImpl
 
   @override
   Future<Either<Failure, Order>> placeOrder(OrderRequest request) async {
+    final subtotalForCheckout = request.items.fold<double>(
+      0,
+      (acc, item) => acc + item.product.price * item.quantity,
+    );
+    emitAnalyticsEvent(BeginCheckoutAnalyticsEvent(
+      items: request.items,
+      total: subtotalForCheckout,
+    ));
+
     try {
       final addressEntity =
           await addressDao.getAddressById(request.shippingAddressId);
@@ -84,6 +95,13 @@ class OrderRepositoryImpl
         notes: request.notes,
       );
 
+      emitAnalyticsEvent(PurchaseAnalyticsEvent(
+        orderId: orderId,
+        total: total,
+        shipping: shippingCost,
+        tax: tax,
+        items: request.items,
+      ));
       emitEvent(const SuccessEvent(message: 'Order placed successfully'));
 
       return Right(order);
@@ -156,6 +174,7 @@ class OrderRepositoryImpl
   @override
   void dispose() {
     disposeEventEmitter();
+    disposeAnalyticsEmitter();
   }
 
   Future<Order?> _entityToDomain(OrderEntity entity) async {
