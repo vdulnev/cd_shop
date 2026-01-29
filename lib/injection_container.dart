@@ -1,14 +1,13 @@
 import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/core/database/app_database.dart';
-import 'package:cd_shop/core/services/analytics_service.dart';
-import 'package:cd_shop/features/address/data/repositories/firestore_address_repository_impl.dart';
+import 'package:cd_shop/core/di/dependency_factory.dart';
+import 'package:cd_shop/core/di/firebase_dependency_factory.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
 import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
 import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
-import 'package:cd_shop/features/auth/data/repositories/firebase_auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
@@ -23,12 +22,10 @@ import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
-import 'package:cd_shop/features/order/data/repositories/firestore_order_repository_impl.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
-import 'package:cd_shop/features/product/data/repositories/firestore_product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
@@ -40,26 +37,25 @@ final sl = GetIt.instance;
 
 /// Initialize all dependencies
 ///
-/// Call this function in main() before runApp()
-Future<void> initDependencies() async {
+/// Call this function in main() before runApp().
+/// Pass a custom [factory] in tests to replace Firebase services with mocks.
+Future<void> initDependencies({
+  DependencyFactory? factory,
+}) async {
+  final f = factory ?? FirebaseDependencyFactory();
+
   // ===== Core Services =====
-  await _initCoreServices();
+  sl.registerLazySingleton(() => f.createAnalyticsService());
 
   // ===== Core (Database - kept for offline caching) =====
   await _initDatabase();
 
   // ===== Features =====
-  await _initAuthFeature();
-  await _initProductFeature();
-  await _initCartFeature();
-  await _initAddressFeature();
-  await _initOrderFeature();
-}
-
-/// Initialize core services (Analytics)
-Future<void> _initCoreServices() async {
-  // Analytics Service
-  sl.registerLazySingleton(() => AnalyticsService());
+  _initAuthFeature(f);
+  _initProductFeature(f);
+  _initCartFeature(f);
+  _initAddressFeature(f);
+  _initOrderFeature(f);
 }
 
 /// Initialize database (kept for offline caching)
@@ -69,7 +65,7 @@ Future<void> _initDatabase() async {
 }
 
 /// Initialize Auth feature dependencies
-Future<void> _initAuthFeature() async {
+void _initAuthFeature(DependencyFactory f) {
   // Use Cases
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
   sl.registerLazySingleton(() => LoginUser(sl()));
@@ -78,32 +74,25 @@ Future<void> _initAuthFeature() async {
   sl.registerLazySingleton(() => SetDefaultAddress(sl()));
   sl.registerLazySingleton(() => WatchCurrentUser(sl()));
 
-  // Repository - Firebase implementation
-  sl.registerLazySingleton<AuthRepository>(
-    () => FirebaseAuthRepositoryImpl(
-      analyticsService: sl<AnalyticsService>(),
-    ),
-  );
+  // Repository
+  sl.registerLazySingleton<AuthRepository>(() => f.createAuthRepository());
 }
 
 /// Initialize Product feature dependencies
-Future<void> _initProductFeature() async {
+void _initProductFeature(DependencyFactory f) {
   // Use Cases
   sl.registerLazySingleton(() => GetProducts(sl()));
   sl.registerLazySingleton(() => SearchProducts(sl()));
   sl.registerLazySingleton(() => GetProductById(sl()));
   sl.registerLazySingleton(() => WatchProducts(sl()));
 
-  // Repository - Firestore with Floor cache
+  // Repository
   sl.registerLazySingleton<ProductRepository>(
-    () => FirestoreProductRepositoryImpl(
-      productDao: sl<AppDatabase>().productDao,
-    ),
-  );
+      () => f.createProductRepository());
 }
 
 /// Initialize Cart feature dependencies
-Future<void> _initCartFeature() async {
+void _initCartFeature(DependencyFactory f) {
   // Use Cases
   sl.registerLazySingleton(() => AddToCart(sl()));
   sl.registerLazySingleton(() => RemoveFromCart(sl()));
@@ -111,12 +100,9 @@ Future<void> _initCartFeature() async {
   sl.registerLazySingleton(() => ClearCart(sl()));
   sl.registerLazySingleton(() => WatchCart(sl()));
 
-  // Repository - Firestore implementation
+  // Repository
   sl.registerLazySingleton<CartRepository>(
-    () => FirestoreCartRepositoryImpl(
-      authRepository: sl<AuthRepository>(),
-      analyticsService: sl<AnalyticsService>(),
-    ),
+    () => f.createCartRepository(),
     dispose: (instance) {
       if (instance is FirestoreCartRepositoryImpl) {
         instance.dispose();
@@ -126,30 +112,25 @@ Future<void> _initCartFeature() async {
 }
 
 /// Initialize Address feature dependencies
-Future<void> _initAddressFeature() async {
+void _initAddressFeature(DependencyFactory f) {
   // Use Cases
   sl.registerLazySingleton(() => WatchAddresses(sl()));
   sl.registerLazySingleton(() => AddAddress(sl()));
   sl.registerLazySingleton(() => UpdateAddress(sl()));
   sl.registerLazySingleton(() => DeleteAddress(sl()));
 
-  // Repository - Firestore implementation
+  // Repository
   sl.registerLazySingleton<AddressRepository>(
-    () => FirestoreAddressRepositoryImpl(),
-  );
+      () => f.createAddressRepository());
 }
 
 /// Initialize Order/Checkout feature dependencies
-Future<void> _initOrderFeature() async {
+void _initOrderFeature(DependencyFactory f) {
   // Use Cases
   sl.registerLazySingleton(() => PlaceOrder(sl()));
   sl.registerLazySingleton(() => WatchUserOrders(sl()));
   sl.registerLazySingleton(() => CancelOrder(sl()));
 
-  // Repository - Firestore implementation
-  sl.registerLazySingleton<OrderRepository>(
-    () => FirestoreOrderRepositoryImpl(
-      analyticsService: sl<AnalyticsService>(),
-    ),
-  );
+  // Repository
+  sl.registerLazySingleton<OrderRepository>(() => f.createOrderRepository());
 }

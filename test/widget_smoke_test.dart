@@ -1,15 +1,95 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mocktail/mocktail.dart';
 
 import 'package:cd_shop/app.dart';
+import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
+import 'package:cd_shop/features/auth/domain/entities/user.dart';
+import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
+import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
+import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
+import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
+import 'package:cd_shop/features/product/domain/entities/product.dart';
+import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
+import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/injection_container.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class MockFirebaseAnalyticsObserver extends Mock
+    implements FirebaseAnalyticsObserver {}
+
+class MockAuthRepository extends Mock implements AuthRepository {}
+
+class MockProductRepository extends Mock implements ProductRepository {}
+
+class MockCartRepository extends Mock implements CartRepository {}
+
+class MockAddressRepository extends Mock implements AddressRepository {}
+
+class MockOrderRepository extends Mock implements OrderRepository {}
+
+class MockDependencyFactory implements DependencyFactory {
+  static const _emptyEvents = Stream<RepositoryEvent>.empty();
+
+  @override
+  AnalyticsService createAnalyticsService() {
+    final mock = MockAnalyticsService();
+    when(() => mock.observer).thenReturn(MockFirebaseAnalyticsObserver());
+    return mock;
+  }
+
+  @override
+  AuthRepository createAuthRepository() {
+    final mock = MockAuthRepository();
+    when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
+    when(() => mock.watchCurrentUser())
+        .thenAnswer((_) => const Stream<User?>.empty());
+    return mock;
+  }
+
+  @override
+  ProductRepository createProductRepository() {
+    final mock = MockProductRepository();
+    when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
+    when(() => mock.watchProducts())
+        .thenAnswer((_) => Stream.value(const <Product>[]));
+    return mock;
+  }
+
+  @override
+  CartRepository createCartRepository() {
+    final mock = MockCartRepository();
+    when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
+    when(() => mock.watchCart())
+        .thenAnswer((_) => const Stream<Cart>.empty());
+    return mock;
+  }
+
+  @override
+  AddressRepository createAddressRepository() {
+    final mock = MockAddressRepository();
+    when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
+    return mock;
+  }
+
+  @override
+  OrderRepository createOrderRepository() {
+    final mock = MockOrderRepository();
+    when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
+    return mock;
+  }
+}
 
 void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    await initDependencies();
+    await initDependencies(factory: MockDependencyFactory());
   });
 
   tearDown(() async {
