@@ -4,13 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
-import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
 
 class MockSearchProducts extends Mock implements SearchProducts {}
 
-class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _FakeParams extends Fake implements SearchProductsParams {}
 
@@ -21,19 +20,18 @@ void main() {
 
   group('ProductSearchNotifier', () {
     late MockSearchProducts mockSearchProducts;
-    late MockAnalyticsService mockAnalyticsService;
+    late AnalyticsEventBus analyticsEventBus;
     late ProviderContainer container;
 
     setUp(() {
       mockSearchProducts = MockSearchProducts();
-      mockAnalyticsService = MockAnalyticsService();
-      when(() => mockAnalyticsService.logSearch(any())).thenAnswer((_) async {});
+      analyticsEventBus = AnalyticsEventBus();
       container = ProviderContainer(
         overrides: [
           productSearchProvider.overrideWith((_) {
             return ProductSearchNotifier(
               searchProducts: mockSearchProducts,
-              analyticsService: mockAnalyticsService,
+              analyticsEventBus: analyticsEventBus,
             );
           }),
         ],

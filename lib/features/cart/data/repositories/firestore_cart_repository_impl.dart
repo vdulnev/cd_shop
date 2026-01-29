@@ -5,8 +5,9 @@ import 'package:dartz/dartz.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
-import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
@@ -21,7 +22,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
   FirestoreCartRepositoryImpl({
     FirebaseFirestore? firestore,
     required AuthRepository authRepository,
-    this.analyticsService,
+    this.analyticsEventBus,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _authRepository = authRepository {
     _initCartStream();
@@ -29,7 +30,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
 
   final FirebaseFirestore _firestore;
   final AuthRepository _authRepository;
-  final AnalyticsService? analyticsService;
+  final AnalyticsEventBus? analyticsEventBus;
 
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _cartSubscription;
@@ -175,7 +176,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
       });
 
       // Track analytics
-      await analyticsService?.logAddToCart(product, quantity);
+      analyticsEventBus?.emit(AddToCartAnalyticsEvent(product: product, quantity: quantity));
 
       _eventController.add(
         SuccessEvent(message: '${product.title} added to cart!'),
@@ -211,7 +212,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
 
       // Track analytics
       if (product != null) {
-        await analyticsService?.logRemoveFromCart(product, quantity);
+        analyticsEventBus?.emit(RemoveFromCartAnalyticsEvent(product: product, quantity: quantity));
       }
 
       _eventController.add(

@@ -3,6 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/core/di/firebase_dependency_factory.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
+import 'package:cd_shop/core/services/analytics_observer.dart';
+import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
 import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
@@ -45,7 +48,20 @@ Future<void> initDependencies({
   final f = factory ?? FirebaseDependencyFactory();
 
   // ===== Core Services =====
-  sl.registerLazySingleton(() => f.createAnalyticsService());
+  sl.registerLazySingleton(() => AnalyticsEventBus());
+
+  if (factory == null) {
+    // Only register Firebase-dependent analytics in production
+    sl.registerLazySingleton(() => AnalyticsService());
+    sl.registerLazySingleton(
+      () => AnalyticsObserver(
+        analyticsService: sl<AnalyticsService>(),
+        eventBus: sl<AnalyticsEventBus>(),
+      ),
+    );
+    // Eagerly initialize so the observer starts listening immediately
+    sl<AnalyticsObserver>();
+  }
 
   // ===== Core (Database - kept for offline caching) =====
   await _initDatabase();

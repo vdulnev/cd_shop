@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_state.dart';
 import 'package:cd_shop/injection_container.dart';
@@ -10,13 +11,13 @@ import 'package:cd_shop/injection_container.dart';
 class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
   ProductSearchNotifier({
     required SearchProducts searchProducts,
-    required AnalyticsService analyticsService,
+    required AnalyticsEventBus analyticsEventBus,
   }) : _searchProducts = searchProducts,
-       _analyticsService = analyticsService,
+       _analyticsEventBus = analyticsEventBus,
        super(const ProductSearchInitial());
 
   final SearchProducts _searchProducts;
-  final AnalyticsService _analyticsService;
+  final AnalyticsEventBus _analyticsEventBus;
   Timer? _debounce;
 
   void updateQuery(String query) {
@@ -33,7 +34,7 @@ class ProductSearchNotifier extends StateNotifier<ProductSearchState> {
       final products = await _searchProducts(
         SearchProductsParams(query: trimmed),
       );
-      _analyticsService.logSearch(trimmed);
+      _analyticsEventBus.emit(SearchAnalyticsEvent(query: trimmed));
       state = ProductSearchLoaded(products: products, query: trimmed);
     });
   }
@@ -57,6 +58,6 @@ final productSearchProvider =
     >((ref) {
       return ProductSearchNotifier(
         searchProducts: sl<SearchProducts>(),
-        analyticsService: sl<AnalyticsService>(),
+        analyticsEventBus: sl<AnalyticsEventBus>(),
       );
     });

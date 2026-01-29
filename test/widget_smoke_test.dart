@@ -38,13 +38,6 @@ class MockDependencyFactory implements DependencyFactory {
   static const _emptyEvents = Stream<RepositoryEvent>.empty();
 
   @override
-  AnalyticsService createAnalyticsService() {
-    final mock = MockAnalyticsService();
-    when(() => mock.observer).thenReturn(MockFirebaseAnalyticsObserver());
-    return mock;
-  }
-
-  @override
   AuthRepository createAuthRepository() {
     final mock = MockAuthRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
@@ -89,6 +82,13 @@ class MockDependencyFactory implements DependencyFactory {
 void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
+
+    // Pre-register analytics mocks (Firebase not available in tests)
+    final mockAnalytics = MockAnalyticsService();
+    when(() => mockAnalytics.observer)
+        .thenReturn(MockFirebaseAnalyticsObserver());
+    sl.registerLazySingleton<AnalyticsService>(() => mockAnalytics);
+
     await initDependencies(factory: MockDependencyFactory());
   });
 

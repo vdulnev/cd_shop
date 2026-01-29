@@ -5,8 +5,9 @@ import 'package:dartz/dartz.dart' hide Order;
 import 'package:uuid/uuid.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
-import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
@@ -19,11 +20,11 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 class FirestoreOrderRepositoryImpl implements OrderRepository {
   FirestoreOrderRepositoryImpl({
     FirebaseFirestore? firestore,
-    this.analyticsService,
+    this.analyticsEventBus,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
-  final AnalyticsService? analyticsService;
+  final AnalyticsEventBus? analyticsEventBus;
   final _eventController = StreamController<RepositoryEvent>.broadcast();
   final _uuid = const Uuid();
 
@@ -124,13 +125,13 @@ class FirestoreOrderRepositoryImpl implements OrderRepository {
       );
 
       // Track analytics
-      await analyticsService?.logPurchase(
+      analyticsEventBus?.emit(PurchaseAnalyticsEvent(
         orderId: orderId,
         total: total,
         shipping: shippingCost,
         tax: tax,
         items: request.items,
-      );
+      ));
 
       _eventController.add(
         const SuccessEvent(message: 'Order placed successfully'),

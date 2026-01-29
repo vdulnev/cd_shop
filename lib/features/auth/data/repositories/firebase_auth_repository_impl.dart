@@ -5,8 +5,9 @@ import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
-import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 
@@ -17,13 +18,13 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
   FirebaseAuthRepositoryImpl({
     fb.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
-    this.analyticsService,
+    this.analyticsEventBus,
   })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
 
   final fb.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
-  final AnalyticsService? analyticsService;
+  final AnalyticsEventBus? analyticsEventBus;
 
   final _eventController = StreamController<RepositoryEvent>.broadcast();
 
@@ -103,8 +104,8 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
       });
 
       // Track analytics
-      await analyticsService?.logSignUp();
-      await analyticsService?.setUser(user);
+      analyticsEventBus?.emit(const SignUpAnalyticsEvent());
+      analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
 
       _eventController.add(SuccessEvent(message: 'Welcome, $name!'));
       return Right(user);
@@ -150,8 +151,8 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
       );
 
       // Track analytics
-      await analyticsService?.logLogin();
-      await analyticsService?.setUser(user);
+      analyticsEventBus?.emit(const LoginAnalyticsEvent());
+      analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
 
       _eventController.add(SuccessEvent(message: 'Welcome back, ${user.name}!'));
       return Right(user);
@@ -169,7 +170,7 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      await analyticsService?.setUser(null);
+      analyticsEventBus?.emit(const SetUserAnalyticsEvent(user: null));
       await _firebaseAuth.signOut();
       return const Right(null);
     } catch (e) {
