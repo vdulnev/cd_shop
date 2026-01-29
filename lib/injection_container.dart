@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/core/database/app_database.dart';
@@ -18,7 +20,6 @@ import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 import 'package:cd_shop/features/auth/domain/usecases/watch_current_user.dart';
-import 'package:cd_shop/features/cart/data/repositories/firestore_cart_repository_impl.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
@@ -35,6 +36,7 @@ import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 
+
 /// Global service locator instance
 final sl = GetIt.instance;
 
@@ -42,9 +44,7 @@ final sl = GetIt.instance;
 ///
 /// Call this function in main() before runApp().
 /// Pass a custom [factory] in tests to replace Firebase services with mocks.
-Future<void> initDependencies({
-  DependencyFactory? factory,
-}) async {
+Future<void> initDependencies({DependencyFactory? factory}) async {
   final f = factory ?? FirebaseDependencyFactory();
 
   // ===== Core Services =====
@@ -91,7 +91,10 @@ void _initAuthFeature(DependencyFactory f) {
   sl.registerLazySingleton(() => WatchCurrentUser(sl()));
 
   // Repository
-  sl.registerLazySingleton<AuthRepository>(() => f.createAuthRepository());
+  sl.registerLazySingleton<AuthRepository>(
+    f.createAuthRepository.creator,
+    dispose: f.createAuthRepository.dispose,
+  );
 }
 
 /// Initialize Product feature dependencies
@@ -104,7 +107,9 @@ void _initProductFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
-      () => f.createProductRepository());
+    f.createProductRepository.creator,
+    dispose: f.createProductRepository.dispose,
+  );
 }
 
 /// Initialize Cart feature dependencies
@@ -118,12 +123,8 @@ void _initCartFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<CartRepository>(
-    () => f.createCartRepository(),
-    dispose: (instance) {
-      if (instance is FirestoreCartRepositoryImpl) {
-        instance.dispose();
-      }
-    },
+    f.createCartRepository.creator,
+    dispose: f.createCartRepository.dispose,
   );
 }
 
@@ -137,7 +138,9 @@ void _initAddressFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<AddressRepository>(
-      () => f.createAddressRepository());
+    f.createAddressRepository.creator,
+    dispose: f.createAddressRepository.dispose,
+  );
 }
 
 /// Initialize Order/Checkout feature dependencies
@@ -148,5 +151,8 @@ void _initOrderFeature(DependencyFactory f) {
   sl.registerLazySingleton(() => CancelOrder(sl()));
 
   // Repository
-  sl.registerLazySingleton<OrderRepository>(() => f.createOrderRepository());
+  sl.registerLazySingleton<OrderRepository>(
+    f.createOrderRepository.creator,
+    dispose: f.createOrderRepository.dispose,
+  );
 }

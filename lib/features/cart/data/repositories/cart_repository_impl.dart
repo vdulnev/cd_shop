@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:cd_shop/core/database/daos/cart_dao.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
@@ -18,7 +19,9 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 ///
 /// Persists cart items to SQLite using Floor.
 /// Product details are fetched from the product datasource.
-class CartRepositoryImpl implements CartRepository {
+class CartRepositoryImpl
+  with EventEmitterMixin
+  implements CartRepository {
   CartRepositoryImpl({
     required CartDao cartDao,
     required AuthRepository authRepository,
@@ -33,9 +36,6 @@ class CartRepositoryImpl implements CartRepository {
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<List<CartItemEntity>>? _cartItemsSubscription;
   String? _activeUserId;
-
-  // ignore: close_sinks - singleton repository, lives for app lifetime
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   // ignore: close_sinks - singleton repository, lives for app lifetime
   final _cartSubject = BehaviorSubject<Cart>();
@@ -106,9 +106,7 @@ class CartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
 
@@ -123,9 +121,7 @@ class CartRepositoryImpl implements CartRepository {
         ),
       );
 
-      _eventController.add(
-        SuccessEvent(message: '${product.title} added to cart!'),
-      );
+      emitEvent(SuccessEvent(message: '${product.title} added to cart!'));
 
       return Right(await _getCurrentCart(userId));
     } catch (_) {
@@ -138,17 +134,13 @@ class CartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
 
       await _cartDao.deleteCartItem(userId, productId);
 
-      _eventController.add(
-        const SuccessEvent(message: 'Item removed from cart'),
-      );
+      emitEvent(const SuccessEvent(message: 'Item removed from cart'));
 
       return Right(await _getCurrentCart(userId));
     } catch (_) {
@@ -166,9 +158,7 @@ class CartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
 
@@ -201,9 +191,7 @@ class CartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(AuthFailure(message: 'Please sign in to use the cart'));
       }
 
@@ -220,9 +208,6 @@ class CartRepositoryImpl implements CartRepository {
     return _cartSubject.stream;
   }
 
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
-
   Future<Cart> _getCurrentCart(String userId) async {
     final entities = await _cartDao.getAllCartItems(userId);
     return _entitiesToCart(entities, userId: userId);
@@ -231,7 +216,7 @@ class CartRepositoryImpl implements CartRepository {
   void dispose() {
     _authSubscription?.cancel();
     _cartItemsSubscription?.cancel();
-    _eventController.close();
+    disposeEventEmitter();
     _cartSubject.close();
   }
 }

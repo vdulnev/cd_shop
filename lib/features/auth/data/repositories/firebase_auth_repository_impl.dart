@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -14,7 +13,9 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 /// Firebase implementation of [AuthRepository].
 ///
 /// Uses Firebase Auth for authentication and Firestore for user profiles.
-class FirebaseAuthRepositoryImpl implements AuthRepository {
+class FirebaseAuthRepositoryImpl
+  with EventEmitterMixin
+  implements AuthRepository {
   FirebaseAuthRepositoryImpl({
     fb.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
@@ -25,8 +26,6 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
   final fb.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
   final AnalyticsEventBus? analyticsEventBus;
-
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   CollectionReference<Map<String, dynamic>> get _usersRef =>
       _firestore.collection('users');
@@ -107,15 +106,15 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
       analyticsEventBus?.emit(const SignUpAnalyticsEvent());
       analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
 
-      _eventController.add(SuccessEvent(message: 'Welcome, $name!'));
+      emitEvent(SuccessEvent(message: 'Welcome, $name!'));
       return Right(user);
     } on fb.FirebaseAuthException catch (e) {
       final failure = _mapFirebaseAuthError(e);
-      _eventController.add(ErrorEvent(message: failure.message));
+      emitEvent(ErrorEvent(message: failure.message));
       return Left(failure);
     } catch (e) {
       const failure = ServerFailure(message: 'Registration failed');
-      _eventController.add(ErrorEvent(message: failure.message));
+      emitEvent(ErrorEvent(message: failure.message));
       return const Left(failure);
     }
   }
@@ -154,15 +153,15 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
       analyticsEventBus?.emit(const LoginAnalyticsEvent());
       analyticsEventBus?.emit(SetUserAnalyticsEvent(user: user));
 
-      _eventController.add(SuccessEvent(message: 'Welcome back, ${user.name}!'));
+      emitEvent(SuccessEvent(message: 'Welcome back, ${user.name}!'));
       return Right(user);
     } on fb.FirebaseAuthException catch (e) {
       final failure = _mapFirebaseAuthError(e);
-      _eventController.add(ErrorEvent(message: failure.message));
+      emitEvent(ErrorEvent(message: failure.message));
       return Left(failure);
     } catch (e) {
       const failure = ServerFailure(message: 'Login failed');
-      _eventController.add(ErrorEvent(message: failure.message));
+      emitEvent(ErrorEvent(message: failure.message));
       return const Left(failure);
     }
   }
@@ -251,6 +250,8 @@ class FirebaseAuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
+  void dispose() {
+    disposeEventEmitter();
+  }
+  
 }

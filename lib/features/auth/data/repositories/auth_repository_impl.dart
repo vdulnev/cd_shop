@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -7,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import 'package:cd_shop/core/database/daos/user_dao.dart';
 import 'package:cd_shop/core/database/entities/user_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
@@ -14,13 +14,12 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 /// Floor database implementation of AuthRepository
 ///
 /// Persists users and session to SQLite using Floor.
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl
+  with EventEmitterMixin
+  implements AuthRepository {
   AuthRepositoryImpl({required UserDao userDao}) : _userDao = userDao;
 
   final UserDao _userDao;
-
-  // ignore: close_sinks - singleton repository, lives for app lifetime
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   /// Simple password hashing (in production, use bcrypt or similar)
   String _hashPassword(String password) {
@@ -71,7 +70,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // Set current session
       await _userDao.setCurrentSession(SessionEntity(id: 1, userId: user.id));
 
-      _eventController.add(SuccessEvent(message: 'Welcome, $name!'));
+      emitEvent(SuccessEvent(message: 'Welcome, $name!'));
       return Right(user);
     } catch (e) {
       return const Left(ServerFailure(message: 'Registration failed'));
@@ -88,9 +87,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (userEntity == null ||
           userEntity.passwordHash != _hashPassword(password)) {
-        _eventController.add(
-          const ErrorEvent(message: 'Invalid email or password'),
-        );
+        emitEvent(const ErrorEvent(message: 'Invalid email or password'));
         return const Left(AuthFailure(message: 'Invalid email or password'));
       }
 
@@ -100,9 +97,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final user = userEntity.toDomain();
-      _eventController.add(
-        SuccessEvent(message: 'Welcome back, ${user.name}!'),
-      );
+      emitEvent(SuccessEvent(message: 'Welcome back, ${user.name}!'));
       return Right(user);
     } catch (e) {
       return const Left(ServerFailure(message: 'Login failed'));
@@ -153,6 +148,10 @@ class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
+  void dispose() {
+    disposeEventEmitter();
+  }
+
   @override
   Future<Either<Failure, void>> setDefaultAddress(String? addressId) async {
     try {
@@ -172,6 +171,4 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }

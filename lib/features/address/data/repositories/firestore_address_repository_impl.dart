@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
@@ -11,13 +10,14 @@ import 'package:cd_shop/features/address/domain/repositories/address_repository.
 ///
 /// Stores addresses in Firestore subcollections under each user.
 /// Structure: addresses/{userId}/items/{addressId}
-class FirestoreAddressRepositoryImpl implements AddressRepository {
+class FirestoreAddressRepositoryImpl
+  with EventEmitterMixin
+  implements AddressRepository {
   FirestoreAddressRepositoryImpl({
     FirebaseFirestore? firestore,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
   final _uuid = const Uuid();
 
   CollectionReference<Map<String, dynamic>> _addressesRef(String userId) =>
@@ -51,9 +51,6 @@ class FirestoreAddressRepositoryImpl implements AddressRepository {
   }
 
   @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
-
-  @override
   Stream<List<Address>> watchAddresses(String userId) {
     return _addressesRef(userId).snapshots().map((snapshot) {
       return snapshot.docs
@@ -82,15 +79,11 @@ class FirestoreAddressRepositoryImpl implements AddressRepository {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      _eventController.add(
-        SuccessEvent(message: '${address.name} address added'),
-      );
+      emitEvent(SuccessEvent(message: '${address.name} address added'));
 
       return addressWithId;
     } catch (e) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to add address'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to add address'));
       rethrow;
     }
   }
@@ -102,15 +95,11 @@ class FirestoreAddressRepositoryImpl implements AddressRepository {
             _addressToMap(address),
           );
 
-      _eventController.add(
-        const SuccessEvent(message: 'Address updated'),
-      );
+      emitEvent(const SuccessEvent(message: 'Address updated'));
 
       return address;
     } catch (e) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to update address'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to update address'));
       rethrow;
     }
   }
@@ -135,21 +124,19 @@ class FirestoreAddressRepositoryImpl implements AddressRepository {
 
         if (addressDoc.exists) {
           await addressDoc.reference.delete();
-          _eventController.add(
-            const SuccessEvent(message: 'Address deleted'),
-          );
+          emitEvent(const SuccessEvent(message: 'Address deleted'));
           return;
         }
       }
 
-      _eventController.add(
-        const ErrorEvent(message: 'Address not found'),
-      );
+      emitEvent(const ErrorEvent(message: 'Address not found'));
     } catch (e) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to delete address'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to delete address'));
       rethrow;
     }
+  }
+
+  void dispose() {
+    disposeEventEmitter();
   }
 }

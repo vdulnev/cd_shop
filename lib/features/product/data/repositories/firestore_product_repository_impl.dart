@@ -1,11 +1,9 @@
 // ignore_for_file: close_sinks
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
-import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
@@ -13,7 +11,9 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 ///
 /// Uses Firestore as the primary data source and falls back to
 /// local SQLite cache when offline.
-class FirestoreProductRepositoryImpl implements ProductRepository {
+class FirestoreProductRepositoryImpl
+  with EventEmitterMixin
+  implements ProductRepository {
   FirestoreProductRepositoryImpl({
     FirebaseFirestore? firestore,
     required ProductDao productDao,
@@ -22,8 +22,6 @@ class FirestoreProductRepositoryImpl implements ProductRepository {
 
   final FirebaseFirestore _firestore;
   final ProductDao _productDao;
-
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   CollectionReference<Map<String, dynamic>> get _productsRef =>
       _firestore.collection('products');
@@ -222,7 +220,8 @@ class FirestoreProductRepositoryImpl implements ProductRepository {
       });
     });
   }
-
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
+  
+  void dispose() {
+    disposeEventEmitter();
+  }
 }

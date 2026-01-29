@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:cd_shop/app.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
@@ -24,58 +25,63 @@ class MockAnalyticsService extends Mock implements AnalyticsService {}
 class MockFirebaseAnalyticsObserver extends Mock
     implements FirebaseAnalyticsObserver {}
 
-class MockAuthRepository extends Mock implements AuthRepository {}
+class MockAuthRepository extends Mock
+  implements AuthRepository, EventEmitter {}
 
-class MockProductRepository extends Mock implements ProductRepository {}
+class MockProductRepository extends Mock
+  implements ProductRepository, EventEmitter {}
 
-class MockCartRepository extends Mock implements CartRepository {}
+class MockCartRepository extends Mock
+  implements CartRepository, EventEmitter {}
 
-class MockAddressRepository extends Mock implements AddressRepository {}
+class MockAddressRepository extends Mock
+  implements AddressRepository, EventEmitter {}
 
-class MockOrderRepository extends Mock implements OrderRepository {}
+class MockOrderRepository extends Mock
+  implements OrderRepository, EventEmitter {}
 
 class MockDependencyFactory implements DependencyFactory {
   static const _emptyEvents = Stream<RepositoryEvent>.empty();
 
   @override
-  AuthRepository createAuthRepository() {
+  Creator<AuthRepository> get createAuthRepository {
     final mock = MockAuthRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
     when(() => mock.watchCurrentUser())
         .thenAnswer((_) => const Stream<User?>.empty());
-    return mock;
+    return Creator(creator: () => mock);
   }
 
   @override
-  ProductRepository createProductRepository() {
+  Creator<ProductRepository> get createProductRepository {
     final mock = MockProductRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
     when(() => mock.watchProducts())
         .thenAnswer((_) => Stream.value(const <Product>[]));
-    return mock;
+    return Creator(creator: () => mock);
   }
 
   @override
-  CartRepository createCartRepository() {
+  Creator<CartRepository> get createCartRepository {
     final mock = MockCartRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
     when(() => mock.watchCart())
         .thenAnswer((_) => const Stream<Cart>.empty());
-    return mock;
+    return Creator(creator: () => mock);
   }
 
   @override
-  AddressRepository createAddressRepository() {
+  Creator<AddressRepository> get createAddressRepository {
     final mock = MockAddressRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
-    return mock;
+    return Creator(creator: () => mock);
   }
 
   @override
-  OrderRepository createOrderRepository() {
+  Creator<OrderRepository> get createOrderRepository {
     final mock = MockOrderRepository();
     when(() => mock.eventStream()).thenAnswer((_) => _emptyEvents);
-    return mock;
+    return Creator(creator: () => mock);
   }
 }
 

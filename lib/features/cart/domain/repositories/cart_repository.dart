@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
-import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
@@ -25,6 +24,4 @@ abstract class CartRepository {
   /// Watch the cart for real-time updates
   Stream<Cart> watchCart();
 
-  /// Stream of repository-level events for UI notifications
-  Stream<RepositoryEvent> eventStream();
 }

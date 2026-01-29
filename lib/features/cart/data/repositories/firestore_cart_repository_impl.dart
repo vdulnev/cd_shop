@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -18,7 +19,9 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 ///
 /// Stores cart items in Firestore subcollections under each user.
 /// Structure: carts/{userId}/items/{productId}
-class FirestoreCartRepositoryImpl implements CartRepository {
+class FirestoreCartRepositoryImpl
+  with EventEmitterMixin
+  implements CartRepository {
   FirestoreCartRepositoryImpl({
     FirebaseFirestore? firestore,
     required AuthRepository authRepository,
@@ -36,7 +39,6 @@ class FirestoreCartRepositoryImpl implements CartRepository {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _cartSubscription;
   String? _activeUserId;
 
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
   final _cartSubject = BehaviorSubject<Cart>();
 
   CollectionReference<Map<String, dynamic>> get _productsRef =>
@@ -158,9 +160,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
             AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -178,15 +178,11 @@ class FirestoreCartRepositoryImpl implements CartRepository {
       // Track analytics
       analyticsEventBus?.emit(AddToCartAnalyticsEvent(product: product, quantity: quantity));
 
-      _eventController.add(
-        SuccessEvent(message: '${product.title} added to cart!'),
-      );
+      emitEvent(SuccessEvent(message: '${product.title} added to cart!'));
 
       return Right(await _getCurrentCart(userId));
     } catch (_) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to add item to cart'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to add item to cart'));
       return const Left(CacheFailure(message: 'Failed to add item to cart'));
     }
   }
@@ -196,9 +192,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
             AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -215,15 +209,11 @@ class FirestoreCartRepositoryImpl implements CartRepository {
         analyticsEventBus?.emit(RemoveFromCartAnalyticsEvent(product: product, quantity: quantity));
       }
 
-      _eventController.add(
-        const SuccessEvent(message: 'Item removed from cart'),
-      );
+      emitEvent(const SuccessEvent(message: 'Item removed from cart'));
 
       return Right(await _getCurrentCart(userId));
     } catch (_) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to remove item from cart'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to remove item from cart'));
       return const Left(
         CacheFailure(message: 'Failed to remove item from cart'),
       );
@@ -238,9 +228,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
             AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -262,9 +250,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
 
       return Right(await _getCurrentCart(userId));
     } catch (_) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to update cart item'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to update cart item'));
       return const Left(CacheFailure(message: 'Failed to update cart item'));
     }
   }
@@ -274,9 +260,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
     try {
       final userId = await _getCurrentUserId();
       if (userId == null || userId.isEmpty) {
-        _eventController.add(
-          const ErrorEvent(message: 'Please sign in to use the cart'),
-        );
+        emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
             AuthFailure(message: 'Please sign in to use the cart'));
       }
@@ -291,9 +275,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
 
       return Right(Cart.empty(userId: userId));
     } catch (_) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to clear cart'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to clear cart'));
       return const Left(CacheFailure(message: 'Failed to clear cart'));
     }
   }
@@ -303,9 +285,6 @@ class FirestoreCartRepositoryImpl implements CartRepository {
     _initCartStream();
     return _cartSubject.stream;
   }
-
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 
   Future<Cart> _getCurrentCart(String userId) async {
     try {
@@ -319,7 +298,7 @@ class FirestoreCartRepositoryImpl implements CartRepository {
   void dispose() {
     _authSubscription?.cancel();
     _cartSubscription?.cancel();
-    _eventController.close();
+    disposeEventEmitter();
     _cartSubject.close();
   }
 }

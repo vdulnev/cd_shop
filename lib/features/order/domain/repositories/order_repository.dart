@@ -1,14 +1,10 @@
 import 'package:dartz/dartz.dart' hide Order;
 
 import 'package:cd_shop/core/error/failures.dart';
-import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 
 /// Repository interface for order operations
 abstract class OrderRepository {
-  /// Stream of repository events (e.g., success/error messages)
-  Stream<RepositoryEvent> eventStream();
-
   /// Place a new order
   Future<Either<Failure, Order>> placeOrder(OrderRequest request);
 

@@ -1,10 +1,8 @@
-import 'dart:async';
-
 import 'package:cd_shop/core/database/daos/app_settings_dao.dart';
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/app_settings_entity.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
-import 'package:cd_shop/core/models/repository_event.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
@@ -13,7 +11,9 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 ///
 /// Persists products to SQLite using Floor.
 /// Seeds database with mock data on first launch.
-class ProductRepositoryImpl implements ProductRepository {
+class ProductRepositoryImpl
+  with EventEmitterMixin
+  implements ProductRepository, EventEmitter {
   ProductRepositoryImpl({
     required ProductDao productDao,
     required AppSettingsDao appSettingsDao,
@@ -24,9 +24,6 @@ class ProductRepositoryImpl implements ProductRepository {
 
   final ProductDao _productDao;
   final AppSettingsDao _appSettingsDao;
-
-  // ignore: close_sinks - singleton repository, lives for app lifetime
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
 
   static const _productsSeededKey = 'products_seeded';
 
@@ -42,6 +39,10 @@ class ProductRepositoryImpl implements ProductRepository {
         const AppSettingsEntity(key: _productsSeededKey, value: 'true'),
       );
     }
+  }
+  
+  void dispose() {
+    disposeEventEmitter();
   }
 
   @override
@@ -104,7 +105,4 @@ class ProductRepositoryImpl implements ProductRepository {
       (entities) => entities.map((e) => e.toDomain()).toList(),
     );
   }
-
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 }

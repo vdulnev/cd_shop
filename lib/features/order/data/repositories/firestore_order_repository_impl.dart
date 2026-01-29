@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:uuid/uuid.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
@@ -17,7 +16,9 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Firestore implementation of [OrderRepository].
 ///
 /// Stores orders as documents in the 'orders' collection.
-class FirestoreOrderRepositoryImpl implements OrderRepository {
+class FirestoreOrderRepositoryImpl
+  with EventEmitterMixin
+  implements OrderRepository {
   FirestoreOrderRepositoryImpl({
     FirebaseFirestore? firestore,
     this.analyticsEventBus,
@@ -25,7 +26,6 @@ class FirestoreOrderRepositoryImpl implements OrderRepository {
 
   final FirebaseFirestore _firestore;
   final AnalyticsEventBus? analyticsEventBus;
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
   final _uuid = const Uuid();
 
   CollectionReference<Map<String, dynamic>> get _ordersRef =>
@@ -33,9 +33,6 @@ class FirestoreOrderRepositoryImpl implements OrderRepository {
 
   CollectionReference<Map<String, dynamic>> _addressesRef(String userId) =>
       _firestore.collection('addresses').doc(userId).collection('items');
-
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 
   @override
   Future<Either<Failure, Order>> placeOrder(OrderRequest request) async {
@@ -133,15 +130,11 @@ class FirestoreOrderRepositoryImpl implements OrderRepository {
         items: request.items,
       ));
 
-      _eventController.add(
-        const SuccessEvent(message: 'Order placed successfully'),
-      );
+      emitEvent(const SuccessEvent(message: 'Order placed successfully'));
 
       return Right(order);
     } catch (e) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to place order'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to place order'));
       return const Left(CacheFailure(message: 'Failed to place order'));
     }
   }
@@ -192,17 +185,17 @@ class FirestoreOrderRepositoryImpl implements OrderRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      _eventController.add(
-        const SuccessEvent(message: 'Order cancelled successfully'),
-      );
+      emitEvent(const SuccessEvent(message: 'Order cancelled successfully'));
 
       return const Right(null);
     } catch (e) {
-      _eventController.add(
-        const ErrorEvent(message: 'Failed to cancel order'),
-      );
+      emitEvent(const ErrorEvent(message: 'Failed to cancel order'));
       return const Left(CacheFailure(message: 'Failed to cancel order'));
     }
+  }
+
+  void dispose() {
+    disposeEventEmitter();
   }
 
   Order? _documentToOrder(DocumentSnapshot<Map<String, dynamic>> doc) {

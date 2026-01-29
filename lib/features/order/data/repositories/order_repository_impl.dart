@@ -1,6 +1,4 @@
 // ignore_for_file: close_sinks
-import 'dart:async';
-
 import 'package:dartz/dartz.dart' hide Order;
 import 'package:uuid/uuid.dart';
 
@@ -8,13 +6,16 @@ import 'package:cd_shop/core/database/daos/address_dao.dart';
 import 'package:cd_shop/core/database/daos/order_dao.dart';
 import 'package:cd_shop/core/database/entities/order_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
-class OrderRepositoryImpl implements OrderRepository {
+class OrderRepositoryImpl
+  with EventEmitterMixin
+  implements OrderRepository {
   OrderRepositoryImpl({
     required this.orderDao,
     required this.addressDao,
@@ -22,32 +23,27 @@ class OrderRepositoryImpl implements OrderRepository {
 
   final OrderDao orderDao;
   final AddressDao addressDao;
-  final _eventController = StreamController<RepositoryEvent>.broadcast();
   final _uuid = const Uuid();
-
-  @override
-  Stream<RepositoryEvent> eventStream() => _eventController.stream;
 
   @override
   Future<Either<Failure, Order>> placeOrder(OrderRequest request) async {
     try {
-      // Fetch the shipping address
-      final addressEntity = await addressDao.getAddressById(request.shippingAddressId);
+      final addressEntity =
+          await addressDao.getAddressById(request.shippingAddressId);
       if (addressEntity == null) {
-        return const Left(NotFoundFailure(message: 'Shipping address not found'));
+        return const Left(
+            NotFoundFailure(message: 'Shipping address not found'));
       }
       final shippingAddress = addressEntity.toDomain();
 
-      // Calculate costs
-      final subtotal = request.items.fold(0.0, (sum, item) => sum + item.totalPrice);
-      const shippingCost = 5.99; // Fixed shipping cost
-      final tax = subtotal * 0.08; // 8% tax
+      final subtotal =
+          request.items.fold(0.0, (sum, item) => sum + item.totalPrice);
+      const shippingCost = 5.99;
+      final tax = subtotal * 0.08;
       final total = subtotal + shippingCost + tax;
 
-      // Generate order ID
       final orderId = _uuid.v4();
 
-      // Create order entity
       final orderEntity = OrderEntity(
         id: orderId,
         userId: request.userId,
@@ -59,20 +55,18 @@ class OrderRepositoryImpl implements OrderRepository {
         total: total,
         status: OrderStatus.pending.name,
         orderDate: DateTime.now().millisecondsSinceEpoch,
-        estimatedDeliveryDate: DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch,
+        estimatedDeliveryDate:
+            DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch,
         notes: request.notes,
       );
 
-      // Save order to database
       await orderDao.insertOrder(orderEntity);
 
-      // Save order items
       final orderItems = request.items
           .map((item) => OrderItemEntity.fromCartItem(orderId, item))
           .toList();
       await orderDao.insertOrderItems(orderItems);
 
-      // Create domain order object
       final order = Order(
         id: orderId,
         userId: request.userId,
@@ -89,12 +83,10 @@ class OrderRepositoryImpl implements OrderRepository {
         notes: request.notes,
       );
 
-      _eventController.add(
-        const SuccessEvent(message: 'Order placed successfully'),
-      );
+      emitEvent(const SuccessEvent(message: 'Order placed successfully'));
 
       return Right(order);
-    } catch (e) {
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to place order'));
     }
   }
@@ -122,7 +114,7 @@ class OrderRepositoryImpl implements OrderRepository {
       }
 
       return Right(order);
-    } catch (e) {
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to load order'));
     }
   }
@@ -152,36 +144,35 @@ class OrderRepositoryImpl implements OrderRepository {
 
       await orderDao.updateOrder(updatedOrder);
 
-      _eventController.add(
-        const SuccessEvent(message: 'Order cancelled successfully'),
-      );
+      emitEvent(const SuccessEvent(message: 'Order cancelled successfully'));
 
       return const Right(null);
-    } catch (e) {
+    } catch (_) {
       return const Left(CacheFailure(message: 'Failed to cancel order'));
     }
   }
 
-  /// Convert order entity to domain model
+  void dispose() {
+    disposeEventEmitter();
+  }
+
   Future<Order?> _entityToDomain(OrderEntity entity) async {
     try {
-      // Fetch shipping address
-      final addressEntity = await addressDao.getAddressById(entity.shippingAddressId);
+      final addressEntity =
+          await addressDao.getAddressById(entity.shippingAddressId);
       if (addressEntity == null) return null;
 
-      // Fetch order items
       final orderItemEntities = await orderDao.getOrderItems(entity.id);
 
-      // Convert order items to cart items
       final items = orderItemEntities.map((itemEntity) {
         final product = Product(
           id: itemEntity.productId,
           title: itemEntity.productTitle,
           artist: itemEntity.productArtist,
-          description: '', // Not stored in order items
+          description: '',
           price: itemEntity.productPrice,
           imageUrl: itemEntity.productImageUrl,
-          genre: ProductGenre.rock, // Default genre
+          genre: ProductGenre.rock,
           stockQuantity: 0,
         );
         return CartItem(product: product, quantity: itemEntity.quantity);
@@ -210,7 +201,7 @@ class OrderRepositoryImpl implements OrderRepository {
             : null,
         notes: entity.notes,
       );
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

@@ -1,4 +1,3 @@
-import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
 /// Abstract repository interface for Product feature
@@ -29,6 +28,4 @@ abstract class ProductRepository {
   /// Watch products for real-time updates
   Stream<List<Product>> watchProducts();
 
-  /// Stream of repository-level events for UI notifications
-  Stream<RepositoryEvent> eventStream();
 }
