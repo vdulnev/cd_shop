@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "131116124632",
+    "project_id": "cd-shop-5d4ec",
+    "storage_bucket": "cd-shop-5d4ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:131116124632:android:0241804169994fd1f20aad",
+        "android_client_info": {
+          "package_name": "com.example.cd_shop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhK-eTc-6xxEPay4ruv52Zai8JQGYo6r4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

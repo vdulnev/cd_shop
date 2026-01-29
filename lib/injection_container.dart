@@ -1,13 +1,14 @@
 import 'package:get_it/get_it.dart';
 
 import 'package:cd_shop/core/database/app_database.dart';
-import 'package:cd_shop/features/address/data/repositories/address_repository_impl.dart';
+import 'package:cd_shop/core/services/analytics_service.dart';
+import 'package:cd_shop/features/address/data/repositories/firestore_address_repository_impl.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
 import 'package:cd_shop/features/address/domain/usecases/add_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/delete_address.dart';
 import 'package:cd_shop/features/address/domain/usecases/watch_addresses.dart';
 import 'package:cd_shop/features/address/domain/usecases/update_address.dart';
-import 'package:cd_shop/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:cd_shop/features/auth/data/repositories/firebase_auth_repository_impl.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
@@ -15,19 +16,19 @@ import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 import 'package:cd_shop/features/auth/domain/usecases/watch_current_user.dart';
-import 'package:cd_shop/features/cart/data/repositories/cart_repository_impl.dart';
+import 'package:cd_shop/features/cart/data/repositories/firestore_cart_repository_impl.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
-import 'package:cd_shop/features/order/data/repositories/order_repository_impl.dart';
+import 'package:cd_shop/features/order/data/repositories/firestore_order_repository_impl.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
-import 'package:cd_shop/features/product/data/repositories/product_repository_impl.dart';
+import 'package:cd_shop/features/product/data/repositories/firestore_product_repository_impl.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
@@ -41,7 +42,10 @@ final sl = GetIt.instance;
 ///
 /// Call this function in main() before runApp()
 Future<void> initDependencies() async {
-  // ===== Core (Database) =====
+  // ===== Core Services =====
+  await _initCoreServices();
+
+  // ===== Core (Database - kept for offline caching) =====
   await _initDatabase();
 
   // ===== Features =====
@@ -50,10 +54,15 @@ Future<void> initDependencies() async {
   await _initCartFeature();
   await _initAddressFeature();
   await _initOrderFeature();
-
 }
 
-/// Initialize database
+/// Initialize core services (Analytics)
+Future<void> _initCoreServices() async {
+  // Analytics Service
+  sl.registerLazySingleton(() => AnalyticsService());
+}
+
+/// Initialize database (kept for offline caching)
 Future<void> _initDatabase() async {
   final database = await AppDatabase.create();
   sl.registerSingleton<AppDatabase>(database);
@@ -69,9 +78,11 @@ Future<void> _initAuthFeature() async {
   sl.registerLazySingleton(() => SetDefaultAddress(sl()));
   sl.registerLazySingleton(() => WatchCurrentUser(sl()));
 
-  // Repositories
+  // Repository - Firebase implementation
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(userDao: sl<AppDatabase>().userDao),
+    () => FirebaseAuthRepositoryImpl(
+      analyticsService: sl<AnalyticsService>(),
+    ),
   );
 }
 
@@ -83,11 +94,10 @@ Future<void> _initProductFeature() async {
   sl.registerLazySingleton(() => GetProductById(sl()));
   sl.registerLazySingleton(() => WatchProducts(sl()));
 
-  // Repositories
+  // Repository - Firestore with Floor cache
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(
+    () => FirestoreProductRepositoryImpl(
       productDao: sl<AppDatabase>().productDao,
-      appSettingsDao: sl<AppDatabase>().appSettingsDao,
     ),
   );
 }
@@ -101,14 +111,14 @@ Future<void> _initCartFeature() async {
   sl.registerLazySingleton(() => ClearCart(sl()));
   sl.registerLazySingleton(() => WatchCart(sl()));
 
-  // Repositories
+  // Repository - Firestore implementation
   sl.registerLazySingleton<CartRepository>(
-    () => CartRepositoryImpl(
-      cartDao: sl<AppDatabase>().cartDao,
-      authRepository: sl(),
+    () => FirestoreCartRepositoryImpl(
+      authRepository: sl<AuthRepository>(),
+      analyticsService: sl<AnalyticsService>(),
     ),
     dispose: (instance) {
-      if (instance is CartRepositoryImpl) {
+      if (instance is FirestoreCartRepositoryImpl) {
         instance.dispose();
       }
     },
@@ -123,9 +133,9 @@ Future<void> _initAddressFeature() async {
   sl.registerLazySingleton(() => UpdateAddress(sl()));
   sl.registerLazySingleton(() => DeleteAddress(sl()));
 
-  // Repositories
+  // Repository - Firestore implementation
   sl.registerLazySingleton<AddressRepository>(
-    () => AddressRepositoryImpl(sl<AppDatabase>().addressDao),
+    () => FirestoreAddressRepositoryImpl(),
   );
 }
 
@@ -136,12 +146,10 @@ Future<void> _initOrderFeature() async {
   sl.registerLazySingleton(() => WatchUserOrders(sl()));
   sl.registerLazySingleton(() => CancelOrder(sl()));
 
-  // Repositories
+  // Repository - Firestore implementation
   sl.registerLazySingleton<OrderRepository>(
-    () => OrderRepositoryImpl(
-      orderDao: sl<AppDatabase>().orderDao,
-      addressDao: sl<AppDatabase>().addressDao,
+    () => FirestoreOrderRepositoryImpl(
+      analyticsService: sl<AnalyticsService>(),
     ),
   );
 }
-

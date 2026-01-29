@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/core/widgets/app_event_widget.dart';
+import 'package:cd_shop/injection_container.dart';
 import 'package:cd_shop/features/address/presentation/routes/address_routes.dart';
 import 'package:cd_shop/features/auth/presentation/routes/auth_routes.dart';
 import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
@@ -41,6 +43,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: true,
+    observers: [sl<AnalyticsService>().observer],
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

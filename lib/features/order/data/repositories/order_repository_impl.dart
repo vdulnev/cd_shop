@@ -90,7 +90,7 @@ class OrderRepositoryImpl implements OrderRepository {
       );
 
       _eventController.add(
-        const OrderSuccessEvent(message: 'Order placed successfully'),
+        const SuccessEvent(message: 'Order placed successfully'),
       );
 
       return Right(order);
@@ -153,7 +153,7 @@ class OrderRepositoryImpl implements OrderRepository {
       await orderDao.updateOrder(updatedOrder);
 
       _eventController.add(
-        const OrderSuccessEvent(message: 'Order cancelled successfully'),
+        const SuccessEvent(message: 'Order cancelled successfully'),
       );
 
       return const Right(null);
@@ -214,9 +214,4 @@ class OrderRepositoryImpl implements OrderRepository {
       return null;
     }
   }
-}
-
-class OrderSuccessEvent extends RepositoryEvent {
-  const OrderSuccessEvent({required this.message});
-  final String message;
 }

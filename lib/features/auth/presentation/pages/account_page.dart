@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cd_shop/core/services/firestore_seeder.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_state.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_provider.dart';
@@ -129,6 +131,8 @@ class _AuthenticatedView extends StatelessWidget {
               title: 'Settings',
               onTap: () {},
             ),
+            const Divider(),
+            if (kDebugMode) const _SeedProductsButton(),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -145,6 +149,51 @@ class _AuthenticatedView extends StatelessWidget {
           ],
         ),
       );
+  }
+}
+
+class _SeedProductsButton extends StatefulWidget {
+  const _SeedProductsButton();
+
+  @override
+  State<_SeedProductsButton> createState() => _SeedProductsButtonState();
+}
+
+class _SeedProductsButtonState extends State<_SeedProductsButton> {
+  bool _isSeeding = false;
+
+  Future<void> _seedProducts() async {
+    setState(() => _isSeeding = true);
+    try {
+      final seeder = FirestoreSeeder();
+      final count = await seeder.seedProducts();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(count > 0
+                ? 'Seeded $count products to Firestore'
+                : 'Products already exist in Firestore'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error seeding: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSeeding = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountMenuItem(
+      icon: _isSeeding ? Icons.hourglass_top : Icons.cloud_upload,
+      title: _isSeeding ? 'Seeding...' : 'Seed Products (Debug)',
+      onTap: _isSeeding ? () {} : _seedProducts,
+    );
   }
 }
 

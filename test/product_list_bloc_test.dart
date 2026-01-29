@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
+import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -8,7 +9,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
-import 'package:cd_shop/features/product/presentation/bloc/product_list_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
 
 class MockWatchProducts extends Mock implements WatchProducts {}
