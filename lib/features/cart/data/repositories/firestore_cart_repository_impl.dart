@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
@@ -21,7 +22,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Structure: carts/{userId}/items/{productId}
 class FirestoreCartRepositoryImpl
   with EventEmitterMixin
-  implements CartRepository {
+  implements CartRepository, Disposable {
   FirestoreCartRepositoryImpl({
     FirebaseFirestore? firestore,
     required AuthRepository authRepository,
@@ -295,6 +296,7 @@ class FirestoreCartRepositoryImpl
     }
   }
 
+  @override
   void dispose() {
     _authSubscription?.cancel();
     _cartSubscription?.cancel();

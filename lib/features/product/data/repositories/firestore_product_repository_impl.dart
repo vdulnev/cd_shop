@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
@@ -13,7 +14,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 /// local SQLite cache when offline.
 class FirestoreProductRepositoryImpl
   with EventEmitterMixin
-  implements ProductRepository {
+  implements ProductRepository, Disposable {
   FirestoreProductRepositoryImpl({
     FirebaseFirestore? firestore,
     required ProductDao productDao,
@@ -221,6 +222,7 @@ class FirestoreProductRepositoryImpl
     });
   }
   
+  @override
   void dispose() {
     disposeEventEmitter();
   }

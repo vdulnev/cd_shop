@@ -2,6 +2,7 @@ import 'package:cd_shop/core/database/daos/app_settings_dao.dart';
 import 'package:cd_shop/core/database/daos/product_dao.dart';
 import 'package:cd_shop/core/database/entities/app_settings_entity.dart';
 import 'package:cd_shop/core/database/entities/product_entity.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/features/product/data/datasources/product_mock_datasource.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
@@ -13,7 +14,7 @@ import 'package:cd_shop/features/product/domain/repositories/product_repository.
 /// Seeds database with mock data on first launch.
 class ProductRepositoryImpl
   with EventEmitterMixin
-  implements ProductRepository, EventEmitter {
+  implements ProductRepository, EventEmitter, Disposable {
   ProductRepositoryImpl({
     required ProductDao productDao,
     required AppSettingsDao appSettingsDao,
@@ -41,6 +42,7 @@ class ProductRepositoryImpl
     }
   }
   
+  @override
   void dispose() {
     disposeEventEmitter();
   }

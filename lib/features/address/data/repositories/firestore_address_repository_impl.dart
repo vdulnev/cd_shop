@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
@@ -12,7 +13,7 @@ import 'package:cd_shop/features/address/domain/repositories/address_repository.
 /// Structure: addresses/{userId}/items/{addressId}
 class FirestoreAddressRepositoryImpl
   with EventEmitterMixin
-  implements AddressRepository {
+  implements AddressRepository, Disposable {
   FirestoreAddressRepositoryImpl({
     FirebaseFirestore? firestore,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -136,6 +137,7 @@ class FirestoreAddressRepositoryImpl
     }
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }

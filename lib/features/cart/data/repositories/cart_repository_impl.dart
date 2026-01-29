@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 import 'package:cd_shop/core/database/daos/cart_dao.dart';
 import 'package:cd_shop/core/database/entities/cart_item_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -21,7 +22,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Product details are fetched from the product datasource.
 class CartRepositoryImpl
   with EventEmitterMixin
-  implements CartRepository {
+  implements CartRepository, Disposable {
   CartRepositoryImpl({
     required CartDao cartDao,
     required AuthRepository authRepository,
@@ -213,6 +214,7 @@ class CartRepositoryImpl
     return _entitiesToCart(entities, userId: userId);
   }
 
+  @override
   void dispose() {
     _authSubscription?.cancel();
     _cartItemsSubscription?.cancel();

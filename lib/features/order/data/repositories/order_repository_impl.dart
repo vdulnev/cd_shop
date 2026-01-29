@@ -6,6 +6,7 @@ import 'package:cd_shop/core/database/daos/address_dao.dart';
 import 'package:cd_shop/core/database/daos/order_dao.dart';
 import 'package:cd_shop/core/database/entities/order_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
@@ -15,7 +16,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 
 class OrderRepositoryImpl
   with EventEmitterMixin
-  implements OrderRepository {
+  implements OrderRepository, Disposable {
   OrderRepositoryImpl({
     required this.orderDao,
     required this.addressDao,
@@ -152,6 +153,7 @@ class OrderRepositoryImpl
     }
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }

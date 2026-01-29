@@ -1,6 +1,7 @@
 // ignore_for_file: close_sinks
 import 'package:cd_shop/core/database/daos/address_dao.dart';
 import 'package:cd_shop/core/database/entities/address_entity.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
@@ -8,7 +9,7 @@ import 'package:cd_shop/features/address/domain/repositories/address_repository.
 
 class AddressRepositoryImpl
     with EventEmitterMixin
-    implements AddressRepository {
+    implements AddressRepository, Disposable {
   AddressRepositoryImpl(this.addressDao);
 
   final AddressDao addressDao;
@@ -42,6 +43,7 @@ class AddressRepositoryImpl
     emitEvent(const SuccessEvent(message: 'Address deleted'));
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }

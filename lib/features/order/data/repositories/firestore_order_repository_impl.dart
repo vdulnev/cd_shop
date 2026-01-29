@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
@@ -18,7 +19,7 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Stores orders as documents in the 'orders' collection.
 class FirestoreOrderRepositoryImpl
   with EventEmitterMixin
-  implements OrderRepository {
+  implements OrderRepository, Disposable {
   FirestoreOrderRepositoryImpl({
     FirebaseFirestore? firestore,
     this.analyticsEventBus,
@@ -194,6 +195,7 @@ class FirestoreOrderRepositoryImpl
     }
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }

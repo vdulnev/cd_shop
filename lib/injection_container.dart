@@ -1,6 +1,8 @@
 import 'dart:async';
 
-import 'package:get_it/get_it.dart';
+import 'package:get_it/get_it.dart' hide Disposable;
+
+import 'package:cd_shop/core/models/disposable.dart';
 
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
@@ -35,7 +37,6 @@ import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart'
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
-
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -92,8 +93,8 @@ void _initAuthFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
-    f.createAuthRepository.creator,
-    dispose: f.createAuthRepository.dispose,
+    () => f.createAuthRepository(),
+    dispose: (i) => _dispose(i),
   );
 }
 
@@ -107,8 +108,8 @@ void _initProductFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
-    f.createProductRepository.creator,
-    dispose: f.createProductRepository.dispose,
+    () => f.createProductRepository(),
+    dispose: (i) => _dispose(i),
   );
 }
 
@@ -123,8 +124,8 @@ void _initCartFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<CartRepository>(
-    f.createCartRepository.creator,
-    dispose: f.createCartRepository.dispose,
+    () => f.createCartRepository(),
+    dispose: (i) => _dispose(i),
   );
 }
 
@@ -138,8 +139,8 @@ void _initAddressFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<AddressRepository>(
-    f.createAddressRepository.creator,
-    dispose: f.createAddressRepository.dispose,
+    () => f.createAddressRepository(),
+    dispose: (i) => _dispose(i),
   );
 }
 
@@ -152,7 +153,13 @@ void _initOrderFeature(DependencyFactory f) {
 
   // Repository
   sl.registerLazySingleton<OrderRepository>(
-    f.createOrderRepository.creator,
-    dispose: f.createOrderRepository.dispose,
+    () => f.createOrderRepository(),
+    dispose: (i) => _dispose(i),
   );
+}
+
+void _dispose(Object instance) {
+  if (instance is Disposable) {
+    instance.dispose();
+  }
 }

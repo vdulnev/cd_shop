@@ -16,46 +16,28 @@ import 'package:cd_shop/injection_container.dart';
 /// Default factory that creates real Firebase-backed dependencies.
 class FirebaseDependencyFactory implements DependencyFactory {
   @override
-  Creator<AuthRepository> get createAuthRepository =>
-      Creator<FirebaseAuthRepositoryImpl>(
-        creator: () => FirebaseAuthRepositoryImpl(
-          analyticsEventBus: sl<AnalyticsEventBus>(),
-        ),
-        dispose: (instance) => instance.disposeEventEmitter(),
+  AuthRepository createAuthRepository() => FirebaseAuthRepositoryImpl(
+        analyticsEventBus: sl<AnalyticsEventBus>(),
       );
 
   @override
-  Creator<ProductRepository> get createProductRepository =>
-      Creator<FirestoreProductRepositoryImpl>(
-        creator: () => FirestoreProductRepositoryImpl(
-          productDao: sl<AppDatabase>().productDao,
-        ),
-        dispose: (instance) => instance.disposeEventEmitter(),
+  ProductRepository createProductRepository() =>
+      FirestoreProductRepositoryImpl(
+        productDao: sl<AppDatabase>().productDao,
       );
 
   @override
-  Creator<CartRepository> get createCartRepository =>
-      Creator<FirestoreCartRepositoryImpl>(
-        creator: () => FirestoreCartRepositoryImpl(
-          authRepository: sl<AuthRepository>(),
-          analyticsEventBus: sl<AnalyticsEventBus>(),
-        ),
-        dispose: (instance) => instance.disposeEventEmitter(),
+  CartRepository createCartRepository() => FirestoreCartRepositoryImpl(
+        authRepository: sl<AuthRepository>(),
+        analyticsEventBus: sl<AnalyticsEventBus>(),
       );
 
   @override
-  Creator<AddressRepository> get createAddressRepository =>
-      Creator<FirestoreAddressRepositoryImpl>(
-        creator: () => FirestoreAddressRepositoryImpl(),
-        dispose: (instance) => instance.disposeEventEmitter(),
-      );
+  AddressRepository createAddressRepository() =>
+      FirestoreAddressRepositoryImpl();
 
   @override
-  Creator<OrderRepository> get createOrderRepository =>
-      Creator<FirestoreOrderRepositoryImpl>(
-        creator: () => FirestoreOrderRepositoryImpl(
-          analyticsEventBus: sl<AnalyticsEventBus>(),
-        ),
-        dispose: (instance) => instance.disposeEventEmitter(),
+  OrderRepository createOrderRepository() => FirestoreOrderRepositoryImpl(
+        analyticsEventBus: sl<AnalyticsEventBus>(),
       );
 }

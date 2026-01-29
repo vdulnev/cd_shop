@@ -6,6 +6,7 @@ import 'package:dartz/dartz.dart';
 import 'package:cd_shop/core/database/daos/user_dao.dart';
 import 'package:cd_shop/core/database/entities/user_entity.dart';
 import 'package:cd_shop/core/error/failures.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -16,7 +17,7 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 /// Persists users and session to SQLite using Floor.
 class AuthRepositoryImpl
   with EventEmitterMixin
-  implements AuthRepository {
+  implements AuthRepository, Disposable {
   AuthRepositoryImpl({required UserDao userDao}) : _userDao = userDao;
 
   final UserDao _userDao;
@@ -148,6 +149,7 @@ class AuthRepositoryImpl
     });
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }

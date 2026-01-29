@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
+import 'package:cd_shop/core/models/disposable.dart';
 import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_event_bus.dart';
@@ -15,7 +16,7 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 /// Uses Firebase Auth for authentication and Firestore for user profiles.
 class FirebaseAuthRepositoryImpl
   with EventEmitterMixin
-  implements AuthRepository {
+  implements AuthRepository, Disposable {
   FirebaseAuthRepositoryImpl({
     fb.FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
@@ -250,6 +251,7 @@ class FirebaseAuthRepositoryImpl
     }
   }
 
+  @override
   void dispose() {
     disposeEventEmitter();
   }
