@@ -69,6 +69,11 @@ lib/features/<feature>/
 - **Domain-only emissions**: Streams should emit domain models; convert entities in the repository layer.
 - **UI subscription**: Notifiers/BLoCs subscribe to streams and update state on data; handle errors via `onError` to surface user-friendly messages.
 
+### Event & Analytics Emitters
+
+- **App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider` so repository events are surfaced to the app event stream.
+- **Analytics Emitters**: Any class implementing `AnalyticsEmitter` must be included in the `emitters` list inside `AnalyticsObserver` so analytics events are observed and logged.
+
 **Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature is Riverpod-only (StateNotifier/Provider) — do not add new Flutter BLoCs there. Do not create intermediate providers that merely wrap `sl()` calls; inject usecases directly via `sl()` in notifier factories.
 
 ### Core Components

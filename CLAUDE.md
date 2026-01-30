@@ -73,6 +73,10 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 **Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature must use Riverpod (StateNotifier/Provider); do not introduce new Flutter BLoCs there. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
 
+**App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider` so repository events are surfaced to the app event stream.
+
+**Analytics Emitters**: Any class implementing `AnalyticsEmitter` must be included in the `emitters` list inside `AnalyticsObserver` so analytics events are observed and logged.
+
 ### Core Components
 
 - **Database**: Floor (SQLite) with DAOs in `lib/core/database/daos/` and entities in `lib/core/database/entities/`. Migrations defined in `app_database.dart`.
