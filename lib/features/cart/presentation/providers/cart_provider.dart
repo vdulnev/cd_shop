@@ -1,5 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
@@ -9,6 +7,7 @@ import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart'
 import 'package:cd_shop/features/cart/domain/usecases/watch_cart.dart';
 import 'package:cd_shop/features/cart/presentation/providers/cart_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class CartNotifier extends StateNotifier<CartState> {
   CartNotifier({

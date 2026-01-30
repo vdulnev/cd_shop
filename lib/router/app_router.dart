@@ -9,6 +9,7 @@ import 'package:cd_shop/features/auth/presentation/routes/auth_routes.dart';
 import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
 import 'package:cd_shop/features/product/presentation/routes/product_routes.dart';
 import 'package:cd_shop/main_page.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 /// Application route paths (re-exports feature routes for convenience)
 class AppRoutes {
@@ -43,7 +44,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: true,
-    observers: [sl<AnalyticsService>().observer],
+    observers: [TalkerRouteObserver(sl<Talker>()), sl<AnalyticsService>().observer],
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

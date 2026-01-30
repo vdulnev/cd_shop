@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/watch_current_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class AccountNotifier extends StateNotifier<AccountState> {
   AccountNotifier({

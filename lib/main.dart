@@ -11,6 +11,7 @@ import 'package:talker/talker.dart';
 import 'package:cd_shop/app.dart';
 import 'package:cd_shop/firebase_options.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:talker_riverpod_logger/talker_riverpod_logger_observer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,9 +19,7 @@ void main() async {
   // 1. Initialize Firebase
   final talker = Talker();
   talker.info('Initializing Firebase...');
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   talker.info('Firebase initialized');
 
   // 2. Set up Crashlytics error handling
@@ -42,5 +41,7 @@ void main() async {
   await initDependencies();
 
   talker.info('Launching app');
-  runApp(const ProviderScope(child: App()));
+  runApp(
+    ProviderScope(observers: [TalkerRiverpodObserver()], child: const App()),
+  );
 }

@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/registration_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class RegistrationNotifier extends StateNotifier<RegistrationState> {
   RegistrationNotifier({required RegisterUser registerUser})

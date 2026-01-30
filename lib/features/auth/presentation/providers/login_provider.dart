@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/login_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class LoginNotifier extends StateNotifier<LoginState> {
   LoginNotifier({required LoginUser loginUser})

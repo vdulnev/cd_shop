@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
@@ -12,6 +11,7 @@ import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/usecases/place_order.dart';
 import 'package:cd_shop/features/order/presentation/providers/checkout_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class CheckoutParams extends Equatable {
   const CheckoutParams({

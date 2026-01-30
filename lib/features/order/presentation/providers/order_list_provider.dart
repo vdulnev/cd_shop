@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
 import 'package:cd_shop/features/order/presentation/providers/order_list_state.dart';
 import 'package:cd_shop/injection_container.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class OrderListNotifier extends StateNotifier<OrderListState> {
   OrderListNotifier({
