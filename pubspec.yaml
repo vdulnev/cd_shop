@@ -40,6 +40,9 @@ dependencies:
   # UUID generation
   uuid: ^4.4.0
 
+  # Logging
+  talker: ^4.0.0
+
   # Icons font used by CupertinoIcons
   cupertino_icons: ^1.0.8
 

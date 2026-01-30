@@ -18,6 +18,8 @@ import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
+import 'package:talker/talker.dart';
+
 import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/injection_container.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,13 +44,16 @@ class MockOrderRepository extends Mock
   implements OrderRepository, EventEmitter, Disposable {}
 
 class MockDependencyFactory implements DependencyFactory {
-
   MockDependencyFactory() {
     when(() => _analyticsService.observer)
         .thenReturn(MockFirebaseAnalyticsObserver());
   }
+
   static const _emptyEvents = Stream<RepositoryEvent>.empty();
   final AnalyticsService _analyticsService = MockAnalyticsService();
+
+  @override
+  Talker createTalker() => Talker(settings: TalkerSettings(enabled: false));
 
   @override
   AnalyticsService createAnalyticsService() => _analyticsService;

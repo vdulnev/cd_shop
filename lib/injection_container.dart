@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:get_it/get_it.dart' hide Disposable;
+import 'package:talker/talker.dart';
 
 import 'package:cd_shop/core/models/disposable.dart';
 
@@ -47,6 +48,11 @@ final sl = GetIt.instance;
 Future<void> initDependencies({DependencyFactory? factory}) async {
   final f = factory ?? FirebaseDependencyFactory();
 
+  // ===== Logging =====
+  sl.registerSingleton<Talker>(f.createTalker());
+  final log = sl<Talker>();
+  log.info('Initializing dependencies...');
+
   // ===== Core Services =====
   sl.registerLazySingleton<AnalyticsService>(
     () => f.createAnalyticsService(),
@@ -56,19 +62,29 @@ Future<void> initDependencies({DependencyFactory? factory}) async {
       analyticsService: sl<AnalyticsService>(),
     ),
   );
+  log.info('Core services registered');
 
   // ===== Core (Database - kept for offline caching) =====
   await _initDatabase();
+  log.info('Database initialized');
 
   // ===== Features =====
   _initAuthFeature(f);
+  log.info('Auth feature initialized');
   _initProductFeature(f);
+  log.info('Product feature initialized');
   _initCartFeature(f);
+  log.info('Cart feature initialized');
   _initAddressFeature(f);
+  log.info('Address feature initialized');
   _initOrderFeature(f);
+  log.info('Order feature initialized');
 
   // Eagerly initialize so the observer starts listening immediately
   sl<AnalyticsObserver>();
+  log.info('Analytics observer started');
+
+  log.info('All dependencies initialized');
 }
 
 /// Initialize database (kept for offline caching)

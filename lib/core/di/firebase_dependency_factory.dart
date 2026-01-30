@@ -1,3 +1,5 @@
+import 'package:talker/talker.dart';
+
 import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/core/services/analytics_observer.dart';
@@ -16,6 +18,9 @@ import 'package:cd_shop/injection_container.dart';
 
 /// Default factory that creates real Firebase-backed dependencies.
 class FirebaseDependencyFactory implements DependencyFactory {
+  @override
+  Talker createTalker() => Talker();
+
   @override
   AnalyticsService createAnalyticsService() => AnalyticsService();
 
