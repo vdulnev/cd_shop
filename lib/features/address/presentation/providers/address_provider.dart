@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:talker/talker.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/address/domain/entities/address.dart';
@@ -39,8 +40,10 @@ class AddressNotifier extends StateNotifier<AddressState> {
   final SetDefaultAddress _setDefaultAddress;
   StreamSubscription<List<Address>>? _addressesSubscription;
   String? _defaultAddressId;
+  Talker get _log => sl<Talker>();
 
   Future<void> _loadAddresses() async {
+    _log.info('Loading addresses...');
     state = const AddressLoading();
 
     final userResult = await _getCurrentUser(const NoParams());
@@ -50,14 +53,17 @@ class AddressNotifier extends StateNotifier<AddressState> {
     );
 
     if (user == null) {
+      _log.warning('User not authenticated, cannot load addresses');
       state = const AddressNotAuthenticated();
       return;
     }
 
     _defaultAddressId = user.defaultAddressId;
     await _addressesSubscription?.cancel();
+    _log.info('Subscribing to addresses for user ${user.id}');
     _addressesSubscription = _watchAddresses(user.id).listen(
       (addresses) {
+        _log.info('Addresses updated: ${addresses.length} addresses');
         state = AddressesLoadedState(
           addresses: addresses,
           defaultAddressId: _defaultAddressId,
@@ -67,18 +73,22 @@ class AddressNotifier extends StateNotifier<AddressState> {
   }
 
   Future<void> addAddress(Address address) async {
+    _log.info('Adding address "${address.name}"');
     await _addAddress(address);
   }
 
   Future<void> updateAddress(Address address) async {
+    _log.info('Updating address ${address.id}');
     await _updateAddress(address);
   }
 
   Future<void> deleteAddress(String addressId) async {
+    _log.info('Deleting address $addressId');
     await _deleteAddress(addressId);
   }
 
   Future<void> setDefaultAddress(String addressId) async {
+    _log.info('Setting default address to $addressId');
     final result = await _setDefaultAddress(addressId);
     result.fold(
       (_) {},
