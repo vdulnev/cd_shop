@@ -71,7 +71,9 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature must use Riverpod (StateNotifier/Provider); do not introduce new Flutter BLoCs there. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
+
+**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API (from `flutter_riverpod/flutter_riverpod.dart`). Do not use the legacy `StateNotifier`/`StateNotifierProvider` (from `flutter_riverpod/legacy.dart`). Do not use `riverpod_generator` or `riverpod_annotation` — they are incompatible with `floor_generator` due to a `source_gen` version conflict. Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
 
 **App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider` so repository events are surfaced to the app event stream.
 
@@ -89,13 +91,13 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 ### Features
 
-| Feature | BLoCs | Purpose |
-|---------|-------|---------|
-| auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
-| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier (Riverpod-only, no BLoCs) | Product catalog |
-| cart | CartNotifier (Riverpod-only) | Shopping cart with real-time updates |
-| address | AddressBloc | User address management |
-| order | CheckoutBloc, OrderListBloc | Checkout flow and order history |
+| Feature | Notifiers | Purpose |
+|---------|-----------|---------|
+| auth | AccountNotifier, LoginNotifier, RegistrationNotifier | User authentication and session |
+| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier | Product catalog |
+| cart | CartNotifier | Shopping cart with real-time updates |
+| address | AddressNotifier | User address management |
+| order | CheckoutNotifier, OrderListNotifier | Checkout flow and order history |
 
 ## Testing Notes
 

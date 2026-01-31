@@ -5,7 +5,7 @@ This repository contains a multi-platform Flutter application for an e-commerce 
 ## Overview
 - Purpose: Cross-platform shopping app with product listing, search, account auth, and detail pages.
 - Project Type: Flutter app targeting Android, iOS, Web, macOS, Windows, Linux.
-- Stack: Dart, Flutter; state via `flutter_bloc`; routing via `go_router`; DI via `get_it`/`injectable`; database via Floor (SQLite); functional error handling with `dartz`.
+- Stack: Dart, Flutter; state via `flutter_riverpod`; routing via `go_router`; DI via `get_it`; database via Floor (SQLite); functional error handling with `dartz`.
 - Architecture: Clean Architecture with feature-based organization.
 
 ## Build & Development Commands
@@ -74,7 +74,9 @@ lib/features/<feature>/
 - **App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider` so repository events are surfaced to the app event stream.
 - **Analytics Emitters**: Any class implementing `AnalyticsEmitter` must be included in the `emitters` list inside `AnalyticsObserver` so analytics events are observed and logged.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Product feature is Riverpod-only (StateNotifier/Provider) — do not add new Flutter BLoCs there. Do not create intermediate providers that merely wrap `sl()` calls; inject usecases directly via `sl()` in notifier factories.
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that merely wrap `sl()` calls; inject usecases directly via `sl()` in notifier factories.
+
+**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API (from `flutter_riverpod/flutter_riverpod.dart`). Do not use the legacy `StateNotifier`/`StateNotifierProvider` (from `flutter_riverpod/legacy.dart`). Do not use `riverpod_generator` or `riverpod_annotation` — they are incompatible with `floor_generator` due to a `source_gen` version conflict. Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
 
 ### Core Components
 
@@ -88,13 +90,13 @@ lib/features/<feature>/
 
 ### Features
 
-| Feature | BLoCs | Purpose |
-|---------|-------|---------|
-| auth | AccountBloc, LoginBloc, RegistrationBloc | User authentication and session |
-| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier (Riverpod-only, no BLoCs) | Product catalog |
-| cart | CartBloc | Shopping cart with real-time updates |
-| address | AddressBloc | User address management |
-| order | CheckoutBloc, OrderListBloc | Checkout flow and order history |
+| Feature | Notifiers | Purpose |
+|---------|-----------|---------|
+| auth | AccountNotifier, LoginNotifier, RegistrationNotifier | User authentication and session |
+| product | ProductListNotifier, ProductSearchNotifier, ProductDetailNotifier | Product catalog |
+| cart | CartNotifier | Shopping cart with real-time updates |
+| address | AddressNotifier | User address management |
+| order | CheckoutNotifier, OrderListNotifier | Checkout flow and order history |
 
 ## Testing Notes
 
