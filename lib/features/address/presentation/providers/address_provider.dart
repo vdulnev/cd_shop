@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
@@ -14,33 +14,33 @@ import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
 import 'package:cd_shop/injection_container.dart';
 
-class AddressNotifier extends StateNotifier<AddressState> {
-  AddressNotifier({
-    required GetCurrentUser getCurrentUser,
-    required WatchAddresses watchAddresses,
-    required AddAddress addAddress,
-    required UpdateAddress updateAddress,
-    required DeleteAddress deleteAddress,
-    required SetDefaultAddress setDefaultAddress,
-  })  : _getCurrentUser = getCurrentUser,
-        _watchAddresses = watchAddresses,
-        _addAddress = addAddress,
-        _updateAddress = updateAddress,
-        _deleteAddress = deleteAddress,
-        _setDefaultAddress = setDefaultAddress,
-        super(const AddressInitial()) {
-    _loadAddresses();
-  }
-
-  final GetCurrentUser _getCurrentUser;
-  final WatchAddresses _watchAddresses;
-  final AddAddress _addAddress;
-  final UpdateAddress _updateAddress;
-  final DeleteAddress _deleteAddress;
-  final SetDefaultAddress _setDefaultAddress;
+class AddressNotifier extends Notifier<AddressState> {
+  late final GetCurrentUser _getCurrentUser;
+  late final WatchAddresses _watchAddresses;
+  late final AddAddress _addAddress;
+  late final UpdateAddress _updateAddress;
+  late final DeleteAddress _deleteAddress;
+  late final SetDefaultAddress _setDefaultAddress;
   StreamSubscription<List<Address>>? _addressesSubscription;
   String? _defaultAddressId;
   Talker get _log => sl<Talker>();
+
+  @override
+  AddressState build() {
+    _getCurrentUser = sl<GetCurrentUser>();
+    _watchAddresses = sl<WatchAddresses>();
+    _addAddress = sl<AddAddress>();
+    _updateAddress = sl<UpdateAddress>();
+    _deleteAddress = sl<DeleteAddress>();
+    _setDefaultAddress = sl<SetDefaultAddress>();
+
+    ref.onDispose(() {
+      _addressesSubscription?.cancel();
+    });
+
+    _loadAddresses();
+    return const AddressInitial();
+  }
 
   Future<void> _loadAddresses() async {
     _log.info('Loading addresses...');
@@ -104,22 +104,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       },
     );
   }
-
-  @override
-  void dispose() {
-    _addressesSubscription?.cancel();
-    super.dispose();
-  }
 }
 
 final addressProvider =
-    StateNotifierProvider<AddressNotifier, AddressState>((ref) {
-  return AddressNotifier(
-    getCurrentUser: sl<GetCurrentUser>(),
-    watchAddresses: sl<WatchAddresses>(),
-    addAddress: sl<AddAddress>(),
-    updateAddress: sl<UpdateAddress>(),
-    deleteAddress: sl<DeleteAddress>(),
-    setDefaultAddress: sl<SetDefaultAddress>(),
-  );
-});
+    NotifierProvider<AddressNotifier, AddressState>(AddressNotifier.new);
