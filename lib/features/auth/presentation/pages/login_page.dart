@@ -27,9 +27,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(loginProvider.notifier).submit(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
+      ref.read(loginProvider.notifier).login(
+            _emailController.text.trim(),
+            _passwordController.text,
           );
     }
   }

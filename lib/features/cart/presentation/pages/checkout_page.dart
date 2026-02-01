@@ -22,7 +22,7 @@ class CheckoutPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final params = CheckoutParams(userId: userId, cartItems: cartItems);
+    final params = (userId: userId, cartItems: cartItems);
 
     ref.listen<CheckoutState>(checkoutProvider(params), (previous, state) {
       if (state is CheckoutSuccess) {
@@ -85,7 +85,7 @@ class CheckoutPage extends ConsumerWidget {
   Widget _buildCheckoutForm(
     BuildContext context,
     WidgetRef ref,
-    CheckoutParams params,
+    ({String userId, List<CartItem> cartItems}) params,
     CheckoutReady state,
   ) {
     if (state.cartItems.isEmpty) {

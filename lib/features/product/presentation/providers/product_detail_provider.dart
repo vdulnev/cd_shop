@@ -1,39 +1,38 @@
 import 'package:cd_shop/features/product/domain/usecases/get_product_by_id.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_detail_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProductDetailNotifier extends StateNotifier<ProductDetailState> {
-  ProductDetailNotifier({
-    required GetProductById getProductById,
-    required String productId,
-  }) : _getProductById = getProductById,
-       _productId = productId,
-       super(const ProductDetailInitial()) {
-    _fetchProduct();
+class ProductDetailNotifier extends Notifier<ProductDetailState> {
+  ProductDetailNotifier(this._productId);
+
+  final String _productId;
+  late final GetProductById _getProductById;
+
+  @override
+  ProductDetailState build() {
+    _getProductById = sl<GetProductById>();
+    _load(_productId);
+    return const ProductDetailLoading();
   }
 
-  final GetProductById _getProductById;
-  final String _productId;
-
-  Future<void> _fetchProduct() async {
-    state = const ProductDetailLoading();
-    final product = await _getProductById(GetProductByIdParams(id: _productId));
-    if (product != null) {
-      state = ProductDetailLoaded(product);
-    } else {
-      state = const ProductDetailNotFound();
+  Future<void> _load(String productId) async {
+    try {
+      final product = await _getProductById(
+        GetProductByIdParams(id: productId),
+      );
+      if (product == null) {
+        state = const ProductDetailNotFound();
+      } else {
+        state = ProductDetailLoaded(product);
+      }
+    } catch (error) {
+      state = ProductDetailError(error.toString());
     }
   }
 }
 
-final productDetailProvider = StateNotifierProvider.autoDispose
-    .family<ProductDetailNotifier, ProductDetailState, String>((
-      ref,
-      productId,
-    ) {
-      return ProductDetailNotifier(
-        getProductById: sl<GetProductById>(),
-        productId: productId,
-      );
-    });
+final productDetailProvider =
+    NotifierProvider.family<ProductDetailNotifier, ProductDetailState, String>(
+  (productId) => ProductDetailNotifier(productId),
+);

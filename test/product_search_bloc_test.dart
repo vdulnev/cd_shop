@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/search_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
+import 'package:cd_shop/injection_container.dart';
 
 class MockSearchProducts extends Mock implements SearchProducts {}
 
@@ -23,19 +24,19 @@ void main() {
 
     setUp(() {
       mockSearchProducts = MockSearchProducts();
+      sl.registerLazySingleton<SearchProducts>(() => mockSearchProducts);
       container = ProviderContainer(
         overrides: [
-          productSearchProvider.overrideWith((_) {
-            return ProductSearchNotifier(
-              searchProducts: mockSearchProducts,
-            );
-          }),
+          productSearchProvider.overrideWith(
+            ProductSearchNotifier.new,
+          ),
         ],
       );
     });
 
     tearDown(() {
       container.dispose();
+      sl.reset();
     });
 
     test('initial state is ProductSearchInitial', () {

@@ -1,32 +1,26 @@
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/registration_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RegistrationNotifier extends StateNotifier<RegistrationState> {
-  RegistrationNotifier({required RegisterUser registerUser})
-      : _registerUser = registerUser,
-        super(const RegistrationInitial());
+class RegistrationNotifier extends Notifier<RegistrationState> {
+  late final RegisterUser _registerUser;
 
-  final RegisterUser _registerUser;
+  @override
+  RegistrationState build() {
+    _registerUser = sl<RegisterUser>();
+    return const RegistrationInitial();
+  }
 
-  Future<void> submit({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
+  Future<void> register(String email, String password, String name) async {
     state = const RegistrationLoading();
 
     final result = await _registerUser(
-      RegisterParams(
-        email: email,
-        password: password,
-        name: name,
-      ),
+      RegisterParams(email: email, password: password, name: name),
     );
 
     result.fold(
-      (_) => state = const RegistrationInitial(),
+      (failure) => state = const RegistrationInitial(),
       (user) => state = RegistrationSuccess(user),
     );
   }
@@ -37,8 +31,6 @@ class RegistrationNotifier extends StateNotifier<RegistrationState> {
 }
 
 final registrationProvider =
-    StateNotifierProvider.autoDispose<RegistrationNotifier, RegistrationState>(
-  (ref) {
-    return RegistrationNotifier(registerUser: sl<RegisterUser>());
-  },
+    NotifierProvider<RegistrationNotifier, RegistrationState>(
+  RegistrationNotifier.new,
 );

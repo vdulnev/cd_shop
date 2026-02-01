@@ -10,6 +10,7 @@ import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
+import 'package:cd_shop/injection_container.dart';
 
 class MockWatchProducts extends Mock implements WatchProducts {}
 class MockGetProducts extends Mock implements GetProducts {}
@@ -28,11 +29,12 @@ void main() {
     when(() => mockWatchProducts(const NoParams()))
         .thenAnswer((_) => controller.stream);
 
+    sl.registerLazySingleton<WatchProducts>(() => mockWatchProducts);
+    sl.registerLazySingleton<GetProducts>(() => mockGetProducts);
+
     container = ProviderContainer(
       overrides: [
-        productListProvider.overrideWith((_) {
-          return ProductListNotifier(watchProducts: mockWatchProducts, getProducts: mockGetProducts);
-        }),
+        productListProvider.overrideWith(ProductListNotifier.new),
       ],
     );
   });
@@ -40,6 +42,7 @@ void main() {
   tearDown(() {
     container.dispose();
     controller.close();
+    sl.reset();
   });
 
   test('initial state transitions to Loaded when stream emits', () async {

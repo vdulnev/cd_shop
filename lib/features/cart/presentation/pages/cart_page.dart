@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
-import 'package:cd_shop/features/cart/domain/usecases/remove_from_cart.dart';
-import 'package:cd_shop/features/cart/domain/usecases/update_cart_quantity.dart';
 import 'package:cd_shop/features/cart/presentation/providers/cart_state.dart';
 import 'package:cd_shop/features/cart/presentation/providers/cart_provider.dart';
 import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
@@ -91,7 +88,7 @@ class _CartView extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () {
-              ref.read(cartProvider.notifier).clearCart(const NoParams());
+              ref.read(cartProvider.notifier).clear();
               Navigator.of(dialogContext).pop();
             },
             child: const Text('Clear'),
@@ -176,7 +173,7 @@ class _CartItemTile extends ConsumerWidget {
         ),
       ),
       onDismissed: (_) {
-        ref.read(cartProvider.notifier).removeFromCart(RemoveFromCartParams(productId: product.id));
+        ref.read(cartProvider.notifier).removeProduct(product.id);
       },
       child: InkWell(
         onTap: () => context.push('/products/${product.id}'),
@@ -282,13 +279,11 @@ class _QuantityControls extends ConsumerWidget {
             onPressed: () {
               if (item.quantity > 1) {
                 ref.read(cartProvider.notifier).updateQuantity(
-                      UpdateCartQuantityParams(
-                        productId: item.product.id,
-                        quantity: item.quantity - 1,
-                      ),
+                      item.product.id,
+                      item.quantity - 1,
                     );
               } else {
-                ref.read(cartProvider.notifier).removeFromCart(RemoveFromCartParams(productId: item.product.id));
+                ref.read(cartProvider.notifier).removeProduct(item.product.id);
               }
             },
           ),
@@ -307,10 +302,8 @@ class _QuantityControls extends ConsumerWidget {
             onPressed: item.quantity < item.product.stockQuantity
                 ? () {
                     ref.read(cartProvider.notifier).updateQuantity(
-                          UpdateCartQuantityParams(
-                            productId: item.product.id,
-                            quantity: item.quantity + 1,
-                          ),
+                          item.product.id,
+                          item.quantity + 1,
                         );
                   }
                 : null,

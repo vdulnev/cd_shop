@@ -1,38 +1,53 @@
-import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
+import 'dart:async';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
+import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProductListNotifier extends StateNotifier<ProductListState> {
-  ProductListNotifier({
-    required WatchProducts watchProducts,
-    required GetProducts getProducts,
-  }) : _watchProducts = watchProducts,
-       _getProducts = getProducts,
-       super(const ProductListInitial()) {
+class ProductListNotifier extends Notifier<ProductListState> {
+  late final WatchProducts _watchProducts;
+  late final GetProducts _getProducts;
+  StreamSubscription? _subscription;
+
+  @override
+  ProductListState build() {
+    _watchProducts = sl<WatchProducts>();
+    _getProducts = sl<GetProducts>();
     _subscribe();
+    return const ProductListInitial();
   }
 
-  final WatchProducts _watchProducts;
-  final GetProducts _getProducts;
-
   void _subscribe() {
-    _watchProducts(const NoParams()).listen((products) {
-      state = ProductListLoaded(products);
+    _subscription?.cancel();
+    _subscription = _watchProducts(const NoParams()).listen(
+      (products) {
+        state = ProductListLoaded(products);
+      },
+      onError: (error) {
+        state = const ProductListInitial();
+      },
+    );
+
+    ref.onDispose(() {
+      _subscription?.cancel();
     });
   }
 
   Future<void> refresh() async {
     state = const ProductListLoading();
-    final products = await _getProducts();
-    state = ProductListLoaded(products);
+    try {
+      final products = await _getProducts();
+      state = ProductListLoaded(products);
+    } catch (error) {
+      state = const ProductListInitial();
+    }
   }
 }
 
 final productListProvider =
-    StateNotifierProvider<ProductListNotifier, ProductListState>((ref) {
-      return ProductListNotifier(watchProducts: sl(), getProducts: sl());
-    });
+    NotifierProvider<ProductListNotifier, ProductListState>(
+  ProductListNotifier.new,
+);

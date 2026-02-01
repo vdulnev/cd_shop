@@ -1,55 +1,60 @@
 import 'dart:async';
 
-import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/usecases/cancel_order.dart';
 import 'package:cd_shop/features/order/domain/usecases/watch_user_orders.dart';
 import 'package:cd_shop/features/order/presentation/providers/order_list_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class OrderListNotifier extends StateNotifier<OrderListState> {
-  OrderListNotifier({
-    required WatchUserOrders watchUserOrders,
-    required CancelOrder cancelOrder,
-    required String userId,
-  })  : _watchUserOrders = watchUserOrders,
-        _cancelOrder = cancelOrder,
-        _userId = userId,
-        super(const OrderListInitial()) {
-    _subscribe();
-  }
+class OrderListNotifier extends Notifier<OrderListState> {
+  OrderListNotifier(
+    this._userId,
+  );
 
-  final WatchUserOrders _watchUserOrders;
-  final CancelOrder _cancelOrder;
   final String _userId;
 
-  StreamSubscription<List<Order>>? _subscription;
+  late final WatchUserOrders _watchUserOrders;
+  late final CancelOrder _cancelOrder;
+  StreamSubscription? _subscription;
 
-  void _subscribe() {
-    state = const OrderListLoading();
+  @override
+  OrderListState build() {
+    _watchUserOrders = sl<WatchUserOrders>();
+    _cancelOrder = sl<CancelOrder>();
+    _subscribe(_userId);
+    return const OrderListLoading();
+  }
+
+  void _subscribe(String userId) {
     _subscription?.cancel();
-    _subscription = _watchUserOrders(_userId).listen(
-      (orders) => state = OrderListLoaded(orders),
-      onError: (error) => state = OrderListError(error.toString()),
+    _subscription = _watchUserOrders(userId).listen(
+      (orders) {
+        state = OrderListLoaded(orders);
+      },
+      onError: (error) {
+        state = OrderListError(error.toString());
+      },
     );
+
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
   }
 
   Future<void> cancelOrder(String orderId) async {
-    await _cancelOrder(orderId);
+    final result = await _cancelOrder(orderId);
+    result.fold(
+      (failure) => state = OrderListError(failure.message),
+      (_) => _resubscribeIfPossible(),
+    );
   }
 
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+  void _resubscribeIfPossible() {
+    _subscribe(_userId);
   }
 }
 
-final orderListProvider = StateNotifierProvider.autoDispose
-    .family<OrderListNotifier, OrderListState, String>((ref, userId) {
-  return OrderListNotifier(
-    watchUserOrders: sl<WatchUserOrders>(),
-    cancelOrder: sl<CancelOrder>(),
-    userId: userId,
-  );
-});
+final orderListProvider =
+    NotifierProvider.family<OrderListNotifier, OrderListState, String>(
+  (userId) => OrderListNotifier(userId),
+);

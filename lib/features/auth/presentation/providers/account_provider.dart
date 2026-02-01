@@ -6,27 +6,24 @@ import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/watch_current_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AccountNotifier extends StateNotifier<AccountState> {
-  AccountNotifier({
-    required GetCurrentUser getCurrentUser,
-    required LogoutUser logoutUser,
-    required WatchCurrentUser watchCurrentUser,
-  })  : _getCurrentUser = getCurrentUser,
-        _logoutUser = logoutUser,
-        _watchCurrentUser = watchCurrentUser,
-        super(const AccountInitial()) {
-    _subscribe();
-  }
-
-  final GetCurrentUser _getCurrentUser;
-  final LogoutUser _logoutUser;
-  final WatchCurrentUser _watchCurrentUser;
+class AccountNotifier extends Notifier<AccountState> {
+  late final GetCurrentUser _getCurrentUser;
+  late final LogoutUser _logoutUser;
+  late final WatchCurrentUser _watchCurrentUser;
   StreamSubscription? _subscription;
 
+  @override
+  AccountState build() {
+    _getCurrentUser = sl<GetCurrentUser>();
+    _logoutUser = sl<LogoutUser>();
+    _watchCurrentUser = sl<WatchCurrentUser>();
+    _subscribe();
+    return const AccountLoading();
+  }
+
   void _subscribe() {
-    state = const AccountLoading();
     _subscription?.cancel();
     _subscription = _watchCurrentUser().listen(
       (user) {
@@ -40,6 +37,10 @@ class AccountNotifier extends StateNotifier<AccountState> {
         state = AccountError(error.toString());
       },
     );
+
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
   }
 
   Future<void> load() async {
@@ -69,20 +70,8 @@ class AccountNotifier extends StateNotifier<AccountState> {
       (_) => state = const AccountLoggedOut(),
     );
   }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
-  }
 }
 
-final accountProvider = StateNotifierProvider<AccountNotifier, AccountState>((
-  ref,
-) {
-  return AccountNotifier(
-    getCurrentUser: sl<GetCurrentUser>(),
-    logoutUser: sl<LogoutUser>(),
-    watchCurrentUser: sl<WatchCurrentUser>(),
-  );
-});
+final accountProvider = NotifierProvider<AccountNotifier, AccountState>(
+  AccountNotifier.new,
+);

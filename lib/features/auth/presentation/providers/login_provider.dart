@@ -1,30 +1,26 @@
 import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/login_state.dart';
 import 'package:cd_shop/injection_container.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginNotifier extends StateNotifier<LoginState> {
-  LoginNotifier({required LoginUser loginUser})
-      : _loginUser = loginUser,
-        super(const LoginInitial());
+class LoginNotifier extends Notifier<LoginState> {
+  late final LoginUser _loginUser;
 
-  final LoginUser _loginUser;
+  @override
+  LoginState build() {
+    _loginUser = sl<LoginUser>();
+    return const LoginInitial();
+  }
 
-  Future<void> submit({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login(String email, String password) async {
     state = const LoginLoading();
 
     final result = await _loginUser(
-      LoginParams(
-        email: email,
-        password: password,
-      ),
+      LoginParams(email: email, password: password),
     );
 
     result.fold(
-      (_) => state = const LoginInitial(),
+      (failure) => state = const LoginInitial(),
       (user) => state = LoginSuccess(user),
     );
   }
@@ -34,8 +30,6 @@ class LoginNotifier extends StateNotifier<LoginState> {
   }
 }
 
-final loginProvider = StateNotifierProvider.autoDispose<LoginNotifier, LoginState>(
-  (ref) {
-    return LoginNotifier(loginUser: sl<LoginUser>());
-  },
+final loginProvider = NotifierProvider<LoginNotifier, LoginState>(
+  LoginNotifier.new,
 );

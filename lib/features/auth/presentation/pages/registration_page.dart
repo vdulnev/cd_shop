@@ -29,10 +29,10 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(registrationProvider.notifier).submit(
-            name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
+      ref.read(registrationProvider.notifier).register(
+            _emailController.text.trim(),
+            _passwordController.text,
+            _nameController.text.trim(),
           );
     }
   }
