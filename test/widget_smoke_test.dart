@@ -118,7 +118,7 @@ void main() {
   testWidgets('App builds without errors', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: App()));
 
-    // Flush pending timers from async DB operations (Floor/sqflite)
+    // Flush pending timers from async operations
     await tester.pump(const Duration(seconds: 10));
 
     expect(find.byType(MaterialApp), findsOneWidget);

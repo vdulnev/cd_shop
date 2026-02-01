@@ -20,9 +20,6 @@ flutter run
 # Build for web
 flutter build web
 
-# Regenerate Floor database code after entity/DAO changes
-dart run build_runner build --delete-conflicting-outputs
-
 # Clean and re-bootstrap
 flutter clean && flutter pub get
 ```
@@ -71,9 +68,9 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Database → Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
+**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
 
-**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API (from `flutter_riverpod/flutter_riverpod.dart`). Do not use the legacy `StateNotifier`/`StateNotifierProvider` (from `flutter_riverpod/legacy.dart`). Do not use `riverpod_generator` or `riverpod_annotation` — they are incompatible with `floor_generator` due to a `source_gen` version conflict. Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
+**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API (from `flutter_riverpod/flutter_riverpod.dart`). Do not use the legacy `StateNotifier`/`StateNotifierProvider` (from `flutter_riverpod/legacy.dart`). Do not use `riverpod_generator` or `riverpod_annotation`. Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
 
 **No Null Assertion Operator**: Do not use the null assertion operator (`!`). Use safe access (`?.`) and explicit null checks instead.
 
@@ -83,7 +80,7 @@ The `_bloc.dart` file imports and re-exports the event/state files, so consumers
 
 ### Core Components
 
-- **Database**: Floor (SQLite) with DAOs in `lib/core/database/daos/` and entities in `lib/core/database/entities/`. Migrations defined in `app_database.dart`.
+- **Persistence**: Firebase/Firestore is the single source of truth.
 
 - **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation. Each feature defines routes in `presentation/routes/`. Routes aggregate in `lib/router/app_router.dart`.
 

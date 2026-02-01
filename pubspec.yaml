@@ -30,10 +30,6 @@ dependencies:
   # Reactive utilities (BehaviorSubject)
   rxdart: ^0.28.0
 
-  # Local Database
-  floor: ^1.5.0
-  sqflite: ^2.3.0
-
   # Cryptography
   crypto: ^3.0.3
 
@@ -65,8 +61,6 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.8
   injectable_generator: ^2.4.1
-  floor_generator: ^1.5.0
-
   # Testing
   mocktail: ^1.0.3
 

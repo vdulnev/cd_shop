@@ -5,7 +5,6 @@ import 'package:talker/talker.dart';
 
 import 'package:cd_shop/core/models/disposable.dart';
 
-import 'package:cd_shop/core/database/app_database.dart';
 import 'package:cd_shop/core/di/dependency_factory.dart';
 import 'package:cd_shop/core/di/firebase_dependency_factory.dart';
 import 'package:cd_shop/core/services/analytics_observer.dart';
@@ -64,10 +63,6 @@ Future<void> initDependencies({DependencyFactory? factory}) async {
   );
   log.info('Core services registered');
 
-  // ===== Core (Database - kept for offline caching) =====
-  await _initDatabase();
-  log.info('Database initialized');
-
   // ===== Features =====
   _initAuthFeature(f);
   log.info('Auth feature initialized');
@@ -85,12 +80,6 @@ Future<void> initDependencies({DependencyFactory? factory}) async {
   log.info('Analytics observer started');
 
   log.info('All dependencies initialized');
-}
-
-/// Initialize database (kept for offline caching)
-Future<void> _initDatabase() async {
-  final database = await AppDatabase.create();
-  sl.registerSingleton<AppDatabase>(database);
 }
 
 /// Initialize Auth feature dependencies
