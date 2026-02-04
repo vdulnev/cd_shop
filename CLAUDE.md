@@ -38,35 +38,32 @@ lib/features/<feature>/
 │   ├── repositories/    # Abstract repository contracts
 │   └── usecases/        # Single-purpose business logic
 └── presentation/
-    ├── bloc/            # BLoC state management
+    ├── providers/       # Riverpod Notifiers & Providers
     ├── pages/           # Screen widgets
     ├── routes/          # GoRouter route definitions
     └── widgets/         # Feature-specific widgets
 ```
 
-### BLoC File Structure
+### Riverpod File Structure
 
-Each BLoC is split into three files:
+Each Notifier is potentially split into files (or kept together if small):
 ```
-lib/features/<feature>/presentation/bloc/
-├── <name>_bloc.dart    # BLoC class (imports + re-exports event/state)
-├── <name>_event.dart   # Sealed event classes
-└── <name>_state.dart   # Sealed state classes
+lib/features/<feature>/presentation/providers/
+├── <name>_provider.dart    # Notifier class and Provider definition
+└── <name>_state.dart       # Sealed state classes (optional separate file)
 ```
-The `_bloc.dart` file imports and re-exports the event/state files, so consumers only need to import `_bloc.dart`.
 
 ### Key Architectural Rules
 
-**Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
+**Page-Notifier Isolation**: Each page uses ONLY its corresponding Notifier(s). Data needed from other features is passed via constructor parameters or route `extra` data.
 
-**No Foreign Bloc/State Access in Widgets**: Widgets must never access BLoCs or state managers from other features directly. Instead:
+**No Foreign State Access in Widgets**: Widgets must never access Notifiers/Providers from other features directly. Instead:
 - Pages (top-level) call foreign usecases and inject callbacks to child widgets.
 - Child widgets receive pure callbacks with no knowledge of other features' implementation.
-- Example: ProductDetailPage calls `AddToCart` usecase, passes result callback to _AddToCartBar.
 
-**No Direct Repository Access in BLoCs**: BLoCs must never depend on repositories directly. All data access goes through use case classes (`domain/usecases/`).
+**No Direct Repository Access in Notifiers**: Notifiers must never depend on repositories directly. All data access goes through use case classes (`domain/usecases/`).
 
-**Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
+**Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` or `StreamController` for real-time updates. Use cases wrap repository methods. Notifiers subscribe to streams and emit state changes.
 
 **Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
 
