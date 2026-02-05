@@ -8,9 +8,12 @@ import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 
 /// Use case to update the quantity of a cart item
-@lazySingleton
-class UpdateCartQuantity extends UseCase<Cart, UpdateCartQuantityParams> {
-  UpdateCartQuantity(this._repository);
+abstract interface class UpdateCartQuantity
+    implements UseCase<Cart, UpdateCartQuantityParams> {}
+
+@LazySingleton(as: UpdateCartQuantity)
+class UpdateCartQuantityImpl implements UpdateCartQuantity {
+  UpdateCartQuantityImpl(this._repository);
 
   final CartRepository _repository;
 

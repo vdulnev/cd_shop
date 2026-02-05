@@ -5,12 +5,17 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
 /// Use case to get a product by its ID
-@lazySingleton
-class GetProductById {
-  GetProductById(this.repository);
+abstract interface class GetProductById {
+  Future<Product?> call(GetProductByIdParams params);
+}
+
+@LazySingleton(as: GetProductById)
+class GetProductByIdImpl implements GetProductById {
+  GetProductByIdImpl(this.repository);
 
   final ProductRepository repository;
 
+  @override
   Future<Product?> call(GetProductByIdParams params) {
     return repository.getProductById(params.id);
   }

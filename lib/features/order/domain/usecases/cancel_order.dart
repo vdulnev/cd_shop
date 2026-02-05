@@ -6,9 +6,11 @@ import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 
 /// Use case for cancelling an order
-@lazySingleton
-class CancelOrder implements UseCase<void, String> {
-  CancelOrder(this.repository);
+abstract interface class CancelOrder implements UseCase<void, String> {}
+
+@LazySingleton(as: CancelOrder)
+class CancelOrderImpl implements CancelOrder {
+  CancelOrderImpl(this.repository);
 
   final OrderRepository repository;
 

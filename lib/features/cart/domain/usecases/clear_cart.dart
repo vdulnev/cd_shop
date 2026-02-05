@@ -7,9 +7,11 @@ import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 
 /// Use case to clear all items from the cart
-@lazySingleton
-class ClearCart extends UseCase<Cart, NoParams> {
-  ClearCart(this._repository);
+abstract interface class ClearCart implements UseCase<Cart, NoParams> {}
+
+@LazySingleton(as: ClearCart)
+class ClearCartImpl implements ClearCart {
+  ClearCartImpl(this._repository);
 
   final CartRepository _repository;
 

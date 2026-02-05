@@ -7,9 +7,11 @@ import 'package:cd_shop/features/order/domain/entities/order.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 
 /// Use case for placing a new order
-@lazySingleton
-class PlaceOrder implements UseCase<Order, OrderRequest> {
-  PlaceOrder(this.repository);
+abstract interface class PlaceOrder implements UseCase<Order, OrderRequest> {}
+
+@LazySingleton(as: PlaceOrder)
+class PlaceOrderImpl implements PlaceOrder {
+  PlaceOrderImpl(this.repository);
 
   final OrderRepository repository;
 

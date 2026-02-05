@@ -61,6 +61,10 @@ lib/features/<feature>/presentation/providers/
 - Pages (top-level) call foreign usecases and inject callbacks to child widgets.
 - Child widgets receive pure callbacks with no knowledge of other features' implementation.
 
+**Use Cases as Interfaces**: All use cases must be defined as abstract interface classes.
+- Create a concrete implementation class suffixed with `Impl` (e.g., `class GetUserImpl implements GetUser`).
+- Annotate the implementation with `@LazySingleton(as: InterfaceName)` to register it against the interface.
+
 **No Direct Repository Access in Notifiers**: Notifiers must never depend on repositories directly. All data access goes through use case classes (`domain/usecases/`).
 
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` or `StreamController` for real-time updates. Use cases wrap repository methods. Notifiers subscribe to streams and emit state changes.

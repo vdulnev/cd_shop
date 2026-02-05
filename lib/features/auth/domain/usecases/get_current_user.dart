@@ -6,9 +6,12 @@ import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 
-@lazySingleton
-class GetCurrentUser implements UseCase<User?, NoParams> {
-  GetCurrentUser(this.repository);
+/// Use case to get the current user
+abstract interface class GetCurrentUser implements UseCase<User?, NoParams> {}
+
+@LazySingleton(as: GetCurrentUser)
+class GetCurrentUserImpl implements GetCurrentUser {
+  GetCurrentUserImpl(this.repository);
 
   final AuthRepository repository;
 

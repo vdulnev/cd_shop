@@ -7,9 +7,12 @@ import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 
-@lazySingleton
-class LoginUser implements UseCase<User, LoginParams> {
-  LoginUser(this.repository);
+/// Use case to login a user
+abstract interface class LoginUser implements UseCase<User, LoginParams> {}
+
+@LazySingleton(as: LoginUser)
+class LoginUserImpl implements LoginUser {
+  LoginUserImpl(this.repository);
 
   final AuthRepository repository;
 

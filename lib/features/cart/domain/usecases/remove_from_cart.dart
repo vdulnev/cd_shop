@@ -8,9 +8,12 @@ import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 
 /// Use case to remove a product from the cart
-@lazySingleton
-class RemoveFromCart extends UseCase<Cart, RemoveFromCartParams> {
-  RemoveFromCart(this._repository);
+abstract interface class RemoveFromCart
+    implements UseCase<Cart, RemoveFromCartParams> {}
+
+@LazySingleton(as: RemoveFromCart)
+class RemoveFromCartImpl implements RemoveFromCart {
+  RemoveFromCartImpl(this._repository);
 
   final CartRepository _repository;
 

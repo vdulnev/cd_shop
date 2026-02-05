@@ -9,9 +9,11 @@ import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 
 /// Use case to add a product to the cart
-@lazySingleton
-class AddToCart extends UseCase<Cart, AddToCartParams> {
-  AddToCart(this._repository);
+abstract interface class AddToCart implements UseCase<Cart, AddToCartParams> {}
+
+@LazySingleton(as: AddToCart)
+class AddToCartImpl implements AddToCart {
+  AddToCartImpl(this._repository);
 
   final CartRepository _repository;
 

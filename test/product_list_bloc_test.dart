@@ -6,13 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
 import 'package:cd_shop/injection_container.dart';
 
 class MockWatchProducts extends Mock implements WatchProducts {}
+
 class MockGetProducts extends Mock implements GetProducts {}
 
 void main() {
@@ -26,16 +26,13 @@ void main() {
     mockGetProducts = MockGetProducts();
     controller = StreamController<List<Product>>.broadcast();
 
-    when(() => mockWatchProducts(const NoParams()))
-        .thenAnswer((_) => controller.stream);
+    when(() => mockWatchProducts()).thenAnswer((_) => controller.stream);
 
     sl.registerLazySingleton<WatchProducts>(() => mockWatchProducts);
     sl.registerLazySingleton<GetProducts>(() => mockGetProducts);
 
     container = ProviderContainer(
-      overrides: [
-        productListProvider.overrideWith(ProductListNotifier.new),
-      ],
+      overrides: [productListProvider.overrideWith(ProductListNotifier.new)],
     );
   });
 
@@ -101,8 +98,14 @@ void main() {
     expect(states.length, greaterThanOrEqualTo(3));
     expect(states[0], isA<ProductListInitial>());
     expect(states[1], isA<ProductListLoading>());
-    expect(states[2], isA<ProductListLoaded>()
-        .having((s) => s.products.first.id, 'first.id', '2'));
+    expect(
+      states[2],
+      isA<ProductListLoaded>().having(
+        (s) => s.products.first.id,
+        'first.id',
+        '2',
+      ),
+    );
 
     sub.close();
   });

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cd_shop/core/usecases/usecase.dart';
 import 'package:cd_shop/features/product/domain/usecases/get_products.dart';
 import 'package:cd_shop/features/product/domain/usecases/watch_products.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
@@ -22,7 +21,7 @@ class ProductListNotifier extends Notifier<ProductListState> {
 
   void _subscribe() {
     _subscription?.cancel();
-    _subscription = _watchProducts(const NoParams()).listen(
+    _subscription = _watchProducts().listen(
       (products) {
         state = ProductListLoaded(products);
       },
@@ -49,5 +48,5 @@ class ProductListNotifier extends Notifier<ProductListState> {
 
 final productListProvider =
     NotifierProvider<ProductListNotifier, ProductListState>(
-  ProductListNotifier.new,
-);
+      ProductListNotifier.new,
+    );

@@ -115,36 +115,60 @@ void main() {
     sl.registerSingleton<OrderRepository>(orderRepo);
 
     // Auth UseCases
-    sl.registerLazySingleton(() => WatchCurrentUser(authRepo));
-    sl.registerLazySingleton(() => GetCurrentUser(authRepo));
-    sl.registerLazySingleton(() => LoginUser(authRepo));
-    sl.registerLazySingleton(() => LogoutUser(authRepo));
-    sl.registerLazySingleton(() => RegisterUser(authRepo));
-    sl.registerLazySingleton(() => SetDefaultAddress(authRepo));
+    sl.registerLazySingleton<WatchCurrentUser>(
+      () => WatchCurrentUserImpl(authRepo),
+    );
+    sl.registerLazySingleton<GetCurrentUser>(
+      () => GetCurrentUserImpl(authRepo),
+    );
+    sl.registerLazySingleton<LoginUser>(() => LoginUserImpl(authRepo));
+    sl.registerLazySingleton<LogoutUser>(() => LogoutUserImpl(authRepo));
+    sl.registerLazySingleton<RegisterUser>(() => RegisterUserImpl(authRepo));
+    sl.registerLazySingleton<SetDefaultAddress>(
+      () => SetDefaultAddressImpl(authRepo),
+    );
 
     // Product UseCases
-    sl.registerLazySingleton(() => GetProducts(productRepo));
-    sl.registerLazySingleton(() => WatchProducts(productRepo));
-    sl.registerLazySingleton(() => SearchProducts(productRepo));
-    sl.registerLazySingleton(() => GetProductById(productRepo));
+    sl.registerLazySingleton<GetProducts>(() => GetProductsImpl(productRepo));
+    sl.registerLazySingleton<WatchProducts>(
+      () => WatchProductsImpl(productRepo),
+    );
+    sl.registerLazySingleton<SearchProducts>(
+      () => SearchProductsImpl(productRepo),
+    );
+    sl.registerLazySingleton<GetProductById>(
+      () => GetProductByIdImpl(productRepo),
+    );
 
     // Cart UseCases
-    sl.registerLazySingleton(() => WatchCart(cartRepo));
-    sl.registerLazySingleton(() => AddToCart(cartRepo));
-    sl.registerLazySingleton(() => UpdateCartQuantity(cartRepo));
-    sl.registerLazySingleton(() => RemoveFromCart(cartRepo));
-    sl.registerLazySingleton(() => ClearCart(cartRepo));
+    sl.registerLazySingleton<WatchCart>(() => WatchCartImpl(cartRepo));
+    sl.registerLazySingleton<AddToCart>(() => AddToCartImpl(cartRepo));
+    sl.registerLazySingleton<UpdateCartQuantity>(
+      () => UpdateCartQuantityImpl(cartRepo),
+    );
+    sl.registerLazySingleton<RemoveFromCart>(
+      () => RemoveFromCartImpl(cartRepo),
+    );
+    sl.registerLazySingleton<ClearCart>(() => ClearCartImpl(cartRepo));
 
     // Address UseCases
-    sl.registerLazySingleton(() => WatchAddresses(addressRepo));
-    sl.registerLazySingleton(() => AddAddress(addressRepo));
-    sl.registerLazySingleton(() => UpdateAddress(addressRepo));
-    sl.registerLazySingleton(() => DeleteAddress(addressRepo));
+    sl.registerLazySingleton<WatchAddresses>(
+      () => WatchAddressesImpl(addressRepo),
+    );
+    sl.registerLazySingleton<AddAddress>(() => AddAddressImpl(addressRepo));
+    sl.registerLazySingleton<UpdateAddress>(
+      () => UpdateAddressImpl(addressRepo),
+    );
+    sl.registerLazySingleton<DeleteAddress>(
+      () => DeleteAddressImpl(addressRepo),
+    );
 
     // Order UseCases
-    sl.registerLazySingleton(() => PlaceOrder(orderRepo));
-    sl.registerLazySingleton(() => WatchUserOrders(orderRepo));
-    sl.registerLazySingleton(() => CancelOrder(orderRepo));
+    sl.registerLazySingleton<PlaceOrder>(() => PlaceOrderImpl(orderRepo));
+    sl.registerLazySingleton<WatchUserOrders>(
+      () => WatchUserOrdersImpl(orderRepo),
+    );
+    sl.registerLazySingleton<CancelOrder>(() => CancelOrderImpl(orderRepo));
 
     // We do NOT call initDependencies() to avoid real Firebase init
   });
