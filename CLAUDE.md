@@ -65,25 +65,30 @@ lib/features/<feature>/presentation/providers/
 
 **Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` or `StreamController` for real-time updates. Use cases wrap repository methods. Notifiers subscribe to streams and emit state changes.
 
-**Dependency Injection**: All dependencies registered in `lib/injection_container.dart`. Features initialize in order: Auth → Product → Cart → Address → Order → Core BLoCs. Do not create intermediate providers that simply wrap `sl()` calls (e.g., `getProductsProvider`); inject usecases directly via `sl<UseCase>()` in notifier factories for simplicity.
+**Dependency Injection**: Dependencies are managed by `get_it` and `injectable`.
+-   Annotate implementation classes with `@LazySingleton(as: Interface)`.
+-   Run `flutter pub run build_runner build` to generate `lib/injection_container.config.dart`.
+-   Do not manually register dependencies in `injection_container.dart` except for external modules in `lib/core/di/register_module.dart`.
 
-**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API (from `flutter_riverpod/flutter_riverpod.dart`). Do not use the legacy `StateNotifier`/`StateNotifierProvider` (from `flutter_riverpod/legacy.dart`). Do not use `riverpod_generator` or `riverpod_annotation`. Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
+**Riverpod Providers**: Use the modern `Notifier`/`NotifierProvider` API.
+- Do not use `riverpod_generator` or `riverpod_annotation`.
+- Declare providers manually (e.g., `NotifierProvider<MyNotifier, MyState>(MyNotifier.new)`).
 
 **No Null Assertion Operator**: Do not use the null assertion operator (`!`). Use safe access (`?.`) and explicit null checks instead.
 
-**App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider` so repository events are surfaced to the app event stream.
+**App Event Emitters**: Any class implementing `EventEmitter` must be included in the `emitters` list inside `appEventProvider`.
 
-**Analytics Emitters**: Any class implementing `AnalyticsEmitter` must be included in the `emitters` list inside `AnalyticsObserver` so analytics events are observed and logged.
+**Analytics Emitters**: Any class implementing `AnalyticsEmitter` must be included in the `emitters` list inside `AnalyticsObserver`.
 
 ### Core Components
 
 - **Persistence**: Firebase/Firestore is the single source of truth.
 
-- **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation. Each feature defines routes in `presentation/routes/`. Routes aggregate in `lib/router/app_router.dart`.
+- **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation.
 
-- **App Events**: Repository events (success/error) flow through `StreamController.broadcast()` → `AppEventBloc` → `AppEventWidget` → snackbars via `lib/core/widgets/snackbar_helper.dart`.
+- **App Events**: Repository events flow through `StreamController.broadcast()` → `AppEventBloc` → `AppEventWidget` → snackbars.
 
-- **Error Handling**: `dartz` `Either<Failure, T>` for repository returns. Failure types in `lib/core/error/failures.dart`.
+- **Error Handling**: `dartz` `Either<Failure, T>` for repository returns.
 
 ### Features
 
@@ -97,6 +102,5 @@ lib/features/<feature>/presentation/providers/
 
 ## Testing Notes
 
-- Initialize DI before pumping widgets: `await initDependencies()`
+- Initialize DI before pumping widgets: `await GetIt.instance.reset(); await initDependencies();` (or manually register mocks for unit tests).
 - Flush fake delays: `await tester.pump(const Duration(seconds: 1))`
-- BLoC tests use `bloc_test` package with `mocktail` for mocking

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
@@ -7,9 +8,9 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Service wrapper for Firebase Analytics.
 ///
 /// Provides typed methods for tracking e-commerce events.
+@lazySingleton
 class AnalyticsService {
-  AnalyticsService({FirebaseAnalytics? analytics})
-      : _analytics = analytics ?? FirebaseAnalytics.instance;
+  AnalyticsService(this._analytics);
 
   final FirebaseAnalytics _analytics;
 
@@ -92,12 +93,14 @@ class AnalyticsService {
       currency: 'USD',
       value: total,
       items: items
-          .map((item) => AnalyticsEventItem(
-                itemId: item.product.id,
-                itemName: item.product.title,
-                price: item.product.price,
-                quantity: item.quantity,
-              ))
+          .map(
+            (item) => AnalyticsEventItem(
+              itemId: item.product.id,
+              itemName: item.product.title,
+              price: item.product.price,
+              quantity: item.quantity,
+            ),
+          )
           .toList(),
     );
   }
@@ -117,12 +120,14 @@ class AnalyticsService {
       shipping: shipping,
       tax: tax,
       items: items
-          .map((item) => AnalyticsEventItem(
-                itemId: item.product.id,
-                itemName: item.product.title,
-                price: item.product.price,
-                quantity: item.quantity,
-              ))
+          .map(
+            (item) => AnalyticsEventItem(
+              itemId: item.product.id,
+              itemName: item.product.title,
+              price: item.product.price,
+              quantity: item.quantity,
+            ),
+          )
           .toList(),
     );
   }

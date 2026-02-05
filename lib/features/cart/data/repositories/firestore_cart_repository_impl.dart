@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
@@ -20,14 +21,15 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 ///
 /// Stores cart items in Firestore subcollections under each user.
 /// Structure: carts/{userId}/items/{productId}
+@LazySingleton(as: CartRepository)
 class FirestoreCartRepositoryImpl
-  with EventEmitterMixin, AnalyticsEventBusMixin
-  implements CartRepository, Disposable {
+    with EventEmitterMixin, AnalyticsEventBusMixin
+    implements CartRepository, Disposable {
   FirestoreCartRepositoryImpl({
-    FirebaseFirestore? firestore,
     required AuthRepository authRepository,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _authRepository = authRepository {
+    FirebaseFirestore? firestore,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _authRepository = authRepository {
     _initCartStream();
   }
 
@@ -48,9 +50,9 @@ class FirestoreCartRepositoryImpl
 
   void _initCartStream() {
     _authSubscription ??= _authRepository.watchCurrentUser().listen(
-          (user) => unawaited(_syncCartStreamForUser(user?.id)),
-          onError: (_) => unawaited(_syncCartStreamForUser(null)),
-        );
+      (user) => unawaited(_syncCartStreamForUser(user?.id)),
+      onError: (_) => unawaited(_syncCartStreamForUser(null)),
+    );
     unawaited(_syncCartStreamForUser(_activeUserId));
   }
 
@@ -161,7 +163,8 @@ class FirestoreCartRepositoryImpl
       if (userId == null || userId.isEmpty) {
         emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
-            AuthFailure(message: 'Please sign in to use the cart'));
+          AuthFailure(message: 'Please sign in to use the cart'),
+        );
       }
 
       final itemRef = _cartItemsRef(userId).doc(product.id);
@@ -175,7 +178,9 @@ class FirestoreCartRepositoryImpl
       });
 
       // Track analytics
-      emitAnalyticsEvent(AddToCartAnalyticsEvent(product: product, quantity: quantity));
+      emitAnalyticsEvent(
+        AddToCartAnalyticsEvent(product: product, quantity: quantity),
+      );
 
       emitEvent(SuccessEvent(message: '${product.title} added to cart!'));
 
@@ -193,7 +198,8 @@ class FirestoreCartRepositoryImpl
       if (userId == null || userId.isEmpty) {
         emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
-            AuthFailure(message: 'Please sign in to use the cart'));
+          AuthFailure(message: 'Please sign in to use the cart'),
+        );
       }
 
       // Get product for analytics before removing
@@ -205,7 +211,9 @@ class FirestoreCartRepositoryImpl
 
       // Track analytics
       if (product != null) {
-        emitAnalyticsEvent(RemoveFromCartAnalyticsEvent(product: product, quantity: quantity));
+        emitAnalyticsEvent(
+          RemoveFromCartAnalyticsEvent(product: product, quantity: quantity),
+        );
       }
 
       emitEvent(const SuccessEvent(message: 'Item removed from cart'));
@@ -229,7 +237,8 @@ class FirestoreCartRepositoryImpl
       if (userId == null || userId.isEmpty) {
         emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
-            AuthFailure(message: 'Please sign in to use the cart'));
+          AuthFailure(message: 'Please sign in to use the cart'),
+        );
       }
 
       final itemRef = _cartItemsRef(userId).doc(productId);
@@ -242,9 +251,7 @@ class FirestoreCartRepositoryImpl
       if (quantity <= 0) {
         await itemRef.delete();
       } else {
-        await itemRef.update({
-          'quantity': quantity,
-        });
+        await itemRef.update({'quantity': quantity});
       }
 
       return Right(await _getCurrentCart(userId));
@@ -261,7 +268,8 @@ class FirestoreCartRepositoryImpl
       if (userId == null || userId.isEmpty) {
         emitEvent(const ErrorEvent(message: 'Please sign in to use the cart'));
         return const Left(
-            AuthFailure(message: 'Please sign in to use the cart'));
+          AuthFailure(message: 'Please sign in to use the cart'),
+        );
       }
 
       // Delete all items in the cart subcollection

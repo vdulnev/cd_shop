@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
 import 'package:talker/talker.dart';
 import 'package:uuid/uuid.dart';
 
@@ -13,12 +14,11 @@ import 'package:cd_shop/injection_container.dart';
 ///
 /// Stores addresses in Firestore subcollections under each user.
 /// Structure: addresses/{userId}/items/{addressId}
+@LazySingleton(as: AddressRepository)
 class FirestoreAddressRepositoryImpl
-  with EventEmitterMixin
-  implements AddressRepository, Disposable {
-  FirestoreAddressRepositoryImpl({
-    FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+    with EventEmitterMixin
+    implements AddressRepository, Disposable {
+  FirestoreAddressRepositoryImpl(this._firestore);
 
   final FirebaseFirestore _firestore;
   final _uuid = const Uuid();
@@ -28,7 +28,9 @@ class FirestoreAddressRepositoryImpl
       _firestore.collection('addresses').doc(userId).collection('items');
 
   Address _documentToAddress(
-      DocumentSnapshot<Map<String, dynamic>> doc, String userId) {
+    DocumentSnapshot<Map<String, dynamic>> doc,
+    String userId,
+  ) {
     final data = doc.data()!;
     return Address(
       id: doc.id,
@@ -102,9 +104,9 @@ class FirestoreAddressRepositoryImpl
   Future<Address> updateAddress(Address address) async {
     _log.info('Updating address ${address.id}');
     try {
-      await _addressesRef(address.userId).doc(address.id).update(
-            _addressToMap(address),
-          );
+      await _addressesRef(
+        address.userId,
+      ).doc(address.id).update(_addressToMap(address));
 
       emitEvent(const SuccessEvent(message: 'Address updated'));
       _log.info('Address updated: ${address.id}');

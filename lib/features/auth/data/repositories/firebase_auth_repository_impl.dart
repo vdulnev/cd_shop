@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:injectable/injectable.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
@@ -14,14 +15,11 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 /// Firebase implementation of [AuthRepository].
 ///
 /// Uses Firebase Auth for authentication and Firestore for user profiles.
+@LazySingleton(as: AuthRepository)
 class FirebaseAuthRepositoryImpl
-  with EventEmitterMixin, AnalyticsEventBusMixin
-  implements AuthRepository, Disposable {
-  FirebaseAuthRepositoryImpl({
-    fb.FirebaseAuth? firebaseAuth,
-    FirebaseFirestore? firestore,
-  })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+    with EventEmitterMixin, AnalyticsEventBusMixin
+    implements AuthRepository, Disposable {
+  FirebaseAuthRepositoryImpl(this._firebaseAuth, this._firestore);
 
   final fb.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
@@ -44,10 +42,12 @@ class FirebaseAuthRepositoryImpl
         return const ValidationFailure(message: 'Invalid email address');
       case 'network-request-failed':
         return const NetworkFailure(
-            message: 'Network error. Please check your connection.');
+          message: 'Network error. Please check your connection.',
+        );
       case 'too-many-requests':
         return const AuthFailure(
-            message: 'Too many attempts. Please try again later.');
+          message: 'Too many attempts. Please try again later.',
+        );
       case 'user-disabled':
         return const AuthFailure(message: 'This account has been disabled');
       default:
@@ -68,7 +68,8 @@ class FirebaseAuthRepositoryImpl
       }
       if (password.length < 6) {
         return const Left(
-            ValidationFailure(message: 'Password must be at least 6 characters'));
+          ValidationFailure(message: 'Password must be at least 6 characters'),
+        );
       }
       if (name.isEmpty) {
         return const Left(ValidationFailure(message: 'Name is required'));
@@ -89,11 +90,7 @@ class FirebaseAuthRepositoryImpl
       await firebaseUser.updateDisplayName(name);
 
       // Create user profile in Firestore
-      final user = User(
-        id: firebaseUser.uid,
-        email: email,
-        name: name,
-      );
+      final user = User(id: firebaseUser.uid, email: email, name: name);
 
       await _usersRef.doc(firebaseUser.uid).set({
         'email': email,
@@ -141,9 +138,8 @@ class FirebaseAuthRepositoryImpl
       final user = User(
         id: firebaseUser.uid,
         email: firebaseUser.email ?? email,
-        name: userData?['name'] as String? ??
-            firebaseUser.displayName ??
-            'User',
+        name:
+            userData?['name'] as String? ?? firebaseUser.displayName ?? 'User',
         avatarUrl: firebaseUser.photoURL,
         defaultAddressId: userData?['defaultAddressId'] as String?,
       );
@@ -187,15 +183,18 @@ class FirebaseAuthRepositoryImpl
       final userDoc = await _usersRef.doc(firebaseUser.uid).get();
       final userData = userDoc.data();
 
-      return Right(User(
-        id: firebaseUser.uid,
-        email: firebaseUser.email ?? '',
-        name: userData?['name'] as String? ??
-            firebaseUser.displayName ??
-            'User',
-        avatarUrl: firebaseUser.photoURL,
-        defaultAddressId: userData?['defaultAddressId'] as String?,
-      ));
+      return Right(
+        User(
+          id: firebaseUser.uid,
+          email: firebaseUser.email ?? '',
+          name:
+              userData?['name'] as String? ??
+              firebaseUser.displayName ??
+              'User',
+          avatarUrl: firebaseUser.photoURL,
+          defaultAddressId: userData?['defaultAddressId'] as String?,
+        ),
+      );
     } catch (e) {
       return const Left(ServerFailure(message: 'Failed to get current user'));
     }
@@ -213,7 +212,8 @@ class FirebaseAuthRepositoryImpl
         return User(
           id: firebaseUser.uid,
           email: firebaseUser.email ?? '',
-          name: userData?['name'] as String? ??
+          name:
+              userData?['name'] as String? ??
               firebaseUser.displayName ??
               'User',
           avatarUrl: firebaseUser.photoURL,
@@ -245,7 +245,9 @@ class FirebaseAuthRepositoryImpl
 
       return const Right(null);
     } catch (e) {
-      return const Left(ServerFailure(message: 'Failed to set default address'));
+      return const Left(
+        ServerFailure(message: 'Failed to set default address'),
+      );
     }
   }
 
@@ -253,5 +255,4 @@ class FirebaseAuthRepositoryImpl
   void dispose() {
     disposeEventEmitter();
   }
-  
 }

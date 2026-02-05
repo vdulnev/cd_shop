@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
+@lazySingleton
 class SearchProducts {
   SearchProducts(this.repository);
 

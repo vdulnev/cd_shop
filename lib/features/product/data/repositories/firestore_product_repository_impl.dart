@@ -1,5 +1,5 @@
-// ignore_for_file: close_sinks
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
 
 import 'package:cd_shop/core/models/analytics_event.dart';
 import 'package:cd_shop/core/models/disposable.dart';
@@ -9,12 +9,11 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 
 /// Firestore implementation of [ProductRepository].
+@LazySingleton(as: ProductRepository)
 class FirestoreProductRepositoryImpl
-  with EventEmitterMixin, AnalyticsEventBusMixin
-  implements ProductRepository, Disposable {
-  FirestoreProductRepositoryImpl({
-    FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+    with EventEmitterMixin, AnalyticsEventBusMixin
+    implements ProductRepository, Disposable {
+  FirestoreProductRepositoryImpl(this._firestore);
 
   final FirebaseFirestore _firestore;
 
@@ -84,9 +83,11 @@ class FirestoreProductRepositoryImpl
     if (searchQuery != null && searchQuery.isNotEmpty) {
       final lowerQuery = searchQuery.toLowerCase();
       products = products
-          .where((p) =>
-              p.title.toLowerCase().contains(lowerQuery) ||
-              p.artist.toLowerCase().contains(lowerQuery))
+          .where(
+            (p) =>
+                p.title.toLowerCase().contains(lowerQuery) ||
+                p.artist.toLowerCase().contains(lowerQuery),
+          )
           .toList();
     }
 
@@ -110,10 +111,12 @@ class FirestoreProductRepositoryImpl
     final products = await getProducts();
     final lowerQuery = query.toLowerCase();
     return products
-        .where((p) =>
-            p.title.toLowerCase().contains(lowerQuery) ||
-            p.artist.toLowerCase().contains(lowerQuery) ||
-            p.description.toLowerCase().contains(lowerQuery))
+        .where(
+          (p) =>
+              p.title.toLowerCase().contains(lowerQuery) ||
+              p.artist.toLowerCase().contains(lowerQuery) ||
+              p.description.toLowerCase().contains(lowerQuery),
+        )
         .toList();
   }
 
@@ -137,7 +140,7 @@ class FirestoreProductRepositoryImpl
       return snapshot.docs.map(_documentToProduct).toList();
     });
   }
-  
+
   @override
   void dispose() {
     disposeEventEmitter();

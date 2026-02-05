@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:injectable/injectable.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:cd_shop/core/models/analytics_event.dart';
@@ -9,17 +10,21 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
-import 'package:cd_shop/injection_container.dart';
 
+@lazySingleton
 class AnalyticsObserver {
-  AnalyticsObserver({
-    required AnalyticsService analyticsService,
-  }) : _analyticsService = analyticsService {
+  AnalyticsObserver(
+    this._analyticsService,
+    AuthRepository authRepository,
+    CartRepository cartRepository,
+    OrderRepository orderRepository,
+    ProductRepository productRepository,
+  ) {
     final emitters = [
-      sl<AuthRepository>(),
-      sl<CartRepository>(),
-      sl<OrderRepository>(),
-      sl<ProductRepository>(),
+      authRepository,
+      cartRepository,
+      orderRepository,
+      productRepository,
     ].whereType<AnalyticsEmitter>().toList();
 
     _subscription = MergeStream<AnalyticsEvent>(

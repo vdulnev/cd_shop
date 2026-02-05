@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:dartz/dartz.dart' hide Order;
+import 'package:injectable/injectable.dart' hide Order;
 import 'package:uuid/uuid.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
@@ -17,12 +18,11 @@ import 'package:cd_shop/features/product/domain/entities/product.dart';
 /// Firestore implementation of [OrderRepository].
 ///
 /// Stores orders as documents in the 'orders' collection.
+@LazySingleton(as: OrderRepository)
 class FirestoreOrderRepositoryImpl
-  with EventEmitterMixin, AnalyticsEventBusMixin
-  implements OrderRepository, Disposable {
-  FirestoreOrderRepositoryImpl({
-    FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+    with EventEmitterMixin, AnalyticsEventBusMixin
+    implements OrderRepository, Disposable {
+  FirestoreOrderRepositoryImpl(this._firestore);
 
   final FirebaseFirestore _firestore;
   final _uuid = const Uuid();
@@ -36,21 +36,26 @@ class FirestoreOrderRepositoryImpl
   @override
   Future<Either<Failure, Order>> placeOrder(OrderRequest request) async {
     final subtotalForCheckout = request.items.fold<double>(
-      0, (acc, item) => acc + item.product.price * item.quantity,
+      0,
+      (acc, item) => acc + item.product.price * item.quantity,
     );
-    emitAnalyticsEvent(BeginCheckoutAnalyticsEvent(
-      items: request.items,
-      total: subtotalForCheckout,
-    ));
+    emitAnalyticsEvent(
+      BeginCheckoutAnalyticsEvent(
+        items: request.items,
+        total: subtotalForCheckout,
+      ),
+    );
 
     try {
       // Fetch the shipping address
-      final addressDoc =
-          await _addressesRef(request.userId).doc(request.shippingAddressId).get();
+      final addressDoc = await _addressesRef(
+        request.userId,
+      ).doc(request.shippingAddressId).get();
 
       if (!addressDoc.exists) {
         return const Left(
-            NotFoundFailure(message: 'Shipping address not found'));
+          NotFoundFailure(message: 'Shipping address not found'),
+        );
       }
 
       final addressData = addressDoc.data()!;
@@ -66,8 +71,10 @@ class FirestoreOrderRepositoryImpl
       );
 
       // Calculate costs
-      final subtotal =
-          request.items.fold(0.0, (acc, item) => acc + item.totalPrice);
+      final subtotal = request.items.fold(
+        0.0,
+        (acc, item) => acc + item.totalPrice,
+      );
       const shippingCost = 5.99;
       final tax = subtotal * 0.08;
       final total = subtotal + shippingCost + tax;
@@ -81,14 +88,16 @@ class FirestoreOrderRepositoryImpl
       await _ordersRef.doc(orderId).set({
         'userId': request.userId,
         'items': request.items
-            .map((item) => {
-                  'productId': item.product.id,
-                  'productTitle': item.product.title,
-                  'productArtist': item.product.artist,
-                  'productPrice': item.product.price,
-                  'productImageUrl': item.product.imageUrl,
-                  'quantity': item.quantity,
-                })
+            .map(
+              (item) => {
+                'productId': item.product.id,
+                'productTitle': item.product.title,
+                'productArtist': item.product.artist,
+                'productPrice': item.product.price,
+                'productImageUrl': item.product.imageUrl,
+                'quantity': item.quantity,
+              },
+            )
             .toList(),
         'shippingAddress': {
           'id': shippingAddress.id,
@@ -129,13 +138,15 @@ class FirestoreOrderRepositoryImpl
       );
 
       // Track analytics
-      emitAnalyticsEvent(PurchaseAnalyticsEvent(
-        orderId: orderId,
-        total: total,
-        shipping: shippingCost,
-        tax: tax,
-        items: request.items,
-      ));
+      emitAnalyticsEvent(
+        PurchaseAnalyticsEvent(
+          orderId: orderId,
+          total: total,
+          shipping: shippingCost,
+          tax: tax,
+          items: request.items,
+        ),
+      );
 
       emitEvent(const SuccessEvent(message: 'Order placed successfully'));
 
@@ -153,11 +164,11 @@ class FirestoreOrderRepositoryImpl
         .orderBy('orderDate', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => _documentToOrder(doc))
-          .whereType<Order>()
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => _documentToOrder(doc))
+              .whereType<Order>()
+              .toList();
+        });
   }
 
   @override
@@ -232,7 +243,8 @@ class FirestoreOrderRepositoryImpl
       }).toList();
 
       // Parse shipping address
-      final addressData = data['shippingAddress'] as Map<String, dynamic>? ?? {};
+      final addressData =
+          data['shippingAddress'] as Map<String, dynamic>? ?? {};
       final shippingAddress = Address(
         id: addressData['id'] as String? ?? '',
         userId: data['userId'] as String? ?? '',
@@ -246,7 +258,8 @@ class FirestoreOrderRepositoryImpl
 
       // Parse dates
       final orderDateTimestamp = data['orderDate'] as Timestamp?;
-      final estimatedDeliveryTimestamp = data['estimatedDeliveryDate'] as Timestamp?;
+      final estimatedDeliveryTimestamp =
+          data['estimatedDeliveryDate'] as Timestamp?;
 
       return Order(
         id: doc.id,
