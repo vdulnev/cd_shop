@@ -1,5 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 
+import 'package:cd_shop/features/address/presentation/routes/address_routes.dart';
+import 'package:cd_shop/features/auth/presentation/routes/auth_routes.dart';
+import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
+import 'package:cd_shop/features/order/presentation/routes/order_routes.dart';
+import 'package:cd_shop/features/product/presentation/routes/product_routes.dart';
 import 'package:cd_shop/router/app_router.gr.dart';
 
 @AutoRouterConfig()
@@ -14,41 +19,25 @@ class AppRouter extends RootStackRouter {
             AutoRoute(
               path: 'products',
               page: ProductsTab.page,
-              children: [
-                AutoRoute(path: '', page: ProductListRoute.page),
-                AutoRoute(path: ':id', page: ProductDetailRoute.page),
-              ],
+              children: productRoutes,
             ),
             AutoRoute(
               path: 'search',
               page: SearchTab.page,
-              children: [
-                AutoRoute(path: '', page: ProductSearchRoute.page),
-                AutoRoute(
-                    path: 'products/:id', page: ProductDetailRoute.page),
-              ],
+              children: searchRoutes,
             ),
             AutoRoute(
               path: 'cart',
               page: CartTab.page,
-              children: [
-                AutoRoute(path: '', page: CartRoute.page),
-                AutoRoute(path: 'checkout', page: CheckoutRoute.page),
-              ],
+              children: cartRoutes,
             ),
             AutoRoute(
               path: 'account',
               page: AccountTab.page,
               children: [
-                AutoRoute(path: '', page: AccountRoute.page),
-                AutoRoute(path: 'login', page: LoginRoute.page),
-                AutoRoute(path: 'register', page: RegistrationRoute.page),
-                AutoRoute(path: 'addresses', page: AddressesRoute.page),
-                AutoRoute(
-                    path: 'addresses/add', page: AddAddressRoute.page),
-                AutoRoute(
-                    path: 'addresses/edit', page: EditAddressRoute.page),
-                AutoRoute(path: 'orders', page: OrdersRoute.page),
+                ...authRoutes,
+                ...addressRoutes,
+                ...orderRoutes,
               ],
             ),
           ],

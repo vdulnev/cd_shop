@@ -187,6 +187,7 @@ class CheckoutPage extends ConsumerWidget {
   }
 
   void _showSuccessDialog(BuildContext context, Order order) {
+    final pageContext = context;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -216,7 +217,7 @@ class CheckoutPage extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.tabsRouter.setActiveIndex(0);
+              pageContext.tabsRouter.setActiveIndex(0);
             },
             child: const Text('Continue Shopping'),
           ),
