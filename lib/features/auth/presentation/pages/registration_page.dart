@@ -1,10 +1,12 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/auth/presentation/providers/registration_state.dart';
 import 'package:cd_shop/features/auth/presentation/providers/registration_provider.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class RegistrationPage extends ConsumerStatefulWidget {
   const RegistrationPage({super.key});
 
@@ -41,8 +43,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
   Widget build(BuildContext context) {
     ref.listen<RegistrationState>(registrationProvider, (previous, state) {
       if (state is RegistrationSuccess && mounted) {
-        context.pop();
-        context.pop();
+        context.router.popUntilRouteWithName(AccountRoute.name);
       }
     });
 
@@ -153,7 +154,7 @@ class _RegistrationPageState extends ConsumerState<RegistrationPage> {
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: isLoading ? null : () => context.pop(),
+                onPressed: isLoading ? null : () => context.router.maybePop(),
                 child: const Text('Already have an account? Sign in'),
               ),
             ],

@@ -1,6 +1,6 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/order/domain/entities/order.dart';
@@ -10,6 +10,7 @@ import 'package:cd_shop/features/order/presentation/widgets/address_selection_se
 import 'package:cd_shop/features/order/presentation/widgets/order_summary_section.dart';
 import 'package:cd_shop/features/order/presentation/widgets/payment_method_section.dart';
 
+@RoutePage()
 class CheckoutPage extends ConsumerWidget {
   const CheckoutPage({
     super.key,
@@ -44,7 +45,7 @@ class CheckoutPage extends ConsumerWidget {
         title: const Text('Checkout'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.router.maybePop(),
         ),
       ),
       body: switch (state) {
@@ -72,7 +73,7 @@ class CheckoutPage extends ConsumerWidget {
                 Text(state.message),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () => context.router.maybePop(),
                   child: const Text('Go Back'),
                 ),
               ],
@@ -98,7 +99,7 @@ class CheckoutPage extends ConsumerWidget {
             const Text('Your cart is empty'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go('/'),
+              onPressed: () => context.tabsRouter.setActiveIndex(0),
               child: const Text('Start Shopping'),
             ),
           ],
@@ -215,7 +216,7 @@ class CheckoutPage extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/');
+              context.tabsRouter.setActiveIndex(0);
             },
             child: const Text('Continue Shopping'),
           ),

@@ -1,12 +1,14 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_search_provider.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class ProductSearchPage extends ConsumerStatefulWidget {
   const ProductSearchPage({super.key});
 
@@ -135,7 +137,7 @@ class _SearchResultsList extends StatelessWidget {
         final product = products[index];
         return _SearchResultItem(
           product: product,
-          onTap: () => context.push('/search/products/${product.id}'),
+          onTap: () => context.router.push(ProductDetailRoute(productId: product.id)),
         );
       },
     );

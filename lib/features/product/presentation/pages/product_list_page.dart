@@ -1,15 +1,16 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/constants/app_strings.dart';
 import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_state.dart';
 import 'package:cd_shop/features/product/presentation/providers/product_list_provider.dart';
-import 'package:cd_shop/router/app_router.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
 /// Page displaying the list of products
+@RoutePage()
 class ProductListPage extends ConsumerWidget {
   const ProductListPage({super.key});
 
@@ -42,7 +43,7 @@ class _ProductListView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () => context.go(AppRoutes.cart),
+            onPressed: () => context.tabsRouter.setActiveIndex(2),
           ),
         ],
       ),
@@ -83,7 +84,7 @@ class _ProductGrid extends StatelessWidget {
           final product = products[index];
           return _ProductCard(
             product: product,
-            onTap: () => context.push('/products/${product.id}'),
+            onTap: () => context.router.push(ProductDetailRoute(productId: product.id)),
           );
         },
       ),

@@ -1,6 +1,6 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:cd_shop/core/usecases/usecase.dart';
@@ -10,6 +10,7 @@ import 'package:cd_shop/features/address/presentation/providers/address_provider
 import 'package:cd_shop/features/auth/domain/usecases/get_current_user.dart';
 import 'package:cd_shop/injection_container.dart';
 
+@RoutePage()
 class AddAddressPage extends StatefulWidget {
   const AddAddressPage({super.key});
 
@@ -62,7 +63,7 @@ class _AddAddressPageState extends State<AddAddressPage> {
           );
 
           ref.read(addressProvider.notifier).addAddress(address);
-          context.pop();
+          context.router.maybePop();
         }
       },
     );

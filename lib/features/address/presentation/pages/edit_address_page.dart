@@ -1,10 +1,11 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/address/domain/entities/address.dart';
 import 'package:cd_shop/features/address/presentation/providers/address_provider.dart';
 
+@RoutePage()
 class EditAddressPage extends StatefulWidget {
   const EditAddressPage({super.key, required this.address});
 
@@ -60,7 +61,7 @@ class _EditAddressPageState extends State<EditAddressPage> {
     );
 
     ref.read(addressProvider.notifier).updateAddress(updatedAddress);
-    context.pop();
+    context.router.maybePop();
   }
 
   @override

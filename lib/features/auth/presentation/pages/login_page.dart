@@ -1,10 +1,12 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/auth/presentation/providers/login_state.dart';
 import 'package:cd_shop/features/auth/presentation/providers/login_provider.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -38,7 +40,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     ref.listen<LoginState>(loginProvider, (previous, state) {
       if (state is LoginSuccess && mounted) {
-        context.pop();
+        context.router.maybePop();
       }
     });
 
@@ -130,7 +132,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed:
-                    isLoading ? null : () => context.push('/account/register'),
+                    isLoading ? null : () => context.router.push(const RegistrationRoute()),
                 child: const Text("Don't have an account? Register"),
               ),
             ],

@@ -40,7 +40,6 @@ lib/features/<feature>/
 └── presentation/
     ├── providers/       # Riverpod Notifiers & Providers
     ├── pages/           # Screen widgets
-    ├── routes/          # GoRouter route definitions
     └── widgets/         # Feature-specific widgets
 ```
 
@@ -55,7 +54,7 @@ lib/features/<feature>/presentation/providers/
 
 ### Key Architectural Rules
 
-**Page-Notifier Isolation**: Each page uses ONLY its corresponding Notifier(s). Data needed from other features is passed via constructor parameters or route `extra` data.
+**Page-Notifier Isolation**: Each page uses ONLY its corresponding Notifier(s). Data needed from other features is passed via constructor parameters or typed route arguments.
 
 **No Foreign State Access in Widgets**: Widgets must never access Notifiers/Providers from other features directly. Instead:
 - Pages (top-level) call foreign usecases and inject callbacks to child widgets.
@@ -88,7 +87,7 @@ lib/features/<feature>/presentation/providers/
 
 - **Persistence**: Firebase/Firestore is the single source of truth.
 
-- **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation.
+- **Routing**: auto_route with `AutoTabsRouter` for tab navigation. Routes are defined in `lib/router/app_router.dart` and generated into `app_router.gr.dart`. All pages are annotated with `@RoutePage()`. Tab shell pages live in `lib/router/tab_pages.dart`.
 
 - **App Events**: Repository events flow through `StreamController.broadcast()` → `AppEventBloc` → `AppEventWidget` → snackbars.
 

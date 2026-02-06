@@ -1,20 +1,22 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/address/domain/entities/address.dart';
 import 'package:cd_shop/features/address/presentation/providers/address_state.dart';
 import 'package:cd_shop/features/address/presentation/providers/address_provider.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class AddressesPage extends ConsumerWidget {
   const AddressesPage({super.key});
 
   void _openAddAddress(BuildContext context) {
-    context.push('/account/addresses/add');
+    context.router.push(const AddAddressRoute());
   }
 
   void _openEditAddress(BuildContext context, Address address) {
-    context.push('/account/addresses/${address.id}/edit', extra: address);
+    context.router.push(EditAddressRoute(address: address));
   }
 
   @override

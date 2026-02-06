@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,10 +11,11 @@ import 'package:cd_shop/features/product/presentation/providers/product_detail_p
 import 'package:cd_shop/injection_container.dart';
 
 /// Page displaying product details
+@RoutePage()
 class ProductDetailPage extends ConsumerWidget {
   const ProductDetailPage({
     super.key,
-    required this.productId,
+    @PathParam('id') required this.productId,
   });
 
   final String productId;
@@ -60,7 +62,7 @@ class _ProductDetailView extends StatelessWidget {
                 Text(message, style: const TextStyle(color: Colors.red)),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => context.router.maybePop(),
                   child: const Text('Go Back'),
                 ),
               ],

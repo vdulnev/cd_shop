@@ -1,13 +1,14 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/presentation/providers/cart_state.dart';
 import 'package:cd_shop/features/cart/presentation/providers/cart_provider.dart';
-import 'package:cd_shop/features/cart/presentation/routes/cart_routes.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
 
@@ -60,9 +61,8 @@ class _CartView extends ConsumerWidget {
             itemCount: itemCount,
             onCheckout: cart != null && cart.isNotEmpty
                 ? () {
-                    context.push(
-                      '/cart/checkout',
-                      extra: CheckoutRouteData(
+                    context.router.push(
+                      CheckoutRoute(
                         userId: cart.userId,
                         cartItems: cart.items,
                       ),
@@ -176,7 +176,7 @@ class _CartItemTile extends ConsumerWidget {
         ref.read(cartProvider.notifier).removeProduct(product.id);
       },
       child: InkWell(
-        onTap: () => context.push('/products/${product.id}'),
+        onTap: () => context.router.push(ProductDetailRoute(productId: product.id)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(

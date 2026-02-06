@@ -1,14 +1,15 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cd_shop/core/services/firestore_seeder.dart';
 import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_state.dart';
 import 'package:cd_shop/features/auth/presentation/providers/account_provider.dart';
-import 'package:cd_shop/features/order/presentation/routes/order_routes.dart';
+import 'package:cd_shop/router/app_router.gr.dart';
 
+@RoutePage()
 class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key});
 
@@ -24,7 +25,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   }
 
   void _goToLogin() async {
-    await context.push('/account/login');
+    await context.router.push(const LoginRoute());
     if (mounted) {
       await ref.read(accountProvider.notifier).load();
     }
@@ -111,9 +112,8 @@ class _AuthenticatedView extends StatelessWidget {
             _AccountMenuItem(
               icon: Icons.shopping_bag_outlined,
               title: 'My Orders',
-              onTap: () => context.push(
-                '/account/orders',
-                extra: OrdersRouteData(userId: user.id),
+              onTap: () => context.router.push(
+                OrdersRoute(userId: user.id),
               ),
             ),
             _AccountMenuItem(
@@ -124,7 +124,7 @@ class _AuthenticatedView extends StatelessWidget {
             _AccountMenuItem(
               icon: Icons.location_on_outlined,
               title: 'Addresses',
-              onTap: () => context.push('/account/addresses'),
+              onTap: () => context.router.push(const AddressesRoute()),
             ),
             _AccountMenuItem(
               icon: Icons.settings_outlined,

@@ -1,4 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 // **************************************************************************
 // InjectableConfigGenerator
@@ -57,91 +58,118 @@ import 'features/product/domain/usecases/search_products.dart' as _i653;
 import 'features/product/domain/usecases/watch_products.dart' as _i676;
 
 extension GetItInjectableX on _i174.GetIt {
-// initializes the registration of main-scope dependencies inside of GetIt
+  // initializes the registration of main-scope dependencies inside of GetIt
   _i174.GetIt init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
   }) {
-    final gh = _i526.GetItHelper(
-      this,
-      environment,
-      environmentFilter,
-    );
+    final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule();
     gh.singleton<_i993.Talker>(() => registerModule.talker);
     gh.singleton<_i398.FirebaseAnalytics>(
-        () => registerModule.firebaseAnalytics);
+      () => registerModule.firebaseAnalytics,
+    );
     gh.lazySingleton<_i59.FirebaseAuth>(() => registerModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => registerModule.firestore);
     gh.lazySingleton<_i608.OrderRepository>(
-        () => _i28.FirestoreOrderRepositoryImpl(gh<_i974.FirebaseFirestore>()));
-    gh.lazySingleton<_i841.ProductRepository>(() =>
-        _i944.FirestoreProductRepositoryImpl(gh<_i974.FirebaseFirestore>()));
+      () => _i28.FirestoreOrderRepositoryImpl(gh<_i974.FirebaseFirestore>()),
+    );
+    gh.lazySingleton<_i841.ProductRepository>(
+      () => _i944.FirestoreProductRepositoryImpl(gh<_i974.FirebaseFirestore>()),
+    );
     gh.lazySingleton<_i1015.AuthRepository>(
-        () => _i98.FirebaseAuthRepositoryImpl(
-              gh<_i59.FirebaseAuth>(),
-              gh<_i974.FirebaseFirestore>(),
-            ));
-    gh.lazySingleton<_i535.AddressRepository>(() =>
-        _i673.FirestoreAddressRepositoryImpl(gh<_i974.FirebaseFirestore>()));
+      () => _i98.FirebaseAuthRepositoryImpl(
+        gh<_i59.FirebaseAuth>(),
+        gh<_i974.FirebaseFirestore>(),
+      ),
+    );
+    gh.lazySingleton<_i535.AddressRepository>(
+      () => _i673.FirestoreAddressRepositoryImpl(gh<_i974.FirebaseFirestore>()),
+    );
     gh.lazySingleton<_i661.AnalyticsService>(
-        () => _i661.AnalyticsService(gh<_i398.FirebaseAnalytics>()));
+      () => _i661.AnalyticsService(gh<_i398.FirebaseAnalytics>()),
+    );
     gh.lazySingleton<_i191.GetCurrentUser>(
-        () => _i191.GetCurrentUserImpl(gh<_i1015.AuthRepository>()));
+      () => _i191.GetCurrentUserImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i560.PlaceOrder>(
-        () => _i560.PlaceOrderImpl(gh<_i608.OrderRepository>()));
+      () => _i560.PlaceOrderImpl(gh<_i608.OrderRepository>()),
+    );
     gh.lazySingleton<_i855.UpdateAddress>(
-        () => _i855.UpdateAddressImpl(gh<_i535.AddressRepository>()));
+      () => _i855.UpdateAddressImpl(gh<_i535.AddressRepository>()),
+    );
     gh.lazySingleton<_i140.WatchAddresses>(
-        () => _i140.WatchAddressesImpl(gh<_i535.AddressRepository>()));
+      () => _i140.WatchAddressesImpl(gh<_i535.AddressRepository>()),
+    );
     gh.lazySingleton<_i303.CartRepository>(
-        () => _i589.FirestoreCartRepositoryImpl(
-              authRepository: gh<_i1015.AuthRepository>(),
-              firestore: gh<_i974.FirebaseFirestore>(),
-            ));
+      () => _i589.FirestoreCartRepositoryImpl(
+        authRepository: gh<_i1015.AuthRepository>(),
+        firestore: gh<_i974.FirebaseFirestore>(),
+      ),
+    );
     gh.lazySingleton<_i42.DeleteAddress>(
-        () => _i42.DeleteAddressImpl(gh<_i535.AddressRepository>()));
+      () => _i42.DeleteAddressImpl(gh<_i535.AddressRepository>()),
+    );
     gh.lazySingleton<_i932.CancelOrder>(
-        () => _i932.CancelOrderImpl(gh<_i608.OrderRepository>()));
+      () => _i932.CancelOrderImpl(gh<_i608.OrderRepository>()),
+    );
     gh.lazySingleton<_i244.WatchCart>(
-        () => _i244.WatchCartImpl(gh<_i303.CartRepository>()));
+      () => _i244.WatchCartImpl(gh<_i303.CartRepository>()),
+    );
     gh.lazySingleton<_i14.RegisterUser>(
-        () => _i14.RegisterUserImpl(gh<_i1015.AuthRepository>()));
+      () => _i14.RegisterUserImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i919.WatchUserOrders>(
-        () => _i919.WatchUserOrdersImpl(gh<_i608.OrderRepository>()));
+      () => _i919.WatchUserOrdersImpl(gh<_i608.OrderRepository>()),
+    );
     gh.lazySingleton<_i381.UpdateCartQuantity>(
-        () => _i381.UpdateCartQuantityImpl(gh<_i303.CartRepository>()));
+      () => _i381.UpdateCartQuantityImpl(gh<_i303.CartRepository>()),
+    );
     gh.lazySingleton<_i905.RemoveFromCart>(
-        () => _i905.RemoveFromCartImpl(gh<_i303.CartRepository>()));
+      () => _i905.RemoveFromCartImpl(gh<_i303.CartRepository>()),
+    );
     gh.lazySingleton<_i305.GetProductById>(
-        () => _i305.GetProductByIdImpl(gh<_i841.ProductRepository>()));
-    gh.lazySingleton<_i220.AnalyticsObserver>(() => _i220.AnalyticsObserver(
-          gh<_i661.AnalyticsService>(),
-          gh<_i1015.AuthRepository>(),
-          gh<_i303.CartRepository>(),
-          gh<_i608.OrderRepository>(),
-          gh<_i841.ProductRepository>(),
-        ));
+      () => _i305.GetProductByIdImpl(gh<_i841.ProductRepository>()),
+    );
+    gh.lazySingleton<_i220.AnalyticsObserver>(
+      () => _i220.AnalyticsObserver(
+        gh<_i661.AnalyticsService>(),
+        gh<_i1015.AuthRepository>(),
+        gh<_i303.CartRepository>(),
+        gh<_i608.OrderRepository>(),
+        gh<_i841.ProductRepository>(),
+      ),
+    );
     gh.lazySingleton<_i1073.LoginUser>(
-        () => _i1073.LoginUserImpl(gh<_i1015.AuthRepository>()));
+      () => _i1073.LoginUserImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i778.SetDefaultAddress>(
-        () => _i778.SetDefaultAddressImpl(gh<_i1015.AuthRepository>()));
+      () => _i778.SetDefaultAddressImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i416.AddAddress>(
-        () => _i416.AddAddressImpl(gh<_i535.AddressRepository>()));
+      () => _i416.AddAddressImpl(gh<_i535.AddressRepository>()),
+    );
     gh.lazySingleton<_i653.SearchProducts>(
-        () => _i653.SearchProductsImpl(gh<_i841.ProductRepository>()));
+      () => _i653.SearchProductsImpl(gh<_i841.ProductRepository>()),
+    );
     gh.lazySingleton<_i591.GetProducts>(
-        () => _i591.GetProductsImpl(gh<_i841.ProductRepository>()));
+      () => _i591.GetProductsImpl(gh<_i841.ProductRepository>()),
+    );
     gh.lazySingleton<_i657.LogoutUser>(
-        () => _i657.LogoutUserImpl(gh<_i1015.AuthRepository>()));
+      () => _i657.LogoutUserImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i676.WatchProducts>(
-        () => _i676.WatchProductsImpl(gh<_i841.ProductRepository>()));
+      () => _i676.WatchProductsImpl(gh<_i841.ProductRepository>()),
+    );
     gh.lazySingleton<_i227.WatchCurrentUser>(
-        () => _i227.WatchCurrentUserImpl(gh<_i1015.AuthRepository>()));
+      () => _i227.WatchCurrentUserImpl(gh<_i1015.AuthRepository>()),
+    );
     gh.lazySingleton<_i841.AddToCart>(
-        () => _i841.AddToCartImpl(gh<_i303.CartRepository>()));
+      () => _i841.AddToCartImpl(gh<_i303.CartRepository>()),
+    );
     gh.lazySingleton<_i505.ClearCart>(
-        () => _i505.ClearCartImpl(gh<_i303.CartRepository>()));
+      () => _i505.ClearCartImpl(gh<_i303.CartRepository>()),
+    );
     return this;
   }
 }
