@@ -101,20 +101,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i140.WatchAddresses>(
       () => _i140.WatchAddressesImpl(gh<_i535.AddressRepository>()),
     );
-    gh.lazySingleton<_i303.CartRepository>(
-      () => _i589.FirestoreCartRepositoryImpl(
-        authRepository: gh<_i1015.AuthRepository>(),
-        firestore: gh<_i974.FirebaseFirestore>(),
-      ),
-    );
     gh.lazySingleton<_i42.DeleteAddress>(
       () => _i42.DeleteAddressImpl(gh<_i535.AddressRepository>()),
     );
     gh.lazySingleton<_i932.CancelOrder>(
       () => _i932.CancelOrderImpl(gh<_i608.OrderRepository>()),
-    );
-    gh.lazySingleton<_i244.WatchCart>(
-      () => _i244.WatchCartImpl(gh<_i303.CartRepository>()),
     );
     gh.lazySingleton<_i14.RegisterUser>(
       () => _i14.RegisterUserImpl(gh<_i1015.AuthRepository>()),
@@ -122,23 +113,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i919.WatchUserOrders>(
       () => _i919.WatchUserOrdersImpl(gh<_i608.OrderRepository>()),
     );
-    gh.lazySingleton<_i381.UpdateCartQuantity>(
-      () => _i381.UpdateCartQuantityImpl(gh<_i303.CartRepository>()),
-    );
-    gh.lazySingleton<_i905.RemoveFromCart>(
-      () => _i905.RemoveFromCartImpl(gh<_i303.CartRepository>()),
-    );
     gh.lazySingleton<_i305.GetProductById>(
       () => _i305.GetProductByIdImpl(gh<_i841.ProductRepository>()),
-    );
-    gh.lazySingleton<_i220.AnalyticsObserver>(
-      () => _i220.AnalyticsObserver(
-        gh<_i661.AnalyticsService>(),
-        gh<_i1015.AuthRepository>(),
-        gh<_i303.CartRepository>(),
-        gh<_i608.OrderRepository>(),
-        gh<_i841.ProductRepository>(),
-      ),
     );
     gh.lazySingleton<_i1073.LoginUser>(
       () => _i1073.LoginUserImpl(gh<_i1015.AuthRepository>()),
@@ -151,6 +127,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i653.SearchProducts>(
       () => _i653.SearchProductsImpl(gh<_i841.ProductRepository>()),
+    );
+    gh.lazySingleton<_i303.CartRepository>(
+      () => _i589.FirestoreCartRepositoryImpl(
+        authRepository: gh<_i1015.AuthRepository>(),
+        firestore: gh<dynamic>(),
+      ),
     );
     gh.lazySingleton<_i591.GetProducts>(
       () => _i591.GetProductsImpl(gh<_i841.ProductRepository>()),
@@ -169,6 +151,24 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i505.ClearCart>(
       () => _i505.ClearCartImpl(gh<_i303.CartRepository>()),
+    );
+    gh.lazySingleton<_i244.WatchCart>(
+      () => _i244.WatchCartImpl(gh<_i303.CartRepository>()),
+    );
+    gh.lazySingleton<_i381.UpdateCartQuantity>(
+      () => _i381.UpdateCartQuantityImpl(gh<_i303.CartRepository>()),
+    );
+    gh.lazySingleton<_i905.RemoveFromCart>(
+      () => _i905.RemoveFromCartImpl(gh<_i303.CartRepository>()),
+    );
+    gh.lazySingleton<_i220.AnalyticsObserver>(
+      () => _i220.AnalyticsObserver(
+        gh<_i661.AnalyticsService>(),
+        gh<_i1015.AuthRepository>(),
+        gh<_i303.CartRepository>(),
+        gh<_i608.OrderRepository>(),
+        gh<_i841.ProductRepository>(),
+      ),
     );
     return this;
   }

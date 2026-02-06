@@ -27,8 +27,8 @@ class FirestoreCartRepositoryImpl
     implements CartRepository, Disposable {
   FirestoreCartRepositoryImpl({
     required AuthRepository authRepository,
-    FirebaseFirestore? firestore,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+    required firestore,
+  }) : _firestore = firestore,
        _authRepository = authRepository {
     _initCartStream();
   }
