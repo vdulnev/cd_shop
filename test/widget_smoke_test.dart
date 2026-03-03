@@ -95,7 +95,7 @@ void main() {
     when(() => authRepo.eventStream()).thenAnswer((_) => emptyEvents);
     when(
       () => authRepo.watchCurrentUser(),
-    ).thenAnswer((_) => Stream<User?>.empty());
+    ).thenAnswer((_) => const Stream<User?>.empty());
 
     // Stub Product
     when(() => productRepo.eventStream()).thenAnswer((_) => emptyEvents);
@@ -105,7 +105,7 @@ void main() {
 
     // Stub Cart
     when(() => cartRepo.eventStream()).thenAnswer((_) => emptyEvents);
-    when(() => cartRepo.watchCart()).thenAnswer((_) => Stream<Cart>.empty());
+    when(() => cartRepo.watchCart()).thenAnswer((_) => const Stream<Cart>.empty());
 
     // Stub Address
     when(() => addressRepo.eventStream()).thenAnswer((_) => emptyEvents);
