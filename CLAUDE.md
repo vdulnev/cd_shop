@@ -24,6 +24,39 @@ flutter build web
 flutter clean && flutter pub get
 ```
 
+## Commit Message Convention
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding or updating tests
+- `chore`: Changes to build process or auxiliary tools
+
+### Scope (optional)
+Use the feature or area affected: `auth`, `product`, `cart`, `order`, `address`, `core`, `router`, `test`, `ci`, `deps`
+
+### Examples
+```
+feat(auth): add password reset functionality
+fix(cart): correct total calculation with tax
+test(product): add unit tests for product search
+refactor(core): simplify error handling logic
+chore(deps): update firebase_core to 4.4.0
+```
+
 ## Architecture Overview
 
 CD Shop is a Flutter e-commerce app using Clean Architecture with feature-based organization.

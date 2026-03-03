@@ -5,7 +5,7 @@ This repository contains a multi-platform Flutter application for an e-commerce 
 ## Overview
 - Purpose: Cross-platform shopping app with product listing, search, account auth, and detail pages.
 - Project Type: Flutter app targeting Android, iOS, Web, macOS, Windows, Linux.
-- Stack: Dart, Flutter; state via `flutter_riverpod`; routing via `go_router`; DI via `get_it`; persistence via Firebase/Firestore; functional error handling with `dartz`.
+- Stack: Dart, Flutter; state via `flutter_riverpod`; routing via `auto_route`; DI via `get_it`; persistence via Firebase/Firestore; functional error handling with `dartz`.
 - Architecture: Clean Architecture with feature-based organization.
 
 ## Build & Development Commands
@@ -30,6 +30,39 @@ flutter build web
 flutter clean && flutter pub get
 ```
 
+## Commit Message Convention
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding or updating tests
+- `chore`: Changes to build process or auxiliary tools
+
+### Scope (optional)
+Use the feature or area affected: `auth`, `product`, `cart`, `order`, `address`, `core`, `router`, `test`, `ci`, `deps`
+
+### Examples
+```
+feat(auth): add password reset functionality
+fix(cart): correct total calculation with tax
+test(product): add unit tests for product search
+refactor(core): simplify error handling logic
+chore(deps): update firebase_core to 4.4.0
+```
+
 ## Architecture Overview
 
 CD Shop uses Clean Architecture with feature-based organization.
@@ -44,25 +77,26 @@ lib/features/<feature>/
 │   ├── repositories/    # Abstract repository contracts
 │   └── usecases/        # Single-purpose business logic
 └── presentation/
-    ├── bloc/            # BLoC state management
+    ├── providers/       # Riverpod Notifiers & Providers
     ├── pages/           # Screen widgets
-    ├── routes/          # GoRouter route definitions
     └── widgets/         # Feature-specific widgets
 ```
 
 ### Key Architectural Rules
 
-**Page-Bloc Isolation**: Each page uses ONLY its corresponding BLoC. Data needed from other features is passed via constructor parameters or route `extra` data, never by reading other BLoCs directly.
+**Page-Notifier Isolation**: Each page uses ONLY its corresponding Notifier(s). Data needed from other features is passed via constructor parameters or typed route arguments.
 
-**No Foreign Bloc Access in Widgets**: Widgets must never access BLoCs from other features (e.g., CartBloc in product widgets). Instead, use usecases or inject callbacks from parent pages. Example: ProductDetailPage injects an `AddToCart` usecase callback to _AddToCartBar, keeping cart logic isolated.
+**No Foreign State Access in Widgets**: Widgets must never access Notifiers/Providers from other features directly. Instead:
+- Pages (top-level) call foreign usecases and inject callbacks to child widgets.
+- Child widgets receive pure callbacks with no knowledge of other features' implementation.
 
-**Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. BLoCs subscribe to streams and emit state changes.
+**Reactive Repositories**: Repositories expose `Stream` via `BehaviorSubject` for real-time updates. Use cases wrap repository methods. Notifiers subscribe to streams and emit state changes.
 
 ### Reactive Repository Rules
 - **Primary API is streams**: Prefer `Stream<List<T>>` (e.g., `watchProducts()`) for live data. Avoid wrapping streams in `Either`; propagate failures via the stream error channel.
 - **Non-blocking initialization**: Trigger seeding in the repository constructor without awaiting in method calls. Do not call init per-method.
 - **Domain-only emissions**: Streams should emit domain models; convert entities in the repository layer.
-- **UI subscription**: Notifiers/BLoCs subscribe to streams and update state on data; handle errors via `onError` to surface user-friendly messages.
+- **UI subscription**: Notifiers subscribe to streams and update state on data; handle errors via `onError` to surface user-friendly messages.
 
 ### Event & Analytics Emitters
 
@@ -79,7 +113,7 @@ lib/features/<feature>/
 
 - **Persistence**: Firebase/Firestore is the single source of truth.
 
-- **Routing**: GoRouter with `StatefulShellRoute.indexedStack` for tab navigation. Each feature defines routes in `presentation/routes/`. Routes aggregate in `lib/router/app_router.dart`.
+- **Routing**: auto_route with `AutoTabsRouter` for tab navigation. Routes are defined in `lib/router/app_router.dart` and generated into `app_router.gr.dart`. All pages are annotated with `@RoutePage()`. Tab shell pages live in `lib/router/tab_pages.dart`.
 
 - **App Events**: Repository events (success/error) flow through `StreamController.broadcast()` → `AppEventBloc` → `AppEventWidget` → snackbars via `lib/core/widgets/snackbar_helper.dart`.
 
@@ -99,7 +133,7 @@ lib/features/<feature>/
 
 - Initialize DI before pumping widgets: `await initDependencies()`
 - Flush fake delays: `await tester.pump(const Duration(seconds: 1))`
-- BLoC tests use `bloc_test` package with `mocktail` for mocking
+- Provider tests use `flutter_test` with `mocktail` for mocking
 
 ## Known Issues & Workarounds
 - Analyze non-zero:
@@ -111,8 +145,8 @@ lib/features/<feature>/
 ## Project Layout
 - Entry: `lib/main.dart` (init DI, run `App`).
 - App shell: `lib/app.dart` sets `MaterialApp.router` with theming and routing.
-- Routing: `lib/router/app_router.dart` uses `go_router` with `StatefulShellRoute.indexedStack` for tabs.
-- DI: `lib/injection_container.dart` registers feature blocs/use cases/repos.
+- Routing: `lib/router/app_router.dart` uses `auto_route` with `AutoTabsRouter` for tabs.
+- DI: `lib/injection_container.dart` registers feature providers/use cases/repos.
 - Features: `lib/features/<feature>/{data,domain,presentation}/` with clean architecture layering.
 - Core: `lib/core/error/failures.dart`, `lib/core/widgets/`, `lib/core/theme/`.
 - Platforms: Standard Flutter folders for android, ios, macos, linux, windows, web.
