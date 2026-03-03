@@ -10,9 +10,12 @@ import 'package:cd_shop/core/models/event_emitter.dart';
 import 'package:cd_shop/core/models/repository_event.dart';
 import 'package:cd_shop/core/services/analytics_service.dart';
 import 'package:cd_shop/features/address/domain/repositories/address_repository.dart';
+import 'package:cd_shop/features/auth/domain/entities/user.dart';
 import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
+import 'package:cd_shop/features/cart/domain/entities/cart_item.dart';
 import 'package:cd_shop/features/cart/domain/repositories/cart_repository.dart';
 import 'package:cd_shop/features/order/domain/repositories/order_repository.dart';
+import 'package:cd_shop/features/product/domain/entities/product.dart';
 import 'package:cd_shop/features/product/domain/repositories/product_repository.dart';
 import 'package:talker/talker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,15 +95,17 @@ void main() {
     when(() => authRepo.eventStream()).thenAnswer((_) => emptyEvents);
     when(
       () => authRepo.watchCurrentUser(),
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => Stream<User?>.empty());
 
     // Stub Product
     when(() => productRepo.eventStream()).thenAnswer((_) => emptyEvents);
-    when(() => productRepo.watchProducts()).thenAnswer((_) => Stream.value([]));
+    when(
+      () => productRepo.watchProducts(),
+    ).thenAnswer((_) => Stream<List<Product>>.value([]));
 
     // Stub Cart
     when(() => cartRepo.eventStream()).thenAnswer((_) => emptyEvents);
-    when(() => cartRepo.watchCart()).thenAnswer((_) => const Stream.empty());
+    when(() => cartRepo.watchCart()).thenAnswer((_) => Stream<Cart>.empty());
 
     // Stub Address
     when(() => addressRepo.eventStream()).thenAnswer((_) => emptyEvents);
