@@ -57,6 +57,13 @@ refactor(core): simplify error handling logic
 chore(deps): update firebase_core to 4.4.0
 ```
 
+## Git & Commit Rules
+
+**No Automatic Commits**: Never commit changes without explicit user command. Always:
+1. Show the changes to be committed
+2. Wait for user confirmation with "commit" command
+3. Then execute the commit
+
 ## Architecture Overview
 
 CD Shop is a Flutter e-commerce app using Clean Architecture with feature-based organization.
