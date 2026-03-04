@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
 import 'package:cd_shop/core/models/analytics_event.dart';
@@ -220,6 +221,101 @@ class FirebaseAuthRepositoryImpl
       return Left(failure);
     } catch (e) {
       const failure = ServerFailure(message: 'Google sign-in failed');
+      emitEvent(ErrorEvent(message: failure.message));
+      return const Left(failure);
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> signInWithApple() async {
+    try {
+      // Trigger Apple Sign In flow
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      // Create Apple credential for Firebase
+      final appleAuthProvider = fb.OAuthProvider('apple.com');
+      final credential = appleAuthProvider.credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      // Sign in to Firebase with Apple credentials
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        return const Left(AuthFailure(message: 'Apple sign-in failed'));
+      }
+
+      // Check if user exists in Firestore, create if not
+      final userDoc = await _usersRef.doc(firebaseUser.uid).get();
+      if (!userDoc.exists) {
+        // Create new user profile
+        // Note: Apple may not always provide email/name (user can hide it)
+        final email = appleCredential.email ?? firebaseUser.email ?? '';
+        final givenName = appleCredential.givenName ?? '';
+        final familyName = appleCredential.familyName ?? '';
+        final fullName = [givenName, familyName].where((s) => s.isNotEmpty).join(' ');
+
+        await _usersRef.doc(firebaseUser.uid).set({
+          'email': email,
+          'name': fullName.isNotEmpty ? fullName : (firebaseUser.displayName ?? 'User'),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final userData = userDoc.data();
+
+      final givenName = appleCredential.givenName ?? '';
+      final familyName = appleCredential.familyName ?? '';
+      final fullName = [givenName, familyName].where((s) => s.isNotEmpty).join(' ');
+
+      final user = User(
+        id: firebaseUser.uid,
+        email: firebaseUser.email ?? appleCredential.email ?? '',
+        name: firebaseUser.displayName ?? (fullName.isNotEmpty ? fullName : 'User'),
+        avatarUrl: firebaseUser.photoURL,
+        defaultAddressId: userData?['defaultAddressId'] as String?,
+      );
+
+      // Track analytics
+      emitAnalyticsEvent(const LoginAnalyticsEvent());
+      emitAnalyticsEvent(SetUserAnalyticsEvent(user: user));
+
+      emitEvent(SuccessEvent(message: 'Welcome, ${user.name}!'));
+      return Right(user);
+    } on fb.FirebaseAuthException catch (e) {
+      final failure = _mapFirebaseAuthError(e);
+      emitEvent(ErrorEvent(message: failure.message));
+      return Left(failure);
+    } on AuthorizationErrorCode catch (e) {
+      String message;
+      switch (e) {
+        case AuthorizationErrorCode.canceled:
+          message = 'Apple sign-in cancelled';
+          break;
+        case AuthorizationErrorCode.failed:
+          message = 'Apple sign-in failed';
+          break;
+        case AuthorizationErrorCode.invalidResponse:
+          message = 'Invalid response from Apple';
+          break;
+        case AuthorizationErrorCode.notInteractive:
+          message = 'Apple sign-in not available';
+          break;
+        default:
+          message = 'Apple sign-in error';
+      }
+      final failure = AuthFailure(message: message);
+      emitEvent(ErrorEvent(message: message));
+      return Left(failure);
+    } catch (e) {
+      const failure = ServerFailure(message: 'Apple sign-in failed');
       emitEvent(ErrorEvent(message: failure.message));
       return const Left(failure);
     }

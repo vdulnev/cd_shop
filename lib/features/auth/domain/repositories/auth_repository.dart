@@ -18,6 +18,9 @@ abstract class AuthRepository {
   /// Sign in with Google account
   Future<Either<Failure, User>> signInWithGoogle();
 
+  /// Sign in with Apple account
+  Future<Either<Failure, User>> signInWithApple();
+
   Future<Either<Failure, void>> logout();
 
   Future<Either<Failure, User?>> getCurrentUser();

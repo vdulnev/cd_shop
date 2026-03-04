@@ -40,6 +40,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     ref.read(loginProvider.notifier).signInWithGoogle();
   }
 
+  void _signInWithApple() {
+    ref.read(loginProvider.notifier).signInWithApple();
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<LoginState>(loginProvider, (previous, state) {
@@ -157,6 +161,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 label: const Text('Sign in with Google'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Apple Sign In Button
+              FilledButton.icon(
+                onPressed: isLoading ? null : _signInWithApple,
+                icon: isLoading
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.apple,
+                        size: 24,
+                        color: Colors.white,
+                      ),
+                label: const Text('Sign in with Apple'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 16),
