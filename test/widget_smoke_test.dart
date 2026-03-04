@@ -29,6 +29,7 @@ import 'package:cd_shop/features/auth/domain/usecases/login_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/logout_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/register_user.dart';
 import 'package:cd_shop/features/auth/domain/usecases/set_default_address.dart';
+import 'package:cd_shop/features/auth/domain/usecases/sign_in_with_google.dart';
 import 'package:cd_shop/features/auth/domain/usecases/watch_current_user.dart';
 import 'package:cd_shop/features/cart/domain/usecases/add_to_cart.dart';
 import 'package:cd_shop/features/cart/domain/usecases/clear_cart.dart';
@@ -131,6 +132,9 @@ void main() {
     sl.registerLazySingleton<RegisterUser>(() => RegisterUserImpl(authRepo));
     sl.registerLazySingleton<SetDefaultAddress>(
       () => SetDefaultAddressImpl(authRepo),
+    );
+    sl.registerLazySingleton<SignInWithGoogle>(
+      () => SignInWithGoogleImpl(authRepo),
     );
 
     // Product UseCases

@@ -36,6 +36,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  void _signInWithGoogle() {
+    ref.read(loginProvider.notifier).signInWithGoogle();
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<LoginState>(loginProvider, (previous, state) {
@@ -128,6 +132,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       )
                     : const Text('Sign In'),
+              ),
+              const SizedBox(height: 16),
+              // Google Sign In Button
+              OutlinedButton.icon(
+                onPressed: isLoading ? null : _signInWithGoogle,
+                icon: isLoading
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Image.network(
+                        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                        height: 24,
+                        width: 24,
+                        errorBuilder: (_, _, _) => const Icon(
+                          Icons.g_mobiledata,
+                          size: 24,
+                        ),
+                      ),
+                label: const Text('Sign in with Google'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
               const SizedBox(height: 16),
               TextButton(

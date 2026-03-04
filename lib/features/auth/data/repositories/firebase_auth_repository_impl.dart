@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:cd_shop/core/error/failures.dart';
@@ -19,10 +20,11 @@ import 'package:cd_shop/features/auth/domain/repositories/auth_repository.dart';
 class FirebaseAuthRepositoryImpl
     with EventEmitterMixin, AnalyticsEventBusMixin
     implements AuthRepository, Disposable {
-  FirebaseAuthRepositoryImpl(this._firebaseAuth, this._firestore);
+  FirebaseAuthRepositoryImpl(this._firebaseAuth, this._firestore, this._googleSignIn);
 
   final fb.FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
 
   CollectionReference<Map<String, dynamic>> get _usersRef =>
       _firestore.collection('users');
@@ -162,9 +164,72 @@ class FirebaseAuthRepositoryImpl
   }
 
   @override
+  Future<Either<Failure, User>> signInWithGoogle() async {
+    try {
+      // Trigger Google Sign In flow
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return const Left(AuthFailure(message: 'Google sign-in cancelled'));
+      }
+
+      // Get Google auth credentials
+      final googleAuth = await googleUser.authentication;
+      final credential = fb.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with Google credentials
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        return const Left(AuthFailure(message: 'Google sign-in failed'));
+      }
+
+      // Check if user exists in Firestore, create if not
+      final userDoc = await _usersRef.doc(firebaseUser.uid).get();
+      if (!userDoc.exists) {
+        // Create new user profile
+        await _usersRef.doc(firebaseUser.uid).set({
+          'email': firebaseUser.email ?? googleUser.email,
+          'name': firebaseUser.displayName ?? googleUser.displayName ?? 'User',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final userData = userDoc.data();
+
+      final user = User(
+        id: firebaseUser.uid,
+        email: firebaseUser.email ?? googleUser.email,
+        name: firebaseUser.displayName ?? googleUser.displayName ?? 'User',
+        avatarUrl: firebaseUser.photoURL ?? googleUser.photoUrl,
+        defaultAddressId: userData?['defaultAddressId'] as String?,
+      );
+
+      // Track analytics
+      emitAnalyticsEvent(const LoginAnalyticsEvent());
+      emitAnalyticsEvent(SetUserAnalyticsEvent(user: user));
+
+      emitEvent(SuccessEvent(message: 'Welcome, ${user.name}!'));
+      return Right(user);
+    } on fb.FirebaseAuthException catch (e) {
+      final failure = _mapFirebaseAuthError(e);
+      emitEvent(ErrorEvent(message: failure.message));
+      return Left(failure);
+    } catch (e) {
+      const failure = ServerFailure(message: 'Google sign-in failed');
+      emitEvent(ErrorEvent(message: failure.message));
+      return const Left(failure);
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       emitAnalyticsEvent(const SetUserAnalyticsEvent(user: null));
+      await _googleSignIn.signOut();
       await _firebaseAuth.signOut();
       return const Right(null);
     } catch (e) {

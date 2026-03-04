@@ -12,7 +12,20 @@
           "package_name": "com.example.cd_shop"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "131116124632-0t93bf3tshskq8u696oa2e10q5s7pakc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cd_shop",
+            "certificate_hash": "ebd4d3802fac4a0c512303a44e69b76c3ddf134c"
+          }
+        },
+        {
+          "client_id": "131116124632-67obo4m49qkfo4tmlstda8gasnocaluh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAhK-eTc-6xxEPay4ruv52Zai8JQGYo6r4"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "131116124632-67obo4m49qkfo4tmlstda8gasnocaluh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "131116124632-9v8pnobk0lkur3thkml3uaj9k5ap3hjv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cdShop"
+              }
+            }
+          ]
         }
       }
     }
