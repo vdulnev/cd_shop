@@ -20,5 +20,5 @@ abstract class RegisterModule {
   FirebaseAnalytics get firebaseAnalytics => FirebaseAnalytics.instance;
 
   @lazySingleton
-  GoogleSignIn get googleSignIn => GoogleSignIn();
+  GoogleSignIn get googleSignIn => GoogleSignIn.instance;
 }

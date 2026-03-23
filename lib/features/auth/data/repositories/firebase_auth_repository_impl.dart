@@ -168,15 +168,11 @@ class FirebaseAuthRepositoryImpl
   Future<Either<Failure, User>> signInWithGoogle() async {
     try {
       // Trigger Google Sign In flow
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        return const Left(AuthFailure(message: 'Google sign-in cancelled'));
-      }
+      final googleUser = await _googleSignIn.authenticate();
 
       // Get Google auth credentials
-      final googleAuth = await googleUser.authentication;
+      final googleAuth = googleUser.authentication;
       final credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 

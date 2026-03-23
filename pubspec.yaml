@@ -52,7 +52,7 @@ dependencies:
   firebase_crashlytics: ^5.0.7
 
   # Google Sign In
-  google_sign_in: ^6.2.1
+  google_sign_in: ^7.2.0
 
   # Apple Sign In
   sign_in_with_apple: ^7.0.0
